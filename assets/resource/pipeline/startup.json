@@ -1,0 +1,154 @@
+{
+    "启动游戏": {
+        "post_wait_freezes": 300,
+        "timeout": 60000,
+        "next": [
+            "开始切换角色"
+        ],
+        "interrupt": [
+            "后退",
+            "关闭礼包"
+        ]
+    },
+    "主界面标志": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    51,
+                    130,
+                    134
+                ],
+                "template": [
+                    "主界面标志.png"
+                ]
+            }
+        }
+    },
+    "开始切换角色": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    0,
+                    51,
+                    130,
+                    134
+                ],
+                "template": [
+                    "主界面标志.png"
+                ],
+                "green_mask": true
+            }
+        },
+        "next": [
+            "点击头像"
+        ]
+    },
+    "点击头像": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    29,
+                    23,
+                    32,
+                    40
+                ]
+            }
+        },
+        "next": [
+            "点击设置"
+        ]
+    },
+    "点击设置": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "设置",
+                "roi": [
+                    536,
+                    1164,
+                    182,
+                    116
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "点击角色管理"
+        ]
+    },
+    "点击角色管理": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "角色管理",
+                "roi": [
+                    101,
+                    254,
+                    236,
+                    160
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "确定角色"
+        ]
+    },
+    "确定角色": {
+        "pre_delay": 1000,
+        "action": "Custom",
+        "custom_action": "根据需要切换角色",
+        "custom_action_param": {
+            "王国编号": "3194",
+            "王国内序号": "1"
+        }
+    },
+    "国度信息": {
+        "recognition": "OCR",
+        "roi": [
+            83,
+            351,
+            307,
+            146
+        ],
+        "expected": "set in code"
+    },
+    "选中角色": {
+        "recognition": "TemplateMatch",
+        "roi": [
+            540,
+            489,
+            89,
+            217
+        ],
+        "template": [
+            "角色-选中.png"
+        ]
+    },
+    "点击角色": {
+        "action": "Click",
+        "next": [
+            "确定切换"
+        ]
+    },
+    "确定切换": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确定",
+                "roi": [
+                    420,
+                    727,
+                    195,
+                    151
+                ]
+            }
+        },
+        "action": "Click",
+        "next": []
+    }
+}

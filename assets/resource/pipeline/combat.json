@@ -1,0 +1,131 @@
+{
+    "自动集结入口": {      
+        "action": "Custom",
+        "custom_action": "自动集结_怪物分支",
+        "custom_action_param": {
+            "巨兽种类": 0
+        }
+    },
+    "识别集结时间": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    422,
+                    1084,
+                    267,
+                    139
+                ],
+                "expected": "^\\d+:\\d+:\\d+$"
+            }
+        }
+    },
+    "点击出征": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    510,
+                    1185,
+                    91,
+                    51
+                ]
+            }
+        }
+    },
+    "行军队列不足": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    236,
+                    262,
+                    251,
+                    151
+                ],
+                "expected": "行军队列"
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    620,
+                    318,
+                    43,
+                    46
+                ]
+            }
+        },
+        "next": [
+            "点击左上角",
+            "后退"
+        ]
+    },
+    "当前空余队列": {
+        "recognition": "OCR",
+        "expected": "行军队列",
+        "roi": [
+            239,
+            267,
+            240,
+            143
+        ]
+    },
+    "当前队列数量": {
+        "recognition": "OCR",
+        "expected": ["1/1","2/2","3/3","4/4","5/5","6/6"],
+        "roi": [
+            143,
+            146,
+            154,
+            137
+        ]
+    },
+    "体力不足": {
+        "recognition": "OCR",
+        "expected": "获取更多",
+        "roi": [
+            240,
+            65,
+            236,
+            146
+        ]
+    },
+    "免费体力": {
+        "recognition": "OCR",
+        "expected": "领取",
+        "roi": [
+            480,
+            303,
+            191,
+            151
+        ],
+        "action": "Click",
+        "next": [
+            "点击左上角"
+        ]
+
+    },
+    "使用罐头": {
+        "recognition": "OCR",
+        "expected": "使用",
+        "roi": [
+            487,
+            452,
+            178,
+            144
+        ]
+    },
+    "当前体力": {
+        "recognition": "OCR",
+        "expected": "^\\d+/\\d+$",
+        "roi": [
+            275,
+            185,
+            230,
+            167
+        ]
+    }
+
+}

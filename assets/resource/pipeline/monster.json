@@ -1,0 +1,200 @@
+{
+    "自动集结_巨兽入口": {
+        "next": [
+            "自动集结_点击放大镜"
+        ],
+        "interrupt": [
+            "后退",
+            "关闭礼包",
+            "转到城外"
+        ]
+    },
+    "自动集结_点击放大镜": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "放大镜.png",
+                "roi": [
+                    4,
+                    836,
+                    82,
+                    258
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动集结_确定巨兽位置"
+        ]
+    },
+    "自动集结_确定巨兽位置": {
+        "next": [
+            "自动集结_识别冰原巨兽"
+        ],
+        "interrupt": [
+            "自动集结_滑动到左边"
+        ]
+    },
+    "自动集结_识别冰原巨兽": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^冰原.*$",
+                "roi": [
+                    148,
+                    883,
+                    194,
+                    130
+                ]
+            }
+        },
+        "next": [
+            "自动集结_选择冰原巨兽"
+        ]
+    },
+    "自动集结_滑动到左边": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    211,
+                    919,
+                    7,
+                    9
+                ],
+                "end": [
+                    510,
+                    917,
+                    25,
+                    12
+                ]
+            }
+        }
+    },
+    "自动集结_选择冰原巨兽": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    225,
+                    898,
+                    29,
+                    23
+                ]
+            }
+        },
+        "next": [
+            "自动集结_点击搜索"
+        ]
+    },
+    "调整等级": {
+        "pre_delay": 500,
+        "action": "Custom",
+        "custom_action": "调整巨兽等级",
+        "custom_action_param": {
+            "巨兽等级": "0"
+        },
+        "next": [
+            "自动集结_点击搜索"
+        ]
+    },
+    "自动集结_点击搜索": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    328,
+                    1194,
+                    88,
+                    36
+                ]
+            }
+        },
+        "next": [
+            "自动集结_点击集结"
+        ]
+    },
+    "自动集结_点击集结": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    320,
+                    472,
+                    84,
+                    35
+                ]
+            }
+        },
+        "pre_delay": 1500,
+        "next": [
+            "自动集结_发起集结"
+        ]
+    },
+    "自动集结_发起集结": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    223,
+                    794,
+                    272,
+                    81
+                ],
+                "expected": "发起集结"
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动集结_选择队伍"
+        ]
+    },
+    "自动集结_选择队伍": {
+        "pre_delay": 200,
+        "action": "Custom",
+        "custom_action": "切换队伍",
+        "custom_action_param": {
+            "队伍序号": 0
+        },
+        "next": [
+            "自动集结_准备出征"
+        ]
+    },
+    "自动集结_准备出征": {
+        "action": "Custom",
+        "custom_action": "开始出征",
+        "custom_action_param": {
+            "出征次数": 0,
+            "巨兽种类": 0
+        }
+    },
+    "自动集结_集结中": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "集结中.png",
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "threshold": 0.9
+            }
+        }
+    },
+    "自动集结_行军中": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    354,
+                    354,
+                    89,
+                    41
+                ],
+                "expected": "^行军中[:：]$"
+            }
+        }
+    }
+}

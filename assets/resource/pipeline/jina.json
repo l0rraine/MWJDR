@@ -1,0 +1,138 @@
+{
+    "自动集结_吉娜入口": {
+        "next": [
+            "自动集结_点击背包"
+        ],
+        "interrupt": [
+            "后退",
+            "关闭礼包",
+            "转到城外"
+        ]
+    },
+    "自动集结_点击背包": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "背包",
+                "roi": [
+                    226,
+                    1165,
+                    163,
+                    115
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动集结_点击其他"
+        ],
+        "post_delay": 1000
+    },
+    "自动集结_点击其他": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    592,
+                    102,
+                    80,
+                    37
+                ]
+            }
+        },
+        "next": [
+            "自动集结_点击吉娜角"
+        ],
+        "post_delay": 500
+    },
+    "自动集结_点击吉娜角": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "吉娜角.png",
+                "roi": [
+                    19,
+                    160,
+                    699,
+                    1120
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动集结_使用吉娜角"
+        ]
+    },
+    "自动集结_使用吉娜角": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    19,
+                    160,
+                    699,
+                    1120
+                ],
+                "template": "使用.png"
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动集结_吉娜点击集结"
+        ]
+    },
+    "自动集结_吉娜点击集结": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    314,
+                    1101,
+                    103,
+                    36
+                ]
+            }
+        },
+        "pre_delay": 1500,
+        "next": [
+            "自动吉娜_发起集结"
+        ]
+    },
+    "自动吉娜_发起集结": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    223,
+                    794,
+                    272,
+                    81
+                ],
+                "expected": "发起集结"
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动吉娜_选择队伍"
+        ]
+    },
+    "自动吉娜_选择队伍": {
+        "pre_delay": 200,
+        "action": "Custom",
+        "custom_action": "切换队伍",
+        "custom_action_param": {
+            "队伍序号": 0
+        },
+        "next": [
+            "自动吉娜_准备出征"
+        ]
+    },
+    "自动吉娜_准备出征": {
+        "action": "Custom",
+        "custom_action": "开始出征",
+        "custom_action_param": {
+            "出征次数": 0,
+            "巨兽种类": 1
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "Help": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    488,
+                    1090,
+                    98,
+                    95
+                ],
+                "template": [
+                    "互助.png"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    517,
+                    1127,
+                    35,
+                    23
+                ]
+            }
+        }
+    }
+}

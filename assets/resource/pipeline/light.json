@@ -1,0 +1,292 @@
+{
+    "灯塔入口": {
+        "next": [
+            "点击灯塔"
+        ],
+        "interrupt": [
+            "转到城外",
+            "后退",
+            "关闭礼包"
+        ]
+    },
+    "点击灯塔": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "灯塔.png",
+                "roi": [
+                    584,
+                    783,
+                    136,
+                    163
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 600,
+        "next": [
+            "灯塔识别奖励",
+            "灯塔准备野兽",
+            "灯塔准备营救",
+            "灯塔准备战斗",
+            "灯塔返回"
+        ]
+    },
+    "灯塔准备野兽": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "./灯塔-野兽",
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "灯塔获得奖励",
+            "灯塔点击查看"
+        ]
+    },
+    "灯塔准备营救": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "./灯塔-营救",
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "灯塔获得奖励",
+            "灯塔点击查看"
+        ]
+    },
+    "灯塔准备战斗": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "./灯塔-战斗",
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "灯塔获得奖励",
+            "灯塔点击查看"
+        ]
+    },
+    "灯塔点击查看": {
+        "post_delay": 800,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "前往查看",
+                    "查看",
+                    "领取"
+                ],
+                "roi": [
+                    213,
+                    800,
+                    292,
+                    170
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "灯塔点击营救",
+            "灯塔点击出征",
+            "灯塔点击探险"
+        ]
+    },
+    "灯塔点击营救": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "营救",
+                "roi": [
+                    282,
+                    549,
+                    154,
+                    129
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 10000,
+        "next": [
+            "灯塔入口"
+        ]
+    },
+    "灯塔点击出征": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "出征",
+                "roi": [
+                    279,
+                    552,
+                    158,
+                    129
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "灯塔选择队伍"
+        ]
+    },
+    "灯塔选择队伍": {
+        "pre_delay": 200,
+        "action": "Custom",
+        "custom_action": "切换队伍",
+        "custom_action_param": {
+            "队伍序号": 0
+        },
+        "next": [
+            "灯塔准备出征"
+        ]
+    },
+    "灯塔准备出征": {
+        "action": "Custom",
+        "custom_action": "灯塔开始出征",
+        "custom_action_param": {
+            "队伍序号": "0"
+        }
+    },
+    "灯塔点击探险": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "探险",
+                "roi": [
+                    279,
+                    552,
+                    158,
+                    129
+                ]
+            }
+        },
+        "action": "Click",
+        "next": "灯塔开始探险战斗"
+    },
+    "灯塔开始探险战斗": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    475,
+                    1190,
+                    96,
+                    37
+                ]
+            }
+        },
+        "next": [
+            "灯塔探险战斗结束"
+        ]
+    },
+    "灯塔探险战斗结束": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "胜利",
+                "roi": [
+                    226,
+                    369,
+                    264,
+                    180
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "灯塔入口"
+        ]
+    },
+    "灯塔识别奖励": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "灯塔-奖励领取.png",
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "灯塔获得奖励"
+        ]
+    },
+    "灯塔获得奖励": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "获得奖励",
+                "roi": [
+                    204,
+                    237,
+                    314,
+                    167
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 300,
+        "next": [
+            "灯塔准备野兽",
+            "灯塔准备营救",
+            "灯塔准备战斗",
+            "灯塔识别奖励"
+        ],
+        "on_error": [
+            "灯塔返回"
+        ]
+    },
+    "灯塔返回": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "灯塔返回.png",
+                "roi": [
+                    0,
+                    0,
+                    164,
+                    154
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    12,
+                    12,
+                    64,
+                    54
+                ]
+            }
+        },
+        "post_delay": 500
+    }
+}

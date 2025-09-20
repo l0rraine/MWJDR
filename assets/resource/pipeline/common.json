@@ -1,0 +1,83 @@
+{
+    "关闭礼包": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "./关闭礼包",
+                "roi": [
+                    422,
+                    4,
+                    297,
+                    447
+                ],
+                "green_mask": true
+            }
+        },
+        "action": "Click",
+        "post_delay": 200
+    },
+    "后退": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "后退.png",
+                "roi": [
+                    0,
+                    0,
+                    177,
+                    165
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    7,
+                    11,
+                    77,
+                    65
+                ]
+            }
+        },
+        "post_delay": 200
+    },
+    "转到城外": {
+        "recognition": "OCR",
+        "expected": [
+            "野外"
+        ],
+        "roi": [
+            566,
+            1188,
+            154,
+            92
+        ],
+        "action": "Click",
+        "post_wait_freezes": 2000
+    },
+    "点击左上角": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    68,
+                    61,
+                    17,
+                    20
+                ]
+            }
+        }
+    },
+    "断线重连": {
+        "recognition": "OCR",
+        "expected": "重新连接",
+        "roi": [
+            397,
+            724,
+            250,
+            149
+        ],
+        "action": "Click"
+    }
+}
