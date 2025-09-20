@@ -105,6 +105,16 @@
                     "pipeline_override": {
                         "自动集结_选择队伍": {
                             "custom_action_param": {
+                                "队伍序号": "0"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "自动集结_选择队伍": {
+                            "custom_action_param": {
                                 "队伍序号": "1"
                             }
                         }
@@ -215,6 +225,16 @@
                     "pipeline_override": {
                         "自动吉娜_选择队伍": {
                             "custom_action_param": {
+                                "队伍序号": "0"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "自动吉娜_选择队伍": {
+                            "custom_action_param": {
                                 "队伍序号": "1"
                             }
                         }
@@ -320,6 +340,16 @@
         },
         "灯塔出征队伍设置": {
             "cases": [
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "灯塔选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "0"
+                            }
+                        }
+                    }
+                },
                 {
                     "name": "1",
                     "pipeline_override": {
