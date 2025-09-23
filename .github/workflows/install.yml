@@ -1,13 +1,7 @@
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"  
-    branches:
-      - "**"
-    paths:
-      - ".github/workflows/install.yml"
-      - "assets/**"
-      - "**.py"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
   pull_request:
     branches:
       - "**"
@@ -134,7 +128,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: M9A-win-${{ matrix.arch }}
+          name: MWJDR-win-${{ matrix.arch }}
           path: "install"
 
   linux:
@@ -197,7 +191,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: M9A-linux-${{ matrix.arch }}
+          name: MWJDR-linux-${{ matrix.arch }}
           path: "install"
 
   macos:
@@ -276,7 +270,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: M9A-macos-${{ matrix.arch }}
+          name: MWJDR-macos-${{ matrix.arch }}
           path: "install"
 
   changelog:
