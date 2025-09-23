@@ -68,8 +68,6 @@ jobs:
         include:
           - arch: x86_64
             runner: windows-latest
-          - arch: aarch64
-            runner: windows-11-arm
       fail-fast: false
     runs-on: ${{ matrix.runner }}
 
@@ -130,77 +128,11 @@ jobs:
         with:
           name: MWJDR-win-${{ matrix.arch }}
           path: "install"
-
-  linux:
-    needs: meta
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        arch: [aarch64, x86_64]
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Download MaaFramework for Linux
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: MaaXYZ/MaaFramework
-          fileName: "MAA-linux-${{ matrix.arch }}*"
-          tag: "v4.4.1"
-          out-file-path: "deps"
-          extract: true
-
-      - name: Download MFAAvalonia for Linux
-        id: download_mfa
-        uses: robinraju/release-downloader@v1
-        with:
-          repository: SweetSmellFox/MFAAvalonia
-          fileName: "MFAAvalonia-*-linux-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
-          tag: "v1.6.5"
-          out-file-path: "MFA"
-          extract: true
-
-      - name: Clean up MFAAvalonia archive on Linux
-        shell: bash
-        run: |
-          ARCHIVE_FILE_PATH="${{ fromJson(steps.download_mfa.outputs.downloaded_files)[0] }}"
-          rm -f "${ARCHIVE_FILE_PATH}"
-          echo "Archive cleanup command executed for MFAAvalonia on Linux."
-
-      - name: Download Python dependencies
-        shell: bash
-        run: |
-          python tools/ci/download_deps.py --deps-dir install/deps
-
-      - name: Install on Linux
-        shell: bash
-        run: |
-          PYTHON_EXECUTABLE="python"
-          echo "Using Python executable: $PYTHON_EXECUTABLE for Linux"
-          $PYTHON_EXECUTABLE ./tools/ci/install.py ${{ needs.meta.outputs.tag }}
-          if [ -d "MFA" ]; then
-            echo "Copying MFA files to install directory on Linux..."
-            mkdir -p install
-            rsync -av --ignore-existing MFA/ install/
-          else
-            echo "MFA directory not found on Linux, skipping copy."
-          fi
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: MWJDR-linux-${{ matrix.arch }}
-          path: "install"
-
   macos:
     needs: meta
     strategy:
       matrix:
         include:
-          - arch: x86_64
-            runner: macos-13  # Intel-based macOS runner
           - arch: aarch64
             runner: macos-latest  # Apple Silicon macOS runner
       fail-fast: false
@@ -296,7 +228,7 @@ jobs:
 
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, windows, linux, macos, changelog]
+    needs: [meta, windows, macos, changelog]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
