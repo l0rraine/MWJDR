@@ -105,7 +105,10 @@
         "custom_action_param": {
             "王国编号": "3194",
             "王国内序号": "1"
-        }
+        },
+        "next": [
+            "确保有空闲队列"
+        ]
     },
     "国度信息": {
         "recognition": "OCR",
@@ -148,7 +151,10 @@
                 ]
             }
         },
-        "action": "Click",
-        "next": []
+        "action": "Click"
+    },
+    "确保有空闲队列": {
+        "action": "Custom",
+        "custom_action": "确保有队列可用"
     }
 }
