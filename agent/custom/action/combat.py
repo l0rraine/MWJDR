@@ -109,7 +109,7 @@ class BeginCombat(CustomAction):
                     img = context.tasker.controller.post_screencap().wait().get()
                     detail = context.run_recognition("自动集结_行军中",img)
                 context.run_task("后退")
-                time.sleep(return_time*2 + 2)
+                time.sleep(return_time*2 + 0.5)
                 jina =param.get("巨兽种类")
                 print("jina=",jina)
                 context.run_task("自动集结入口",{
@@ -145,7 +145,7 @@ class LightBeginCombat(CustomAction):
         if detail is not None:
             context.run_task("免费体力")
             context.run_task("点击出征")
-        time.sleep(return_time*2 + 2)
+        time.sleep(return_time*2 + 0.5)
         context.run_task("灯塔入口")        
         return True
     
