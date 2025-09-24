@@ -17,18 +17,15 @@
         "post_delay": 200
     },
     "后退": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "后退.png",
-                "roi": [
-                    0,
-                    0,
-                    177,
-                    165
-                ]
-            }
-        },
+        "next": [
+            "主界面标志"
+        ],
+        "interrupt": [
+            "点击后退"
+        ],
+        "post_delay": 200
+    },
+    "点击后退": {
         "action": {
             "type": "Click",
             "param": {
@@ -39,10 +36,29 @@
                     65
                 ]
             }
-        },
-        "post_delay": 200
+        }
     },
     "转到城外": {
+        "next": [
+            "在城外"
+        ],
+        "interrupt": [
+            "在城内"
+        ]
+    },
+    "在城外": {
+        "recognition": "OCR",
+        "expected": [
+            "城镇"
+        ],
+        "roi": [
+            566,
+            1188,
+            154,
+            92
+        ]
+    },
+    "在城内": {
         "recognition": "OCR",
         "expected": [
             "野外"
@@ -54,7 +70,7 @@
             92
         ],
         "action": "Click",
-        "post_wait_freezes": 2000
+        "post_delay": 2000
     },
     "点击左上角": {
         "action": {
