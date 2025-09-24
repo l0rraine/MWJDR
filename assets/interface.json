@@ -1,16 +1,12 @@
 {
+    "name": "无尽冬日小助手", //默认为null
+    "mirrorchyan_rid": null, //默认为null , 比如 M9A
+    "mirrorchyan_multiplatform": false, //项目多平台字段(从Mirror酱下载的字段)默认为false
+    "url": "https://github.com/l0rraine/MWJDR", //默认为null , 比如 https://github.com/{Github账户}/{Github项目}
     "controller": [
         {
             "name": "安卓端",
             "type": "Adb"
-        },
-        {
-            "name": "桌面端",
-            "type": "Win32",
-            "win32": {
-                "class_regex": ".*",
-                "window_regex": "Visual Studio"
-            }
         }
     ],
     "resource": [
