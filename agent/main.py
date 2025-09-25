@@ -5,6 +5,7 @@ import sys
 import json
 import subprocess
 from pathlib import Path
+import locale
 
 # utf-8
 sys.stdout.reconfigure(encoding="utf-8")
@@ -14,10 +15,28 @@ current_file_path = os.path.abspath(__file__)
 current_script_dir = os.path.dirname(current_file_path)  # 包含此脚本的目录
 project_root_dir = os.path.dirname(current_script_dir)  # 假定的项目根目录
 
+def safe_print(text, is_error=False, encoding=None):
+    """安全打印文本，自动适配终端编码"""
+    # 获取终端默认编码（若未指定则自动检测）
+    terminal_encoding = encoding or locale.getpreferredencoding(False)
+    try:
+        # 转换文本为终端支持的编码，无法转换的字符用�替代
+        byte_data = text.encode(terminal_encoding, errors="replace")
+        # 输出到对应流（stdout/stderr）
+        if is_error:
+            sys.stderr.buffer.write(byte_data + b"\n")
+            sys.stderr.buffer.flush()
+        else:
+            sys.stdout.buffer.write(byte_data + b"\n")
+            sys.stdout.buffer.flush()
+    except Exception as e:
+        print(f"打印失败: {e}", file=sys.stderr)
+
+
 # 更改CWD到项目根目录
 if os.getcwd() != project_root_dir:
     os.chdir(project_root_dir)
-print(f"set cwd: {os.getcwd()}")
+safe_print(f"set cwd: {os.getcwd()}")
 
 # 将脚本自身的目录添加到sys.path，以便导入utils、maa等模块
 if current_script_dir not in sys.path:
@@ -29,8 +48,6 @@ VENV_NAME = ".venv"  # 虚拟环境目录的名称
 VENV_DIR = Path(project_root_dir) / VENV_NAME
 
 ### 虚拟环境相关 ###
-
-
 def _is_running_in_our_venv():
     """检查脚本是否在此脚本管理的特定venv中运行。"""
     current_python = Path(sys.executable).resolve()
@@ -193,17 +210,47 @@ def _run_pip_command(cmd_args: list, operation_name: str) -> bool:
         logger.info(f"开始 {operation_name}")
         logger.debug(f"执行命令: {' '.join(cmd_args)}")
 
-        # 使用subprocess.Popen进行实时输出
-        process = subprocess.Popen(
-            cmd_args,
+        # 为子进程创建一个干净的环境变量副本
+        agent_env = os.environ.copy()
+        # 强制子进程的Python解释器使用UTF-8编码
+        agent_env["PYTHONUTF8"] = "1"
+        agent_env["PYTHONIOENCODING"] = "utf-8"  # 关键：设置Python的IO编码
+        agent_env["LC_ALL"] = "en_US.UTF-8"      # 通用编码设置，适用于非Python程序
+        agent_env["LANG"] = "en_US.UTF-8"
+        common_kwargs = dict(
+            cwd=os.getcwd(),
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,  # 将stderr重定向到stdout
-            text=True,
+            stderr=subprocess.PIPE,
+            env=agent_env,  # 使用修改后的环境变量
+            # text=True,
             encoding="utf-8",
             errors="replace",
             bufsize=1,  # 行缓冲
-            universal_newlines=True,
+            universal_newlines=True
         )
+        if os.name == 'nt':
+            process = subprocess.Popen(
+                cmd_args,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW,
+                **common_kwargs
+            )
+        else:
+            process = subprocess.Popen(
+                cmd_args,
+                preexec_fn=os.setsid,
+                **common_kwargs
+            )
+        # # 使用subprocess.Popen进行实时输出
+        # process = subprocess.Popen(
+        #     cmd_args,
+        #     stdout=subprocess.PIPE,
+        #     stderr=subprocess.STDOUT,  # 将stderr重定向到stdout
+        #     text=True,
+        #     encoding="utf-8",
+        #     errors="replace",
+        #     bufsize=1,  # 行缓冲
+        #     universal_newlines=True,
+        # )
 
         # 收集所有输出用于日志记录
         all_output = []
@@ -212,7 +259,7 @@ def _run_pip_command(cmd_args: list, operation_name: str) -> bool:
         for line in iter(process.stdout.readline, ""):
             line = line.rstrip("\n\r")
             if line.strip():  # 只显示非空行
-                print(line)  # 实时显示到终端
+                logger.debug(line)  # 实时显示到终端
                 all_output.append(line)  # 收集到列表中
 
         # 等待进程结束
