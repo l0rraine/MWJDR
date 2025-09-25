@@ -22,7 +22,8 @@
                 ],
                 "template": [
                     "主界面标志.png"
-                ]
+                ],
+                "green_mask": true
             }
         }
     },
