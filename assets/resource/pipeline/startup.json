@@ -42,6 +42,7 @@
                 "green_mask": true
             }
         },
+        "focus": "正在切换至指定角色",
         "next": [
             "点击头像"
         ]
