@@ -5,6 +5,7 @@ import json
 import random
 import time
 
+from utils import logger
 @AgentServer.custom_action("根据需要切换角色")
 class SwitchCharacter(CustomAction):
     def run(
@@ -15,7 +16,6 @@ class SwitchCharacter(CustomAction):
         json_data = json.loads(argv.custom_action_param)
         region = json_data.get('王国编号') or "3194"
         index = json_data.get('王国内序号')
-        #print("char info:",region,index)
         img = context.tasker.controller.post_screencap().wait().get()
         expected = f"王国：#{region}"
         region_detail = context.run_recognition(
@@ -23,13 +23,10 @@ class SwitchCharacter(CustomAction):
                     img,
                     {"国度信息": {"expected": expected}},
                 )
-        #print("region_detail:",region_detail)
-        #print("cha_roi:",[region_detail.box.x+374,region_detail.box.y+70,119,231])
         cha_detail = context.run_recognition(
             "选中角色",
             img,
             {"选中角色":{"roi":[region_detail.box.x+374,region_detail.box.y+70,119,231]}})
-        #print("cha_detail:",cha_detail)
         if index=="1" and cha_detail.box.y-region_detail.box.y>170:
             context.run_task(
                 "点击角色",
@@ -42,7 +39,7 @@ class SwitchCharacter(CustomAction):
                 {"点击角色":
                     {"target":[cha_detail.box.x,cha_detail.box.y+170,cha_detail.box.w,cha_detail.box.h]}
                 })
-        print("SwitchCharacter:", json_data)
+        logger.debug(f"SwitchCharacter:{json_data}")
         return CustomAction.RunResult(success=True)
 
 # 确保所有任务执行前有队列可用，1. 关闭自动加入 2.如果有不是挖矿的队伍，等待  3. 如果全部在挖矿，召回最后一队
@@ -53,16 +50,15 @@ class MakeSureQueueAvailable(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        # 总区域 "roi" : [11,196,230,409]
         # 1. 关闭自动加入
-        print("closing auto join")
+        logger.debug("关闭自动加入集结")
         context.run_task("关闭自动加入集结入口")
         context.run_task("转到城外")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("当前队列已满", img)
         if detail is not None:
             a, b = map(int, detail.best_result.text.split('/'))
-            print("cancel a queue")
+            logger.info("当前队列已满")
             # 2.如果有不是挖矿的队伍，等待 
             action_region = [
                 [56,546,96,28],
@@ -82,7 +78,8 @@ class MakeSureQueueAvailable(CustomAction):
                 if detail is not None:
                     flag = 1
                     break
-            print("current queue flag:", flag)
+            if flag==1:
+                logger.info("开始等待出征队伍回归")
             while flag == 1:
                 time.sleep(3)
                 img = context.tasker.controller.post_screencap().wait().get()
@@ -109,7 +106,7 @@ class MakeSureQueueAvailable(CustomAction):
                         }
                     })
                     break
-                print("recalled mine queue, waiting")
+                logger.info("已取消挖矿队伍，开始等待")
                 while True:
                     time.sleep(3)
                     img = context.tasker.controller.post_screencap().wait().get()
