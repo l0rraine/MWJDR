@@ -153,7 +153,16 @@
                 ]
             }
         },
-        "action": "Click"
+        "action": "Click",
+        "post_wait_freezes": {
+            "time": 3000,
+            "target": [
+                119,
+                172,
+                475,
+                140
+            ]
+        }
     },
     "确保有空闲队列": {
         "action": "Custom",
