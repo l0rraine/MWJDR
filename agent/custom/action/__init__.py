@@ -1,5 +1,6 @@
 from .combat import *
 from .common import *
+from .unite import *
 
 __all__ = [
     "ChangeTeam",
@@ -8,6 +9,6 @@ __all__ = [
     "BeginCombat",
     "LightBeginCombat",
     "RecallTeam",
-    
-    "SwitchCharacter"
+    "SwitchCharacter",
+    "UniteScan"
 ]

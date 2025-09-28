@@ -1,0 +1,45 @@
+{
+    "联盟总动员_入口": {
+        "action": "Custom",
+        "custom_action": "联盟总动员_扫描",
+        "custom_action_param": {
+            "wanted_scores": "860"
+        }
+    },
+    "联盟总动员_识别分数": {
+        "recognition": "OCR",
+        "expected": "\\+\\d+"
+    },
+    "联盟总动员_开始刷新": {
+        "pre_delay": 200,
+        "recognition": "OCR",
+        "expected": "刷新任务",
+        "roi": [
+            62,
+            744,
+            274,
+            156
+        ],
+        "action": "Click",
+        "next": [
+            "联盟总动员_确认刷新"
+        ],
+        "post_delay": 200
+    },
+    "联盟总动员_确认刷新": {
+        "recognition": "OCR",
+        "expected": "刷新",
+        "roi": [
+            397,
+            703,
+            223,
+            163
+        ],
+        "action": "Click",
+        "post_delay": 300
+    },
+    "联盟总动员_识别时间": {
+        "recognition": "OCR",
+        "expected": "\\d+:\\d+:\\d+"
+    }
+}

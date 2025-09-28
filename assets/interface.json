@@ -1,7 +1,6 @@
 {
     "name": "无尽冬日小助手",
     "url": "https://github.com/l0rraine/MWJDR",
-    "mfa_max_version": "v1.6.5",
     "controller": [
         {
             "name": "安卓端",
@@ -52,8 +51,29 @@
             "option": [
                 "灯塔出征队伍设置"
             ]
+        },
+        {
+            "name": "联盟总动员",
+            "entry": "联盟总动员_入口",
+            "advanced": [
+                "联盟总动员分数"
+            ]
         }
     ],
+    "advanced": {
+        "联盟总动员分数": {
+            "field": "想要的分数",
+            "type": "string",
+            "default": "860",
+            "pipeline_override": {
+                "联盟总动员_入口": {
+                    "custom_action_param": {
+                        "wanted_scores": "{想要的分数}"
+                    }
+                }
+            }
+        }
+    },
     "option": {
         "王国编号": {
             "cases": [
