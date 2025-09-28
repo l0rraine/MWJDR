@@ -23,6 +23,7 @@
             }
         },
         "action": "Click",
+        "post_delay": 300,
         "next": [
             "自动集结_确定巨兽位置"
         ]
@@ -39,7 +40,7 @@
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "^冰原.*$",
+                "expected": "^冰.*$",
                 "roi": [
                     148,
                     883,
