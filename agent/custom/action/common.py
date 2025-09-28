@@ -26,7 +26,7 @@ class SwitchCharacter(CustomAction):
         cha_detail = context.run_recognition(
             "选中角色",
             img,
-            {"选中角色":{"roi":[region_detail.box.x+374,region_detail.box.y+70,119,231]}})
+            {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}})
         if index=="1" and cha_detail.box.y-region_detail.box.y>170:
             context.run_task(
                 "点击角色",
@@ -52,8 +52,8 @@ class MakeSureQueueAvailable(CustomAction):
     ) -> bool:
         # 1. 关闭自动加入
         logger.debug("关闭自动加入集结")
-        context.run_task("关闭自动加入集结入口")
         context.run_task("转到城外")
+        context.run_task("关闭自动加入集结入口")        
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("当前队列已满", img)
         if detail is not None:
