@@ -91,13 +91,16 @@ class BeginCombat(CustomAction):
         detail = context.run_recognition("体力不足", img)
         if detail is not None:
             context.run_task("免费体力")
-            context.run_task("点击出征")
-            img = context.tasker.controller.post_screencap().wait().get()
+            context.run_task("点击出征")  
+        time.sleep(60)
+        context.run_task("转到城外")
+        img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("自动集结_集结中", img)
         # print(f'detail: {detail}')
         if detail is not None and detail.box:
                 # print(f'detail box: {detail.box}')
                 # print(f'x,y:{6 + detail.box.x + 195},{detail.box.y}')
+                
                 context.tasker.controller.post_click(
                     6 + detail.box.x + 195, detail.box.y
                     
