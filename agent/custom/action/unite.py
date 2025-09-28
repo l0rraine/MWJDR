@@ -26,29 +26,33 @@ class UniteScan(CustomAction):
             # 跳过可能的空字符串（如输入为 ",,1,2," 时产生的空值）
             if cleaned_str:
                 # 转换为整数并添加到结果列表
-                wanted_scores.append(cleaned_str)   
+                wanted_scores.append(cleaned_str) 
+        item_roi = [
+            [183,682,51,46],
+            [488,703,56,36]
+        ]  
         score_roi = [
-            [98,730,226,149],
-            [459,733,181,143]
+            [192,784,100,40],
+            [508,784,100,40]
         ]
         time_roi = [
-            [65,594,289,191],
-            [394,606,262,170]
+            [162,665,119,54],
+            [487,663,109,56]
             
         ]
-        need_wait_seconds = [0,0]
-        img = context.tasker.controller.post_screencap().wait().get()
+        need_wait_seconds = [3600,3600]
         for i in range(0,2):
+            img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("联盟总动员_识别时间", img, {"联盟总动员_识别时间": {"roi": time_roi[i]}})
             if detail is not None:
                 hours, minutes, seconds = map(int, detail.best_result.text.split(':'))
                 need_wait_seconds[i] = hours * 3600 + minutes * 60 + seconds
                 logger.debug(f"{i+1}号位置需要等待：{minutes}:{seconds},共计{need_wait_seconds[i]}秒")
             else:
-                detail = context.run_recognition("联盟总动员_识别分数", img, {"联盟总动员_识别分数": {"exptected": score_roi[i]}})
+                detail = context.run_recognition("联盟总动员_识别分数", img, {"联盟总动员_识别分数": {"roi": score_roi[i]}})
                 if detail is not None:
-                    score = detail.best_result.text.lstrip("+")
-                    logger.debug(f"识别到分数：{score}")
+                    score = detail.best_result.text.lstrip("+").replace(",", "")
+                    logger.debug(f"位置{i+1}识别到分数：{score}")
                     if score not in wanted_scores:
                         logger.debug(f"开始刷新位置{i+1}")
                         context.run_task("custom",{
