@@ -1,17 +1,50 @@
 {
     "联盟总动员_入口": {
+        "next": [
+            "联盟总动员_已在活动界面"
+        ],
+        "interrupt": [
+            "联盟总动员_点击活动",
+            "关闭礼包",
+            "后退"
+        ]
+    },
+    "联盟总动员_点击活动": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "常规活动.png"
+        ],
+        "roi": [
+            598,
+            73,
+            122,
+            148
+        ],
+        "action": "Click",
+        "threshold": 0.9,
+        "next": [
+            "联盟总动员_开始扫描"
+        ]
+    },
+    "联盟总动员_已在活动界面": {
+        "recognition": "OCR",
+        "expected": "联盟总动员",
+        "roi": [
+            0,
+            146,
+            323,
+            174
+        ],
+        "next": [
+            "联盟总动员_开始扫描"
+        ]
+    },
+    "联盟总动员_开始扫描": {
         "action": "Custom",
         "custom_action": "联盟总动员_扫描",
         "custom_action_param": {
-            "wanted_scores": "860"
+            "just_double": "0"
         }
-    },
-    "联盟总动员_识别分数": {
-        "recognition": "OCR",
-        "expected": [
-            "\\+\\d+",
-            "\\+\\d+,\\d+"
-        ]
     },
     "联盟总动员_开始刷新": {
         "pre_delay": 200,
@@ -43,6 +76,77 @@
     },
     "联盟总动员_识别时间": {
         "recognition": "OCR",
-        "expected": "\\d+:\\d+:\\d+"
+        "expected": "\\d+\\D+\\d+\\D+\\d+"
+    },
+    "联盟总动员_识别倍率": {
+        "recognition": "OCR",
+        "expected": [
+            "200%",
+            "120%"
+        ]
+    },
+    "联盟总动员_正在执行": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "method": 4,
+                "lower": [
+                    255,
+                    164,
+                    34
+                ],
+                "upper": [
+                    255,
+                    164,
+                    34
+                ]
+            }
+        }
+    },
+    "联盟总动员_点击详情": {
+        "action": "Click",
+        "post_delay": 200,
+        "next": [
+            "联盟总动员_正在执行",
+            "联盟总动员_识别时间"
+        ],
+        "interrupt": [
+            "联盟总动员_任务_训练士兵-12w-200%",
+            "联盟总动员_任务_训练士兵-12w-120%"
+        ]
+    },
+    "联盟总动员_任务_训练士兵-12w-200%": {
+        "recognition": "OCR",
+        "expected": "士兵.*120[,，]000"
+    },
+    "联盟总动员_任务_训练士兵-12w-120%": {
+        "recognition": "OCR",
+        "expected": "士兵.*120[,，]000"
+    },
+    "联盟总动员_任务_648礼包-200%": {
+        "recognition": "OCR",
+        "expected": "648"
+    },
+    "联盟总动员_任务_648礼包-120%": {
+        "recognition": "OCR",
+        "expected": "648"
+    },
+    "联盟总动员_任务_328礼包-200%": {
+        "recognition": "OCR",
+        "expected": "328"
+    },
+    "联盟总动员_任务_328礼包-120%": {
+        "recognition": "OCR",
+        "expected": "328"
+    },
+    "联盟总动员_识别描述": {
+        "recognition": "OCR",
+        "expected": "write in code",
+        "roi": [
+            216,
+            486,
+            463,
+            220
+        ]
     }
 }

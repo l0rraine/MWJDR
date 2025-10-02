@@ -16,8 +16,9 @@
         }
     ],
     "agent": {
-        "child_exec": "python",
+        "child_exec": "{PROJECT_DIR}/python/python.exe",
         "child_args": [
+            "-u",
             "{PROJECT_DIR}/../agent/main.py"
         ]
     },
@@ -27,6 +28,13 @@
             "entry": "启动游戏",
             "option": [
                 "王国内序号"
+            ]
+        },
+        {
+            "name": "自动灯塔",
+            "entry": "灯塔入口",
+            "option": [
+                "灯塔出征队伍设置"
             ]
         },
         {
@@ -46,35 +54,187 @@
             ]
         },
         {
-            "name": "自动灯塔",
-            "entry": "灯塔入口",
+            "name": "自动野兽",
+            "entry": "自动野兽_入口",
             "option": [
-                "灯塔出征队伍设置"
+                "野兽队伍设置"
             ]
         },
         {
             "name": "联盟总动员",
             "entry": "联盟总动员_入口",
-            "advanced": [
-                "联盟总动员分数"
+            "option": [
+                "是否只要双倍",
+                "训练士兵-12万-200%",
+                "训练士兵-12万-120%",
+                "648礼包-200%",
+                "648礼包-120%",
+                "328礼包-200%",
+                "328礼包-120%"
+            ]
+        },
+        {
+            "name": "半夜挖矿",
+            "entry": "挖矿_入口",
+            "option": [
+                "联盟矿",
+                "保留自动加入"
             ]
         }
     ],
-    "advanced": {
-        "联盟总动员分数": {
-            "field": "想要的分数",
-            "type": "string",
-            "default": "860",
-            "pipeline_override": {
-                "联盟总动员_入口": {
-                    "custom_action_param": {
-                        "wanted_scores": "{想要的分数}"
+    "option": {
+        "先采联盟矿": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "挖矿_参数_联盟矿": {
+                            "enabled": false
+                        }
                     }
                 }
-            }
-        }
-    },
-    "option": {
+            ]
+        },
+        "保留自动加入": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "挖矿_参数_保留自动加入": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "训练士兵-12万-200%": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_训练士兵-12w-200%": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "训练士兵-12万-120%": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_训练士兵-12w-120%": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "648礼包-200%": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_648礼包-200%": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "648礼包-120%": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_648礼包-120%": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "328礼包-200%": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_328礼包-200%": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "328礼包-120%": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_328礼包-120%": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "是否只要双倍": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_入口": {
+                            "custom_action_param": {
+                                "just_double": "0"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "联盟总动员_入口": {
+                            "custom_action_param": {
+                                "just_double": "1"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
         "王国编号": {
             "cases": [
                 {
@@ -439,6 +599,100 @@
                     "name": "0",
                     "pipeline_override": {
                         "灯塔选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "0"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "野兽队伍设置": {
+            "cases": [
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "2",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "3",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "4",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "4"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "5"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "6",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "6"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "7",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "7"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "8",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
+                            "custom_action_param": {
+                                "队伍序号": "8"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "0",
+                    "pipeline_override": {
+                        "自动野兽_选择队伍": {
                             "custom_action_param": {
                                 "队伍序号": "0"
                             }
