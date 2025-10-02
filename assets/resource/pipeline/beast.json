@@ -1,0 +1,108 @@
+{
+    "自动野兽_入口": {
+        "next": [
+            "自动野兽_点击放大镜"
+        ],
+        "interrupt": [
+            "关闭礼包",
+            "后退",
+            "转到城外"
+        ]
+    },
+    "自动野兽_点击放大镜": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "放大镜.png",
+                "roi": [
+                    4,
+                    836,
+                    82,
+                    258
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 300,
+        "next": [
+            "自动野兽_确定野兽位置"
+        ]
+    },
+    "自动野兽_确定野兽位置": {
+        "next": [
+            "自动野兽_识别野兽"
+        ],
+        "interrupt": [
+            "自动集结_滑动到左边"
+        ]
+    },
+    "自动野兽_识别野兽": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "野兽.png",
+                "roi": [
+                    4,
+                    849,
+                    711,
+                    148
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动野兽_点击搜索"
+        ]
+    },
+    "自动野兽_点击搜索": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    328,
+                    1194,
+                    88,
+                    36
+                ]
+            }
+        },
+        "next": [
+            "自动野兽_点击攻击"
+        ]
+    },
+    "自动野兽_点击攻击": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    318,
+                    586,
+                    84,
+                    53
+                ]
+            }
+        },
+        "pre_delay": 1500,
+        "next": [
+            "自动野兽_选择队伍"
+        ]
+    },
+    "自动野兽_选择队伍": {
+        "pre_delay": 200,
+        "action": "Custom",
+        "custom_action": "切换队伍",
+        "custom_action_param": {
+            "队伍序号": 0
+        },
+        "next": [
+            "自动野兽_准备出征"
+        ]
+    },
+    "自动野兽_准备出征": {
+        "action": "Custom",
+        "custom_action": "野兽开始出征",
+        "custom_action_param": {
+            "出征次数": 0
+        }
+    }
+}

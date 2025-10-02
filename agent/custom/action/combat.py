@@ -151,7 +151,32 @@ class LightBeginCombat(CustomAction):
         time.sleep(return_time*2 + 0.5)
         context.run_task("灯塔入口")        
         return True
-    
+
+@AgentServer.custom_action("野兽开始出征")
+class BeastBeginCombat(CustomAction):
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        json_data = json.loads(argv.custom_action_param)
+        logger.debug(json_data)        
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("识别集结时间", img)
+        logger.debug(f"回归时间:{detail.best_result.text}")
+        hours, minutes, seconds = map(int, detail.best_result.text.split(':'))
+        return_time = hours * 3600 + minutes * 60 + seconds
+        
+        # 开始出征
+        context.run_task("点击出征")
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("体力不足", img)
+        if detail is not None:
+            context.run_task("免费体力")
+            context.run_task("点击出征")
+        time.sleep(return_time*2 + 0.5)
+        context.run_task("自动野兽_入口")       
+        return True
     
 @AgentServer.custom_action("撤回最后一个队伍")
 class RecallTeam(CustomAction):
