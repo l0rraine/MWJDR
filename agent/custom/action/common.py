@@ -33,7 +33,7 @@ class SwitchCharacter(CustomAction):
                     img,
                     {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}}
                 )
-                
+                _ = cha_detail.box.y
             except Exception as e:
                 print(f"第 {4 - count} 次执行出错: {e}")
                 time.sleep(2)
