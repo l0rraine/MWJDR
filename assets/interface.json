@@ -64,9 +64,14 @@
             "name": "联盟总动员",
             "entry": "联盟总动员_入口",
             "option": [
+                "是否单角色",
+                "是否启用第一栏位",
+                "是否启用第二栏位",
                 "是否只要双倍",
                 "训练士兵-12万-200%",
                 "训练士兵-12万-120%",
+                "专精石-35-200%",
+                "专精石-35-120%",
                 "648礼包-200%",
                 "648礼包-120%",
                 "328礼包-200%",
@@ -77,7 +82,7 @@
             "name": "半夜挖矿",
             "entry": "挖矿_入口",
             "option": [
-                "联盟矿",
+                "先采联盟矿",
                 "保留自动加入"
             ]
         }
@@ -115,6 +120,54 @@
                 }
             ]
         },
+        "是否单角色": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_参数_是否单角色": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "是否启用第一栏位": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_参数_是否启用第一栏位": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "是否启用第二栏位": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_参数_是否启用第二栏位": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
         "训练士兵-12万-200%": {
             "cases": [
                 {
@@ -144,6 +197,38 @@
                             "enabled": false
                         }
                     }
+                }
+            ]
+        },
+        "专精石-35-200%": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_专精石-35-200%": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "专精石-35-120%": {
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟总动员_任务_专精石-35-120%": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
                 }
             ]
         },
