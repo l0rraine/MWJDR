@@ -1,6 +1,7 @@
 from .logger import *
+from .chainfo import *
 
 try:
-    from .time import *
+    from .timelib import *
 except ImportError:
     logger.warning("utils moudule import failed")
