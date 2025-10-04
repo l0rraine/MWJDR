@@ -23,8 +23,72 @@
         "action": "Click",
         "threshold": 0.9,
         "next": [
+            "联盟总动员_确定图标位置"
+        ],
+        "interrupt": [
+            "联盟总动员_入口"
+        ],
+        "post_delay": 1000
+    },
+    "联盟总动员_确定图标位置": {
+        "recognition": "OCR",
+        "roi": [
+            30,
+            0,
+            277,
+            164
+        ],
+        "expected": "常规活动",
+        "next": [
+            "联盟总动员_点击总动员图标"
+        ],
+        "interrupt": [
+            "联盟总动员_向左滑动"
+        ]
+    },
+    "联盟总动员_点击总动员图标": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "联盟总动员.png"
+                ],
+                "roi": [
+                    12,
+                    82,
+                    703,
+                    109
+                ],
+                "threshold": 0.8,
+                "green_mask": true
+            }
+        },
+        "action": "Click",
+        "focus": "切换至联盟总动员活动",
+        "next": [
             "联盟总动员_开始扫描"
         ]
+    },
+    "联盟总动员_向左滑动": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    185,
+                    130,
+                    30,
+                    28
+                ],
+                "end": [
+                    472,
+                    140,
+                    44,
+                    23
+                ]
+            }
+        },
+        "focus": "滑动至联盟总动员活动",
+        "post_delay": 1000
     },
     "联盟总动员_已在活动界面": {
         "recognition": "OCR",
@@ -43,7 +107,8 @@
         "action": "Custom",
         "custom_action": "联盟总动员_扫描",
         "custom_action_param": {
-            "just_double": "0"
+            "just_double": "0",
+            "current_cha_index": "0"
         }
     },
     "联盟总动员_开始刷新": {
@@ -78,12 +143,12 @@
         "recognition": "OCR",
         "expected": "\\d+\\D+\\d+\\D+\\d+"
     },
-    "联盟总动员_识别倍率": {
-        "recognition": "OCR",
-        "expected": [
-            "200%",
-            "120%"
-        ]
+    "联盟总动员_识别200%倍率": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "200%.png"
+        ],
+        "threshold": 0.85
     },
     "联盟总动员_正在执行": {
         "recognition": {
@@ -104,24 +169,42 @@
         }
     },
     "联盟总动员_点击详情": {
-        "action": "Click",
-        "post_delay": 200,
-        "next": [
-            "联盟总动员_正在执行",
-            "联盟总动员_识别时间"
-        ],
+        "action": "DoNothing",
         "interrupt": [
             "联盟总动员_任务_训练士兵-12w-200%",
-            "联盟总动员_任务_训练士兵-12w-120%"
+            "联盟总动员_任务_训练士兵-12w-120%",
+            "联盟总动员_任务_专精石-35-200%",
+            "联盟总动员_任务_专精石-35-120%",
+            "联盟总动员_任务_648礼包-200%",
+            "联盟总动员_任务_648礼包-120%",
+            "联盟总动员_任务_328礼包-200%",
+            "联盟总动员_任务_328礼包-120%"
         ]
+    },
+    "联盟总动员_参数_是否单角色": {
+        "action": "DoNothing"
+    },
+    "联盟总动员_参数_是否启用第一栏位": {
+        "action": "DoNothing"
+    },
+    "联盟总动员_参数_是否启用第二栏位": {
+        "action": "DoNothing"
     },
     "联盟总动员_任务_训练士兵-12w-200%": {
         "recognition": "OCR",
-        "expected": "士兵.*120[,，]000"
+        "expected": "士兵.*120[\\D+]000"
     },
     "联盟总动员_任务_训练士兵-12w-120%": {
         "recognition": "OCR",
-        "expected": "士兵.*120[,，]000"
+        "expected": "士兵.*120[\\D+]000"
+    },
+    "联盟总动员_任务_专精石-35-200%": {
+        "recognition": "OCR",
+        "expected": "35个英雄"
+    },
+    "联盟总动员_任务_专精石-35-120%": {
+        "recognition": "OCR",
+        "expected": "35个英雄"
     },
     "联盟总动员_任务_648礼包-200%": {
         "recognition": "OCR",
