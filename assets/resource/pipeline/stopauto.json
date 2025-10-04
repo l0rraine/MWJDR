@@ -80,12 +80,12 @@
     "关闭自动加入集结_已打开自动加入": {
         "recognition": "OCR",
         "roi": [
-            248,
-            1194,
-            231,
-            63
+            265,
+            1115,
+            175,
+            74
         ],
-        "expected": "自动加入中",
+        "expected": "\\d+\\D+\\d+\\D+\\d+",
         "action": {
             "type": "Click",
             "param": {
