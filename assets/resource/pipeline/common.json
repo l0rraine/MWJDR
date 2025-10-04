@@ -1,7 +1,7 @@
 {
     "关闭礼包": {
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "FeatureMatch",
             "param": {
                 "template": "./关闭礼包",
                 "roi": [
@@ -23,7 +23,7 @@
         "interrupt": [
             "点击后退"
         ],
-        "post_delay": 200
+        "post_delay": 500
     },
     "点击后退": {
         "action": {

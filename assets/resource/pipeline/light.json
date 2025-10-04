@@ -5,8 +5,8 @@
         ],
         "interrupt": [
             "关闭礼包",
-            "后退",
-            "转到城外"
+            "转到城外",
+            "后退"
         ]
     },
     "点击灯塔": {
@@ -202,10 +202,7 @@
     },
     "灯塔准备出征": {
         "action": "Custom",
-        "custom_action": "灯塔开始出征",
-        "custom_action_param": {
-            "队伍序号": "0"
-        }
+        "custom_action": "灯塔开始出征"
     },
     "灯塔点击探险": {
         "recognition": {
