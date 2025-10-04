@@ -18,15 +18,28 @@ class SwitchCharacter(CustomAction):
         index = json_data.get('王国内序号')
         img = context.tasker.controller.post_screencap().wait().get()
         expected = f"王国：#{region}"
-        region_detail = context.run_recognition(
+        
+        cha_detail = None        
+        count = 3
+        while count > 0 and cha_detail is None:
+            try:
+                region_detail = context.run_recognition(
                     "国度信息",
                     img,
                     {"国度信息": {"expected": expected}},
                 )
-        cha_detail = context.run_recognition(
-            "选中角色",
-            img,
-            {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}})
+                cha_detail = context.run_recognition(
+                    "选中角色",
+                    img,
+                    {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}}
+                )
+                
+            except Exception as e:
+                print(f"第 {4 - count} 次执行出错: {e}")
+                time.sleep(2)
+            finally:                
+                count -= 1
+        
         if index=="1" and cha_detail.box.y-region_detail.box.y>170:
             context.run_task(
                 "点击角色",
@@ -52,8 +65,8 @@ class MakeSureQueueAvailable(CustomAction):
     ) -> bool:
         # 1. 关闭自动加入
         logger.debug("关闭自动加入集结")
-        context.run_task("转到城外")
-        context.run_task("关闭自动加入集结入口")        
+        context.run_task("关闭自动加入集结入口")
+        context.run_task("转到城外")        
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("当前队列已满", img)
         if detail is not None:
@@ -115,4 +128,81 @@ class MakeSureQueueAvailable(CustomAction):
                         break
 
         
+        return CustomAction.RunResult(success=True)
+ 
+@AgentServer.custom_action("NodeParaCombine")
+class NodeParaCombine(CustomAction):   
+    """
+    在 node 合并不同的参数 。
+
+    参数格式:
+    {
+        "node_name": {"参数1": "值1",...},
+        "node_name": {"参数2": "值2",...}
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+
+        node_name = json.loads(argv.custom_action_param)["node_name"]
+        node_data = context.get_node_data(node_name)
+        logger.debug(node_data)
+        context.override_pipeline({f"{node_name}": {"enabled": False}})
+
+        return CustomAction.RunResult(success=True)
+@AgentServer.custom_action("DisableNode")
+class DisableNode(CustomAction):
+    """
+    将特定 node 设置为 disable 状态 。
+
+    参数格式:
+    {
+        "node_name": "结点名称"
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+
+        node_name = json.loads(argv.custom_action_param)["node_name"]
+
+        context.override_pipeline({f"{node_name}": {"enabled": False}})
+
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("NodeOverride")
+class NodeOverride(CustomAction):
+    """
+    在 node 中执行 pipeline_override 。
+
+    参数格式:
+    {
+        "node_name": {"被覆盖参数": "覆盖值",...},
+        "node_name1": {"被覆盖参数": "覆盖值",...}
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+
+        ppover = json.loads(argv.custom_action_param)
+
+        if not ppover:
+            logger.warning("No ppover")
+            return CustomAction.RunResult(success=True)
+
+        logger.debug(f"NodeOverride: {ppover}")
+        context.override_pipeline(ppover)
+
         return CustomAction.RunResult(success=True)
