@@ -6,7 +6,7 @@ import random
 import time
 
 from utils import logger
-
+from utils import timelib
 @AgentServer.custom_action("切换队伍")
 class ChangeTeam(CustomAction):
 
@@ -81,7 +81,7 @@ class BeginCombat(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("识别集结时间", img)
         # print("time:",detail)
-        hours, minutes, seconds = map(int, detail.best_result.text.split(':'))
+        hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
         return_time = hours * 3600 + minutes * 60 + seconds
         
         # 开始出征
@@ -132,13 +132,21 @@ class LightBeginCombat(CustomAction):
         self,
         context: Context,
         argv: CustomAction.RunArg,
-    ) -> bool:
-        json_data = json.loads(argv.custom_action_param)
-        logger.debug(json_data)        
-        img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("识别集结时间", img)
-        logger.debug(f"回归时间:{detail.best_result.text}")
-        hours, minutes, seconds = map(int, detail.best_result.text.split(':'))
+    ) -> bool:             
+        detail = None        
+        count = 3
+        while count > 0 and detail is None:
+            try:
+                img = context.tasker.controller.post_screencap().wait().get()   
+                detail = context.run_recognition("识别集结时间", img)
+                logger.debug(f"回归时间:{detail.best_result.text}")
+            except Exception as e:
+                print(f"第 {4 - count} 次执行出错: {e}")
+                time.sleep(2)
+            finally:                
+                count -= 1
+        
+        hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
         return_time = hours * 3600 + minutes * 60 + seconds
         
         # 开始出征
@@ -164,7 +172,7 @@ class BeastBeginCombat(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("识别集结时间", img)
         logger.debug(f"回归时间:{detail.best_result.text}")
-        hours, minutes, seconds = map(int, detail.best_result.text.split(':'))
+        hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
         return_time = hours * 3600 + minutes * 60 + seconds
         
         # 开始出征
@@ -172,8 +180,24 @@ class BeastBeginCombat(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
         if detail is not None:
-            context.run_task("免费体力")
-            context.run_task("点击出征")
+            detail = context.run_recognition("是否有免费体力",img,{
+                "是否有免费体力": {
+                    "recognition": "OCR",
+                    "expected": "领取",
+                    "roi": [
+                        480,
+                        303,
+                        191,
+                        151
+                    ]
+                }
+            })
+            if detail is not None:
+                context.run_task("免费体力")
+                context.run_task("点击出征")
+            else:
+                return True
+            
         time.sleep(return_time*2 + 0.5)
         context.run_task("自动野兽_入口")       
         return True
