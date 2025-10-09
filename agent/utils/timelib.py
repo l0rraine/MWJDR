@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 import re
-
+import time
 
 def ms_timestamp_diff_to_dhm(timestamp1_ms, timestamp2_ms):
     """
@@ -37,6 +37,22 @@ def split_time_str(time_str):
     hours, minutes, seconds = (numeric_parts + [None, None, None])[:3]
     return hours,minutes,seconds
 
+
+def get_time_from_ocr(context, img, task_name):
+    detail = None        
+    count = 3
+    while count > 0 and detail is None:
+        try:
+            img = context.tasker.controller.post_screencap().wait().get()   
+            detail = context.run_recognition(task_name, img)
+            hours, minutes, seconds = split_time_str(detail.best_result.text)
+        except Exception as e:
+            print(f"第 {4 - count} 次执行出错: {e}")
+            time.sleep(2)
+        finally:                
+            count -= 1
+    return hours,minutes,seconds
+                
 def is_current_period(timestamp_ms, timezone="Asia/Shanghai"):
     """
     判断毫秒级时间戳是否在当前周和当前月

@@ -1,0 +1,133 @@
+{
+    "挖矿_入口": {
+        "action": "Custom",
+        "custom_action": "召回全部队伍",
+        "next": [
+            "挖矿_开始派出队伍"
+        ]
+    },
+    "挖矿_参数": {
+        "recognition": "OCR",
+        "expected": [
+            "write in code"
+        ],
+        "interrupt": [
+            "挖矿_参数_联盟矿",
+            "挖矿_参数_保留自动加入"
+        ]
+    },
+    "挖矿_参数_联盟矿": {
+        "recognition": "OCR",
+        "expected": [
+            "write in code"
+        ]
+    },
+    "挖矿_参数_保留自动加入": {
+        "recognition": "OCR",
+        "expected": [
+            "write in code"
+        ]
+    },
+    "挖矿_开始派出队伍": {},
+    "挖矿_点击联盟": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "联盟",
+                "roi": [
+                    449,
+                    1159,
+                    170,
+                    121
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    517,
+                    1207,
+                    42,
+                    46
+                ]
+            }
+        },
+        "post_delay": 1500,
+        "next": [
+            "自动加入集结_点击联盟战争"
+        ]
+    },
+    "挖矿_确定矿图标": {
+        "next": [
+            "挖矿_识别矿"
+        ],
+        "interrupt": [
+            "挖矿_滑动到右边"
+        ]
+    },
+    "挖矿_识别矿": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^冰.*$",
+                "roi": [
+                    4,
+                    849,
+                    711,
+                    148
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "挖矿_点击搜索"
+        ]
+    },
+    "挖矿_滑动到右边": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    510,
+                    917,
+                    25,
+                    12
+                ],
+                "end": [
+                    211,
+                    919,
+                    7,
+                    9
+                ]
+            }
+        },
+        "post_delay": 1000
+    },
+    "挖矿_点击搜索": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    328,
+                    1194,
+                    88,
+                    36
+                ]
+            }
+        },
+        "next": []
+    },
+    "挖矿_识别数量": {
+        "recognition": "OCR",
+        "expected": "(\\d+[,]?)+",
+        "roi": [
+            384,
+            386,
+            214,
+            139
+        ]
+    },
+    "挖矿_点击采集": {},
+    "挖矿_取消额外英雄": {},
+}

@@ -35,7 +35,7 @@ class ChangeTeam(CustomAction):
                 "action": "Click",
             }
         })
-        return True
+        return CustomAction.RunResult(success=True)
 
 
 @AgentServer.custom_action("调整巨兽等级")
@@ -46,7 +46,7 @@ class ChangeMonsterLevel(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        return True
+        return CustomAction.RunResult(success=True)
 
 @AgentServer.custom_action("自动集结_怪物分支")
 class ChooseMonster(CustomAction):
@@ -63,7 +63,7 @@ class ChooseMonster(CustomAction):
         if jina == 0:
             logger.debug("开始冰原巨兽")
             context.run_task("自动集结_巨兽入口")
-        return True
+        return CustomAction.RunResult(success=True)
 @AgentServer.custom_action("开始出征")
 class BeginCombat(CustomAction):
     def run(
@@ -77,11 +77,8 @@ class BeginCombat(CustomAction):
         #if combat_times == 0:
         #    return True
         
-        # 获取返回时间
         img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("识别集结时间", img)
-        # print("time:",detail)
-        hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
+        hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")        
         return_time = hours * 3600 + minutes * 60 + seconds
         
         # 开始出征
@@ -90,9 +87,25 @@ class BeginCombat(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
         if detail is not None:
-            context.run_task("免费体力")
-            context.run_task("点击出征")  
-        time.sleep(60)
+            detail = context.run_recognition("是否有免费体力",img,{
+                "是否有免费体力": {
+                    "recognition": "OCR",
+                    "expected": "领取",
+                    "roi": [
+                        480,
+                        303,
+                        191,
+                        151
+                    ]
+                }
+            })
+            if detail is not None:
+                context.run_task("免费体力")
+                context.run_task("点击出征")
+            else:
+                context.run_task("转到城外")
+                return CustomAction.RunResult(success=True)
+        time.sleep(80)
         context.run_task("转到城外")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("自动集结_集结中", img)
@@ -123,8 +136,8 @@ class BeginCombat(CustomAction):
                     }
                     
                 })
-                return True
-        return True
+                return CustomAction.RunResult(success=True)
+        return CustomAction.RunResult(success=True)
     
 @AgentServer.custom_action("灯塔开始出征")
 class LightBeginCombat(CustomAction):
@@ -132,47 +145,10 @@ class LightBeginCombat(CustomAction):
         self,
         context: Context,
         argv: CustomAction.RunArg,
-    ) -> bool:             
-        detail = None        
-        count = 3
-        while count > 0 and detail is None:
-            try:
-                img = context.tasker.controller.post_screencap().wait().get()   
-                detail = context.run_recognition("识别集结时间", img)
-                logger.debug(f"回归时间:{detail.best_result.text}")
-            except Exception as e:
-                print(f"第 {4 - count} 次执行出错: {e}")
-                time.sleep(2)
-            finally:                
-                count -= 1
-        
-        hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
-        return_time = hours * 3600 + minutes * 60 + seconds
-        
-        # 开始出征
-        context.run_task("点击出征")
-        img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("体力不足", img)
-        if detail is not None:
-            context.run_task("免费体力")
-            context.run_task("点击出征")
-        time.sleep(return_time*2 + 0.5)
-        context.run_task("灯塔入口")        
-        return True
-
-@AgentServer.custom_action("野兽开始出征")
-class BeastBeginCombat(CustomAction):
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
     ) -> bool:
-        json_data = json.loads(argv.custom_action_param)
-        logger.debug(json_data)        
-        img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("识别集结时间", img)
-        logger.debug(f"回归时间:{detail.best_result.text}")
-        hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
+        img = context.tasker.controller.post_screencap().wait().get()             
+        hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")
+                
         return_time = hours * 3600 + minutes * 60 + seconds
         
         # 开始出征
@@ -196,11 +172,51 @@ class BeastBeginCombat(CustomAction):
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
-                return True
+                return CustomAction.RunResult(success=True)
+        time.sleep(return_time*2 + 0.5)
+        context.run_task("灯塔入口")        
+        return CustomAction.RunResult(success=True)
+
+@AgentServer.custom_action("野兽开始出征")
+class BeastBeginCombat(CustomAction):
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        json_data = json.loads(argv.custom_action_param)
+        logger.debug(json_data)
+        img = context.tasker.controller.post_screencap().wait().get()
+        hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")
+                
+        return_time = hours * 3600 + minutes * 60 + seconds
+        
+        # 开始出征
+        context.run_task("点击出征")
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("体力不足", img)
+        if detail is not None:
+            detail = context.run_recognition("是否有免费体力",img,{
+                "是否有免费体力": {
+                    "recognition": "OCR",
+                    "expected": "领取",
+                    "roi": [
+                        480,
+                        303,
+                        191,
+                        151
+                    ]
+                }
+            })
+            if detail is not None:
+                context.run_task("免费体力")
+                context.run_task("点击出征")
+            else:
+                return CustomAction.RunResult(success=True)
             
         time.sleep(return_time*2 + 0.5)
         context.run_task("自动野兽_入口")       
-        return True
+        return CustomAction.RunResult(success=True)
     
 @AgentServer.custom_action("撤回最后一个队伍")
 class RecallTeam(CustomAction):
@@ -229,4 +245,4 @@ class RecallTeam(CustomAction):
                 "action": "Click",
             }
         })
-        return True
+        return CustomAction.RunResult(success=True)

@@ -33,7 +33,7 @@ class SwitchCharacter(CustomAction):
                     img,
                     {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}}
                 )
-                _ = cha_detail.box.y
+                logger.debugger(cha_detail.box.y-region_detail.box.y<170)
             except Exception as e:
                 print(f"第 {4 - count} 次执行出错: {e}")
                 time.sleep(2)
@@ -65,12 +65,16 @@ class MakeSureQueueAvailable(CustomAction):
     ) -> bool:
         # 1. 关闭自动加入
         logger.debug("关闭自动加入集结")
-        context.run_task("关闭自动加入集结入口")
-        context.run_task("转到城外")        
+        context.run_task("自动加入集结_关闭_入口")  
+        context.run_task("转到城外") 
+        context.run_task("开始查看队列")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("当前队列已满", img)
+        img = context.tasker.controller.post_screencap().wait().get()
         if detail is not None:
-            a, b = map(int, detail.best_result.text.split('/'))
+            context.run_task("后退")
+            _, b = map(int, detail.best_result.text.split('/'))
+            
             logger.info("当前队列已满")
             # 2.如果有不是挖矿的队伍，等待 
             action_region = [
@@ -93,6 +97,7 @@ class MakeSureQueueAvailable(CustomAction):
                     break
             if flag==1:
                 logger.info("开始等待出征队伍回归")
+                context.run_task("开始查看队列")
             while flag == 1:
                 time.sleep(3)
                 img = context.tasker.controller.post_screencap().wait().get()
@@ -120,6 +125,7 @@ class MakeSureQueueAvailable(CustomAction):
                     })
                     break
                 logger.info("已取消挖矿队伍，开始等待")
+                context.run_task("开始查看队列")
                 while True:
                     time.sleep(3)
                     img = context.tasker.controller.post_screencap().wait().get()

@@ -40,9 +40,7 @@ class UniteScan(CustomAction):
         current_cha_index = main_cha_index if current_cha_index == '0' else current_cha_index
         
         ChaInfo.init({f"{kingdom}":{current_cha_index:{"slot1":time.time()+86400,"slot2":time.time()+86400}}})
-        
-        logger.debug(ChaInfo.get_char_data())
-        
+                
         logger.debug(f"当前角色：{current_cha_index}")
                
         
@@ -73,6 +71,10 @@ class UniteScan(CustomAction):
             if detail is not None:
                 hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
                 need_wait_seconds[i] = hours * 3600 + minutes * 60 + seconds
+                
+                # 大于5分钟说明是这个位置任务已做完，用于后面的判断
+                need_wait_seconds[i] = 86400 if need_wait_seconds[i] > 300 else need_wait_seconds[i]
+                    
                 ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+need_wait_seconds[i]})
                 logger.debug(f"{i+1}号位置需要等待{need_wait_seconds[i]}秒")
                 # logger.debug(f"当前信息：{ChaInfo.get_char_data(kingdom)}")
@@ -114,7 +116,7 @@ class UniteScan(CustomAction):
                 if detail is None: 
                     refresh = 1
                 else:
-                    ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+68400}) 
+                    ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+68400})
                         
             else:
                 all = context.get_node_data("联盟总动员_点击详情")["interrupt"]

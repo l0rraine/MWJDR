@@ -155,7 +155,7 @@
         },
         "action": "Click",
         "post_wait_freezes": {
-            "time": 3000,
+            "time": 4000,
             "target": [
                 119,
                 172,
@@ -166,6 +166,7 @@
     },
     "确保有空闲队列": {
         "action": "Custom",
-        "custom_action": "确保有队列可用"
+        "custom_action": "确保有队列可用",
+        "enabled": true
     }
 }

@@ -1,0 +1,36 @@
+{
+    "福袋_识别": {
+        "recognition": "TemplateMatch",
+        "threshold": 0.9,
+        "template": [
+            "福袋.png"
+        ],
+        "action": "Click",
+        "next": [
+            "福袋-领取"
+        ],
+        "roi": [
+            421,
+            168,
+            298,
+            995
+        ]
+    },
+    "福袋-领取": {
+        "recognition": "OCR",
+        "expected": [
+            "打开"
+        ],
+        "roi": [
+            421,
+            168,
+            298,
+            995
+        ],
+        "focus": "打开一个红包！",
+        "action": "Click",
+        "next": [
+            "福袋_识别"
+        ]
+    }
+}

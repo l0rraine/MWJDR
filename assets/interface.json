@@ -27,7 +27,8 @@
             "name": "启动游戏",
             "entry": "启动游戏",
             "option": [
-                "王国内序号"
+                "王国内序号",
+                "确保有队伍可用"
             ]
         },
         {
@@ -85,9 +86,51 @@
                 "先采联盟矿",
                 "保留自动加入"
             ]
+        },
+        {
+            "name": "结束",
+            "entry": "结束_入口",
+            "option": [
+                "打开自动集结"
+            ]
         }
     ],
     "option": {
+        "确保有队伍可用": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "确保有空闲队列": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "打开自动集结": {
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "自动加入集结_打开_点击自动加入": {
+                            "enabled": true
+                        },
+                        "自动加入集结_关闭_点击自动加入": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {}
+                }
+            ]
+        },
         "先采联盟矿": {
             "cases": [
                 {

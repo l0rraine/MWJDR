@@ -1,0 +1,332 @@
+{
+    "联盟赠礼入口": {
+        "next": [
+            "联盟赠礼_联盟宝箱",
+            "联盟赠礼_盟友",
+            "联盟赠礼_战利品"
+        ]
+    },
+    "联盟赠礼_联盟宝箱": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "method": 4,
+                "lower": [
+                    164,
+                    24,
+                    24
+                ],
+                "upper": [
+                    213,
+                    68,
+                    52
+                ],
+                "roi": [
+                    433,
+                    145,
+                    20,
+                    25
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "点击左上角"
+        ]
+    },
+    "联盟赠礼_盟友": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "method": 4,
+                "lower": [
+                    228,
+                    37,
+                    37
+                ],
+                "upper": [
+                    255,
+                    64,
+                    64
+                ],
+                "roi": [
+                    657,
+                    363,
+                    13,
+                    14
+                ]
+            }
+        },
+        "next": [
+            "联盟赠礼_接受第一个赠礼"
+        ]
+    },
+    "联盟赠礼_接受第一个赠礼": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^领取$"
+                ],
+                "roi": [
+                    565,
+                    604,
+                    94,
+                    53
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "联盟赠礼_第二个赠礼"
+        ]
+    },
+    "联盟赠礼_第二个赠礼": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^领取$"
+                ],
+                "roi": [
+                    564,
+                    748,
+                    95,
+                    42
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "联盟赠礼_第二个赠礼"
+        ]
+    },
+    "联盟赠礼_战利品": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "method": 4,
+                "lower": [
+                    229,
+                    48,
+                    48
+                ],
+                "upper": [
+                    250,
+                    78,
+                    78
+                ],
+                "roi": [
+                    320,
+                    361,
+                    12,
+                    14
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "联盟赠礼_全部领取"
+        ]
+    },
+    "联盟赠礼_全部领取": {
+        "action": "Click",
+        "target": [
+            320,
+            1185,
+            96,
+            42
+        ],
+        "next": [
+            "后退"
+        ]
+    },
+    "联盟科技_入口": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "method": 4,
+                "upper": [
+                    255,
+                    62,
+                    62
+                ],
+                "lower": [
+                    235,
+                    52,
+                    52
+                ],
+                "roi": [
+                    661,
+                    884,
+                    13,
+                    12
+                ]
+            }
+        },
+        "action": "Click",
+        "target": [
+            484,
+            917,
+            44,
+            39
+        ],
+        "next": [
+            "联盟科技_点击"
+        ]
+    },
+    "联盟科技_点击": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "大拇指.png",
+                "roi": [
+                    67,
+                    423,
+                    602,
+                    822
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "联盟科技_长按"
+        ],
+        "post_delay": 200
+    },
+    "联盟科技_长按": {
+        "action": "LongPress",
+        "target": [
+            484,
+            1013,
+            56,
+            26
+        ],
+        "duration": 5000
+    },
+    "超值活动_入口": {
+        "action": "Click",
+        "target": [
+            655,
+            243,
+            21,
+            21
+        ],
+        "post_delay": 200,
+        "next": [
+            "超值活动_领取"
+        ]
+    },
+    "超值活动_领取": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^领取$",
+                "roi": [
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        "next": [
+            "超值活动_入口"
+        ],
+        "interrupt": [
+            "后退"
+        ]
+    },
+    "邮件_系统": {
+        "recognition": "ColorMatch",
+        "upper": [
+            255,
+            103,
+            103
+        ],
+        "lower": [
+            199,
+            19,
+            19
+        ],
+        "roi": [
+            395,
+            86,
+            15,
+            20
+        ],
+        "method": 4,
+        "action": "Click",
+        "next": [
+            "邮件_领取"
+        ]
+    },
+    "邮件_报告": {
+        "recognition": "ColorMatch",
+        "upper": [
+            255,
+            105,
+            105
+        ],
+        "lower": [
+            191,
+            26,
+            26
+        ],
+        "roi": [
+            533,
+            86,
+            15,
+            21
+        ],
+        "action": "Click",
+        "method": 4,
+        "next": [
+            "邮件_领取"
+        ]
+    },
+    "邮件_领取": {
+        "action": "Click",
+        "target": [
+            516,
+            1211,
+            110,
+            51
+        ],
+        "post_delay": 300,
+        "next": [
+            "点击左上角"
+        ]
+    },
+    "红点_内容识别": {
+        "recognition": "OCR",
+        "roi": [
+            81,
+            343,
+            297,
+            509
+        ],
+        "expected": [
+            "免费招募",
+            "可寻宝",
+            "已完成",
+            "可捐献\\d+/25"
+        ]
+    },
+    "红点_免费招募": {
+        "recognition": "OCR",
+        "expected": [
+            "免费"
+        ],
+        "roi": [
+            29,
+            777,
+            332,
+            485
+        ],
+        "action": "Click",
+        "next": [
+            "点击左上角"
+        ]
+    }
+}
