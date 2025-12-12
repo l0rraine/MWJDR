@@ -61,7 +61,6 @@ class ChooseMonster(CustomAction):
             logger.debug("开始吉娜")
             context.run_task("自动集结_吉娜入口")
         if jina == 0:
-            logger.debug("开始冰原巨兽")
             context.run_task("自动集结_巨兽入口")
         return CustomAction.RunResult(success=True)
 @AgentServer.custom_action("开始出征")
@@ -72,15 +71,18 @@ class BeginCombat(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         param = json.loads(argv.custom_action_param)
-        logger.debug(f"出征参数：{param}")        
+        # logger.debug(f"出征参数：{param}")        
         # TODO:智能化
         #if combat_times == 0:
         #    return True
         
         img = context.tasker.controller.post_screencap().wait().get()
-        hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")        
-        return_time = hours * 3600 + minutes * 60 + seconds
-        
+        return_time = 3000
+        while return_time > 300:
+            hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")        
+            return_time = hours * 3600 + minutes * 60 + seconds
+            time.sleep(1)
+        logger.debug(f"返回时间：{return_time}")
         # 开始出征
         context.run_task("点击出征")
         time.sleep(0.5)
