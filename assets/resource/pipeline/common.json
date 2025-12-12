@@ -1,5 +1,8 @@
 {
     "关闭礼包": {
+        "focus": {
+            "Node.Recognition.Succeeded": "{name} 识别命中，准备开始执行"
+        },
         "recognition": {
             "type": "FeatureMatch",
             "param": {
@@ -24,6 +27,7 @@
         "post_delay": 500
     },
     "点击后退": {
+        "pre_delay": 300,
         "action": {
             "type": "Click",
             "param": {

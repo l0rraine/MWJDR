@@ -100,11 +100,15 @@
     },
     "确定角色": {
         "pre_delay": 1000,
-        "action": "Custom",
-        "custom_action": "根据需要切换角色",
-        "custom_action_param": {
-            "王国编号": "3194",
-            "王国内序号": "1"
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "根据需要切换角色",
+                "custom_action_param": {
+                    "王国编号": "3194",
+                    "王国内序号": "1"
+                }
+            }
         },
         "next": [
             "确保有空闲队列"
@@ -113,10 +117,10 @@
     "国度信息": {
         "recognition": "OCR",
         "roi": [
-            83,
-            351,
-            307,
-            146
+            57,
+            388,
+            610,
+            891
         ],
         "expected": "set in code"
     },

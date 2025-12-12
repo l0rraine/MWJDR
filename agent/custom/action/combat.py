@@ -88,7 +88,8 @@ class BeginCombat(CustomAction):
         time.sleep(0.5)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        if detail is not None:
+        if detail.hit:
+            logger.debug(f"体力不足，尝试领取免费体力：{detail.best_result.text}")
             detail = context.run_recognition("是否有免费体力",img,{
                 "是否有免费体力": {
                     "recognition": "OCR",
@@ -101,44 +102,47 @@ class BeginCombat(CustomAction):
                     ]
                 }
             })
-            if detail is not None:
+            if detail.hit:
+                logger.debug("领取免费体力")
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
+                logger.debug("无免费体力，结束")
                 context.run_task("转到城外")
                 return CustomAction.RunResult(success=True)
         time.sleep(80)
         context.run_task("转到城外")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("自动集结_集结中", img)
-        # print(f'detail: {detail}')
-        if detail is not None and detail.box:
-                # print(f'detail box: {detail.box}')
-                # print(f'x,y:{6 + detail.box.x + 195},{detail.box.y}')
+        print(f'detail: {detail}')
+        if detail.hit:
+            logger.debug("已识别到集结中标识")
+            # print(f'detail box: {detail.box}')
+            # print(f'x,y:{6 + detail.box.x + 195},{detail.box.y}')
+            
+            context.tasker.controller.post_click(
+                6 + detail.box.x + 195, detail.box.y
                 
-                context.tasker.controller.post_click(
-                    6 + detail.box.x + 195, detail.box.y
-                    
-                ).wait()
+            ).wait()
+            
+            detail = None
+            while detail is None or not detail.hit:
+                time.sleep(1)
+                img = context.tasker.controller.post_screencap().wait().get()
+                detail = context.run_recognition("自动集结_行军中",img)
+            logger.debug(f"已识别到行军：{detail.best_result.text}")
+            context.run_task("后退")
+            time.sleep(return_time*2 + 0.5)
+            jina =param.get("巨兽种类")
+            context.run_task("自动集结入口",{
+                "自动集结入口":{
+                    "custom_action_param": {
+                    "巨兽种类": jina
+                }
+                }
                 
-                detail = None
-                while detail is None:
-                    time.sleep(1)
-                    img = context.tasker.controller.post_screencap().wait().get()
-                    detail = context.run_recognition("自动集结_行军中",img)
-                context.run_task("后退")
-                time.sleep(return_time*2 + 0.5)
-                jina =param.get("巨兽种类")
-                logger.debug(f"jina={jina}")
-                context.run_task("自动集结入口",{
-                    "自动集结入口":{
-                        "custom_action_param": {
-                        "巨兽种类": jina
-                    }
-                    }
-                    
-                })
-                return CustomAction.RunResult(success=True)
+            })
+            return CustomAction.RunResult(success=True)
         return CustomAction.RunResult(success=True)
     
 @AgentServer.custom_action("灯塔开始出征")
@@ -157,7 +161,7 @@ class LightBeginCombat(CustomAction):
         context.run_task("点击出征")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        if detail is not None:
+        if detail.hit:
             detail = context.run_recognition("是否有免费体力",img,{
                 "是否有免费体力": {
                     "recognition": "OCR",
@@ -170,7 +174,7 @@ class LightBeginCombat(CustomAction):
                     ]
                 }
             })
-            if detail is not None:
+            if detail.hit:
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
@@ -197,7 +201,7 @@ class BeastBeginCombat(CustomAction):
         context.run_task("点击出征")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        if detail is not None:
+        if detail.hit:
             detail = context.run_recognition("是否有免费体力",img,{
                 "是否有免费体力": {
                     "recognition": "OCR",
@@ -210,7 +214,7 @@ class BeastBeginCombat(CustomAction):
                     ]
                 }
             })
-            if detail is not None:
+            if detail.hit:
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:

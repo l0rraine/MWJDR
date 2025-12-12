@@ -46,7 +46,7 @@ class RecallAllQueue(CustomAction):
         detail = context.run_recognition("识别当前队列数量", img)
         context.run_task("后退")
         img = context.tasker.controller.post_screencap().wait().get()
-        if detail is not None:
+        if detail.hit:
             a, b = map(int, detail.best_result.text.split('/'))
             logger.info("f当前队列数量为：{a}/{b}")
             
@@ -73,7 +73,7 @@ class RecallAllQueue(CustomAction):
                     time.sleep(3)
                     img = context.tasker.controller.post_screencap().wait().get()
                     detail = context.run_recognition("识别当前队列数量", img)
-                    if detail is None:
+                    if not detail.hit:
                         context.run_task("后退")
                         break        
         return CustomAction.RunResult(success=True)

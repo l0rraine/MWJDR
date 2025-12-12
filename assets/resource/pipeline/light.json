@@ -135,6 +135,9 @@
                 ]
             }
         },
+        "focus": {
+            "Node.Action.Starting": "开始执行 营救幸存者"
+        },
         "action": "Click",
         "next": [
             "灯塔领取免费体力",
@@ -142,6 +145,7 @@
         ]
     },
     "灯塔领取免费体力": {
+        "pre_delay": 300,
         "recognition": "OCR",
         "expected": [
             "领取"
@@ -204,7 +208,10 @@
     },
     "灯塔准备出征": {
         "action": "Custom",
-        "custom_action": "灯塔开始出征"
+        "custom_action": "灯塔开始出征",
+        "focus": {
+            "Node.Action.Starting": "开始执行 击败野兽"
+        }
     },
     "灯塔点击探险": {
         "recognition": {
@@ -236,6 +243,9 @@
                     37
                 ]
             }
+        },
+        "focus": {
+            "Node.Action.Starting": "开始执行 英雄之旅"
         },
         "next": [
             "灯塔探险战斗结束"

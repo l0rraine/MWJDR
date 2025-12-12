@@ -66,12 +66,11 @@
         "action": "Click"
     },
     "当前队列已满": {
-        "focus": "正在确认是否有空闲队列",
         "recognition": "OCR",
         "expected": [
             "0\\D+\\d"
         ],
-        "threshold": 0.6,
+        "threshold": 0.8,
         "roi": [
             270,
             220,
@@ -84,6 +83,7 @@
         "expected": [
             "\\d+\\D+\\d+"
         ],
+        "threshold": 0.8,
         "roi": [
             270,
             220,
@@ -117,7 +117,7 @@
     "识别队列动作": {
         "recognition": "OCR",
         "expected": [
-            "集合",
+            "集结",
             "行",
             "返"
         ]

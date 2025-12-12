@@ -28,8 +28,7 @@
             "name": "启动游戏",
             "entry": "启动游戏",
             "option": [
-                "王国编号",
-                "王国内序号",
+                "角色信息",
                 "确保有队伍可用"
             ]
         },
@@ -67,10 +66,8 @@
             "name": "联盟总动员",
             "entry": "联盟总动员_入口",
             "option": [
-                "是否单角色",
                 "是否启用第一栏位",
                 "是否启用第二栏位",
-                "是否只要双倍",
                 "训练士兵-12万",
                 "专精石-35",
                 "领主装备-8900",
@@ -164,23 +161,6 @@
                             "enabled": false
                         }
                     }
-                }
-            ]
-        },
-        "是否单角色": {
-            "type": "switch",
-            "cases": [
-                {
-                    "name": "No",
-                    "pipeline_override": {
-                        "联盟总动员_参数_是否单角色": {
-                            "enabled": false
-                        }
-                    }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
@@ -320,40 +300,21 @@
                 }
             ]
         },
-        "是否只要双倍": {
-            "type": "switch",
-            "cases": [
-                {
-                    "name": "No",
-                    "pipeline_override": {
-                        "联盟总动员_入口": {
-                            "custom_action_param": {
-                                "just_double": "0"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {
-                        "联盟总动员_入口": {
-                            "custom_action_param": {
-                                "just_double": "1"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "王国编号": {
+        "角色信息": {
             "type": "input",
-            "label": "王国编号",
+            "label": "角色信息",
             "inputs": [
                 {
                     "name": "王国编号",
                     "pipeline_type": "string",
                     "default": "3194",
                     "verify": "^(0|[1-9]\\d*)$"
+                },
+                {
+                    "name": "王国内序号",
+                    "pipeline_type": "string",
+                    "default": "1",
+                    "verify": "^[1-2]$"
                 }
             ],
             "pipeline_override": {
@@ -361,37 +322,13 @@
                     "action": {
                         "param": {
                             "custom_action_param": {
-                                "王国编号": "{王国编号}"
+                                "王国编号": "{王国编号}",
+                                "王国内序号": "{王国内序号}"
                             }
                         }
                     }
                 }
             }
-        },
-        "王国内序号": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "1",
-                    "pipeline_override": {
-                        "确定角色": {
-                            "custom_action_param": {
-                                "王国内序号": "1"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "2",
-                    "pipeline_override": {
-                        "确定角色": {
-                            "custom_action_param": {
-                                "王国内序号": "2"
-                            }
-                        }
-                    }
-                }
-            ]
         },
         "巨兽队伍设置": {
             "type": "input",

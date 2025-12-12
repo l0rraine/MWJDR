@@ -1,10 +1,10 @@
+import re
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 import json
 import random
 import time
-
 from utils import logger
 @AgentServer.custom_action("根据需要切换角色")
 class SwitchCharacter(CustomAction):
@@ -14,14 +14,16 @@ class SwitchCharacter(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         json_data = json.loads(argv.custom_action_param)
+        
         region = json_data.get('王国编号') or "3194"
         index = json_data.get('王国内序号')
+        logger.debug(f"王国编号:{region},王国内序号:{index}")
         img = context.tasker.controller.post_screencap().wait().get()
         expected = f"王国：#{region}"
         
-        cha_detail = None        
+        cha_detail = None
         count = 3
-        while count > 0 and cha_detail is None:
+        while count > 0 and (cha_detail is None or not cha_detail.hit):
             try:
                 region_detail = context.run_recognition(
                     "国度信息",
@@ -33,9 +35,9 @@ class SwitchCharacter(CustomAction):
                     img,
                     {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}}
                 )
-                logger.debugger(f"是否是第一个角色：{cha_detail.box.y-region_detail.box.y<170}")
+                logger.debug(f"是否是第一个角色：{cha_detail.box.y-region_detail.box.y<170}")
             except Exception as e:
-                print(f"第 {4 - count} 次执行出错: {e}")
+                logger.debug(f"第 {4 - count} 次执行出错: {e}")
                 time.sleep(2)
             finally:                
                 count -= 1
@@ -46,13 +48,14 @@ class SwitchCharacter(CustomAction):
                 {"点击角色":
                     {"target":[cha_detail.box.x,cha_detail.box.y-170,cha_detail.box.w,cha_detail.box.h]}
                 })
+            logger.debug(f"SwitchCharacter:{json_data}")
         if index=="2" and cha_detail.box.y-region_detail.box.y<170:
             context.run_task(
                 "点击角色",
                 {"点击角色":
                     {"target":[cha_detail.box.x,cha_detail.box.y+170,cha_detail.box.w,cha_detail.box.h]}
                 })
-        logger.debug(f"SwitchCharacter:{json_data}")
+            logger.debug(f"SwitchCharacter:{json_data}")        
         return CustomAction.RunResult(success=True)
 
 # 确保所有任务执行前有队列可用，1. 关闭自动加入 2.如果有不是挖矿的队伍，等待  3. 如果全部在挖矿，召回最后一队
@@ -70,40 +73,37 @@ class MakeSureQueueAvailable(CustomAction):
         context.run_task("开始查看队列")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("当前队列已满", img)
-        img = context.tasker.controller.post_screencap().wait().get()
-        if detail is not None:
+        max_score_item = max(detail.all_results, key=lambda x: x.score)
+        logger.debug(f"队列情况：{max_score_item.text}")
+        if detail.hit:
             context.run_task("后退")
             _, b = map(int, detail.best_result.text.split('/'))
             
-            logger.info("当前队列已满")
+            logger.info(f"当前队列已满，队列总数为{b}")
             # 2.如果有不是挖矿的队伍，等待 
             action_region = [
-                [56,546,96,28],
-                [56,486,96,28],
-                [56,426,96,28],
-                [56,366,96,28],
-                [56,306,96,28],
-                [56,246,96,28],
+                [15,540,230,60],
+                [15,480,230,60],
+                [15,420,230,60],
+                [15,360,230,60],
+                [15,300,230,60],
+                [15,240,230,60],
             ]
             flag = 0
+            img = context.tasker.controller.post_screencap().wait().get()
             for region in action_region[-b:]:
                 detail = context.run_recognition("识别队列动作", img, {
                     "识别队列动作":{
                         "roi": region
                     }
                 })
-                if detail is not None:
+                #logger.debug(f"识别出队列动作为：{detail.all_results}")
+                if detail.hit:
                     flag = 1
                     break
             if flag==1:
                 logger.info("开始等待出征队伍回归")
-                context.run_task("开始查看队列")
-            while flag == 1:
-                time.sleep(3)
-                img = context.tasker.controller.post_screencap().wait().get()
-                detail = context.run_recognition("当前队列已满", img)
-                if detail is None:
-                    break
+                
             
             # 3. 如果全部在挖矿，召回最后一队
             if flag == 0:
@@ -125,13 +125,17 @@ class MakeSureQueueAvailable(CustomAction):
                     })
                     break
                 logger.info("已取消挖矿队伍，开始等待")
-                context.run_task("开始查看队列")
-                while True:
-                    time.sleep(3)
-                    img = context.tasker.controller.post_screencap().wait().get()
-                    detail = context.run_recognition("当前队列已满", img)
-                    if detail is None:
-                        break
+
+            context.run_task("开始查看队列")
+            while True:
+                time.sleep(3)
+                img = context.tasker.controller.post_screencap().wait().get()
+                detail = context.run_recognition("识别当前队列数量", img)
+                if detail.all_results:
+                    max_score_item = max(detail.all_results, key=lambda x: x.score)
+                    match = re.search(r'\d+', max_score_item.text)
+                    if match and int(match.group())>0:
+                        break                
 
         
         return CustomAction.RunResult(success=True)
