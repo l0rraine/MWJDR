@@ -4,6 +4,7 @@
         "timeout": 60000,
         "next": [
             "开始切换角色",
+            "确保有空闲队列",
             "[JumpBack]关闭礼包",
             "[JumpBack]后退"
         ]

@@ -19,7 +19,7 @@ class SwitchCharacter(CustomAction):
         index = json_data.get('王国内序号')
         logger.debug(f"王国编号:{region},王国内序号:{index}")
         img = context.tasker.controller.post_screencap().wait().get()
-        expected = f"王国：#{region}"
+        expected = f"王国\\D+{region}"
         
         cha_detail = None
         count = 3
@@ -30,6 +30,10 @@ class SwitchCharacter(CustomAction):
                     img,
                     {"国度信息": {"expected": expected}},
                 )
+                if region_detail.hit:
+                    logger.debug(f"国度信息：{region_detail.best_result.text}")
+                else:
+                    logger.debug(f"未找到国度信息,期望值：{expected}")
                 cha_detail = context.run_recognition(
                     "选中角色",
                     img,

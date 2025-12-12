@@ -28,7 +28,7 @@
             "name": "启动游戏",
             "entry": "启动游戏",
             "option": [
-                "角色信息",
+                "切换角色",
                 "确保有队伍可用"
             ]
         },
@@ -297,6 +297,25 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {}
+                }
+            ]
+        },
+        "切换角色": {
+            "type": "switch",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "开始切换角色": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "option": [
+                        "角色信息"
+                    ]
                 }
             ]
         },
