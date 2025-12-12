@@ -116,12 +116,13 @@ class UniteScan(CustomAction):
                 if detail is None: 
                     refresh = 1
                 else:
-                    ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+68400})
+                    ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+86400})
+                    need_wait_seconds[i] = 86400
                         
             else:
                 all = context.get_node_data("联盟总动员_点击详情")["interrupt"]
                 
-                filtered = [s for s in all if rate in s]
+                filtered = [s for s in all]
                 need = [d["recognition"]["param"]["expected"] for item in filtered if (d := context.get_node_data(item))["enabled"]]
                 flattened = [item for sublist in need for item in sublist]
 
@@ -137,7 +138,9 @@ class UniteScan(CustomAction):
                         refresh = 1
                     else:
                         matched = detail.best_result.text
-                        ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+68400})
+                        ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+86400})
+                        need_wait_seconds[i] = 86400
+                        
             if refresh == 1:
                 logger.debug(f"开始刷新位置{i+1}")
                 context.run_task("联盟总动员_开始刷新")
@@ -183,6 +186,7 @@ class UniteScan(CustomAction):
                     })
             else:
                 logger.info(f"已全部得到2个满意的结果，停止刷新")
+                return True
         else:
             # 当前用户处理完毕后继续处理下个角色，需要切换角色的操作
             
