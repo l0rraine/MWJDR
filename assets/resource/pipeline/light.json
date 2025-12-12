@@ -48,7 +48,8 @@
                     0,
                     0,
                     0
-                ]
+                ],
+                "threshold": 0.8
             }
         },
         "action": "Click",
@@ -87,7 +88,8 @@
                     0,
                     0,
                     0
-                ]
+                ],
+                "threshold": 0.8
             }
         },
         "action": "Click",
@@ -144,8 +146,7 @@
     "灯塔领取免费体力": {
         "recognition": "OCR",
         "expected": [
-            "领取",
-            "使用"
+            "领取"
         ],
         "roi": [
             465,
