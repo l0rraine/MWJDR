@@ -1,6 +1,7 @@
 {
-    "name": "无尽冬日小助手",
-    "url": "https://github.com/l0rraine/MWJDR",
+    "name": "无尽冬日助手",
+    "interface_version": 2,
+    "github": "https://github.com/l0rraine/MWJDR",
     "controller": [
         {
             "name": "安卓端",
@@ -27,6 +28,7 @@
             "name": "启动游戏",
             "entry": "启动游戏",
             "option": [
+                "王国编号",
                 "王国内序号",
                 "确保有队伍可用"
             ]
@@ -69,14 +71,12 @@
                 "是否启用第一栏位",
                 "是否启用第二栏位",
                 "是否只要双倍",
-                "训练士兵-12万-200%",
-                "训练士兵-12万-120%",
-                "专精石-35-200%",
-                "专精石-35-120%",
-                "648礼包-200%",
-                "648礼包-120%",
-                "328礼包-200%",
-                "328礼包-120%"
+                "训练士兵-12万",
+                "专精石-35",
+                "领主装备-8900",
+                "钻石-50000",
+                "礼包-648",
+                "礼包-328"
             ]
         },
         {
@@ -97,6 +97,7 @@
     ],
     "option": {
         "确保有队伍可用": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
@@ -113,14 +114,15 @@
             ]
         },
         "打开自动集结": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "自动加入集结_打开_点击自动加入": {
+                        "自动加入集结_已关闭自动加入": {
                             "enabled": true
                         },
-                        "自动加入集结_关闭_点击自动加入": {
+                        "自动加入集结_已打开自动加入": {
                             "enabled": false
                         }
                     }
@@ -132,6 +134,7 @@
             ]
         },
         "先采联盟矿": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
@@ -148,6 +151,7 @@
             ]
         },
         "保留自动加入": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
@@ -164,6 +168,7 @@
             ]
         },
         "是否单角色": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
@@ -180,6 +185,7 @@
             ]
         },
         "是否启用第一栏位": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
@@ -196,6 +202,7 @@
             ]
         },
         "是否启用第二栏位": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
@@ -211,7 +218,8 @@
                 }
             ]
         },
-        "训练士兵-12万-200%": {
+        "训练士兵-12万": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "Yes",
@@ -220,35 +228,20 @@
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "联盟总动员_任务_训练士兵-12w-200%": {
+                        "联盟总动员_任务_训练士兵-12w": {
                             "enabled": false
                         }
                     }
                 }
             ]
         },
-        "训练士兵-12万-120%": {
-            "cases": [
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
-                    "pipeline_override": {
-                        "联盟总动员_任务_训练士兵-12w-120%": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        },
-        "专精石-35-200%": {
+        "专精石-35": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "联盟总动员_任务_专精石-35-200%": {
+                        "联盟总动员_任务_专精石-35": {
                             "enabled": false
                         }
                     }
@@ -259,12 +252,13 @@
                 }
             ]
         },
-        "专精石-35-120%": {
+        "领主装备-8900": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "联盟总动员_任务_专精石-35-120%": {
+                        "联盟总动员_任务_领主装备-8900": {
                             "enabled": false
                         }
                     }
@@ -275,12 +269,13 @@
                 }
             ]
         },
-        "648礼包-200%": {
+        "礼包-648": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "联盟总动员_任务_648礼包-200%": {
+                        "联盟总动员_任务_648礼包": {
                             "enabled": false
                         }
                     }
@@ -291,12 +286,13 @@
                 }
             ]
         },
-        "648礼包-120%": {
+        "礼包-328": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "联盟总动员_任务_648礼包-120%": {
+                        "联盟总动员_任务_328礼包": {
                             "enabled": false
                         }
                     }
@@ -307,28 +303,13 @@
                 }
             ]
         },
-        "328礼包-200%": {
+        "钻石-50000": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "联盟总动员_任务_328礼包-200%": {
-                            "enabled": false
-                        }
-                    }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                }
-            ]
-        },
-        "328礼包-120%": {
-            "cases": [
-                {
-                    "name": "No",
-                    "pipeline_override": {
-                        "联盟总动员_任务_328礼包-120%": {
+                        "联盟总动员_任务_50000钻石": {
                             "enabled": false
                         }
                     }
@@ -340,6 +321,7 @@
             ]
         },
         "是否只要双倍": {
+            "type": "switch",
             "cases": [
                 {
                     "name": "No",
@@ -364,20 +346,30 @@
             ]
         },
         "王国编号": {
-            "cases": [
+            "type": "input",
+            "label": "王国编号",
+            "inputs": [
                 {
-                    "name": "3194",
-                    "pipeline_override": {
-                        "确定角色": {
+                    "name": "王国编号",
+                    "pipeline_type": "string",
+                    "default": "3194",
+                    "verify": "^(0|[1-9]\\d*)$"
+                }
+            ],
+            "pipeline_override": {
+                "确定角色": {
+                    "action": {
+                        "param": {
                             "custom_action_param": {
-                                "王国编号": "3194"
+                                "王国编号": "{王国编号}"
                             }
                         }
                     }
                 }
-            ]
+            }
         },
         "王国内序号": {
+            "type": "select",
             "cases": [
                 {
                     "name": "1",
@@ -402,100 +394,32 @@
             ]
         },
         "巨兽队伍设置": {
-            "cases": [
+            "type": "input",
+            "label": "队伍设置",
+            "inputs": [
                 {
-                    "name": "1",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
+                    "name": "队伍序号",
+                    "pattern_msg": "请输入队伍序号，0表示默认队伍",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^(\\d+)$",
+                    "description": "请输入队伍序号，0表示默认队伍"
+                }
+            ],
+            "pipeline_override": {
+                "自动集结_选择队伍": {
+                    "action": {
+                        "param": {
                             "custom_action_param": {
-                                "队伍序号": "1"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "2",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "2"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "3",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "3"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "4",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "4"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "5",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "5"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "6",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "6"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "7",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "7"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "8",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "8"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "0",
-                    "pipeline_override": {
-                        "自动集结_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "0"
+                                "队伍序号": "{队伍序号}"
                             }
                         }
                     }
                 }
-            ]
+            }
         },
         "巨兽战斗设置": {
+            "type": "select",
             "cases": [
                 {
                     "name": "清空体力",
@@ -522,100 +446,32 @@
             ]
         },
         "吉娜队伍设置": {
-            "cases": [
+            "type": "input",
+            "label": "队伍设置",
+            "inputs": [
                 {
-                    "name": "1",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
+                    "name": "队伍序号",
+                    "pattern_msg": "请输入队伍序号，0表示默认队伍",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^(\\d+)$",
+                    "description": "请输入队伍序号，0表示默认队伍"
+                }
+            ],
+            "pipeline_override": {
+                "自动吉娜_选择队伍": {
+                    "action": {
+                        "param": {
                             "custom_action_param": {
-                                "队伍序号": "1"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "2",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "2"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "3",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "3"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "4",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "4"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "5",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "5"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "6",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "6"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "7",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "7"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "8",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "8"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "0",
-                    "pipeline_override": {
-                        "自动吉娜_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "0"
+                                "队伍序号": "{队伍序号}"
                             }
                         }
                     }
                 }
-            ]
+            }
         },
         "吉娜战斗设置": {
+            "type": "select",
             "cases": [
                 {
                     "name": "清空体力",
@@ -642,192 +498,54 @@
             ]
         },
         "灯塔出征队伍设置": {
-            "cases": [
+            "type": "input",
+            "label": "队伍设置",
+            "inputs": [
                 {
-                    "name": "1",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
+                    "name": "队伍序号",
+                    "pattern_msg": "请输入队伍序号，0表示默认队伍",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^(\\d+)$",
+                    "description": "请输入队伍序号，0表示默认队伍"
+                }
+            ],
+            "pipeline_override": {
+                "灯塔选择队伍": {
+                    "action": {
+                        "param": {
                             "custom_action_param": {
-                                "队伍序号": "1"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "2",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "2"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "3",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "3"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "4",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "4"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "5",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "5"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "6",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "6"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "7",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "7"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "8",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "8"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "0",
-                    "pipeline_override": {
-                        "灯塔选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "0"
+                                "队伍序号": "{队伍序号}"
                             }
                         }
                     }
                 }
-            ]
+            }
         },
         "野兽队伍设置": {
-            "cases": [
+            "type": "input",
+            "label": "队伍设置",
+            "inputs": [
                 {
-                    "name": "1",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
+                    "name": "队伍序号",
+                    "pattern_msg": "请输入队伍序号，0表示默认队伍",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^(\\d+)$",
+                    "description": "请输入队伍序号，0表示默认队伍"
+                }
+            ],
+            "pipeline_override": {
+                "自动野兽_选择队伍": {
+                    "action": {
+                        "param": {
                             "custom_action_param": {
-                                "队伍序号": "1"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "2",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "2"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "3",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "3"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "4",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "4"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "5",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "5"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "6",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "6"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "7",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "7"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "8",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "8"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "0",
-                    "pipeline_override": {
-                        "自动野兽_选择队伍": {
-                            "custom_action_param": {
-                                "队伍序号": "0"
+                                "队伍序号": "{队伍序号}"
                             }
                         }
                     }
                 }
-            ]
+            }
         }
     }
 }
