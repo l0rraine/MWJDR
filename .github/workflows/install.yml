@@ -81,7 +81,7 @@ jobs:
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-win-${{ matrix.arch }}*"
-          tag: "v5.2.0"
+          tag: "v5.2.6"
           out-file-path: "deps"
           extract: true
 
@@ -91,7 +91,7 @@ jobs:
         with:
           repository: SweetSmellFox/MFAAvalonia
           fileName: "MFAAvalonia-*-win-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
-          tag: "v2.2.0"
+          tag: "v2.2.2"
           out-file-path: "MFA"
           extract: true
 
@@ -147,7 +147,7 @@ jobs:
         with:
           repository: MaaXYZ/MaaFramework
           fileName: "MAA-macos-${{ matrix.arch }}*"
-          tag: "v5.2.0"
+          tag: "v5.2.6"
           out-file-path: "deps"
           extract: true
 
@@ -157,7 +157,7 @@ jobs:
         with:
           repository: SweetSmellFox/MFAAvalonia
           fileName: "MFAAvalonia-*-osx-${{ matrix.arch == 'x86_64' && 'x64' || 'arm64' }}*"
-          tag: "v2.2.0"
+          tag: "v2.2.2"
           out-file-path: "MFA"
           extract: true
 
