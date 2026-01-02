@@ -30,70 +30,52 @@
         "post_delay": 600,
         "next": [
             "灯塔识别奖励",
-            "灯塔准备野兽",
-            "灯塔准备营救",
-            "灯塔准备战斗",
+            "灯塔点击专家",
+            "灯塔准备",
             "灯塔返回"
         ]
     },
-    "灯塔准备野兽": {
+    "灯塔准备": {
         "recognition": {
             "type": "TemplateMatch",
             "param": {
-                "template": "./灯塔-野兽",
+                "template": "./灯塔",
                 "roi": [
                     0,
                     0,
                     0,
                     0
                 ],
-                "threshold": 0.8
+                "green_mask": true
             }
         },
         "action": "Click",
+        "target": true,
+        "target_offset": [
+            -10,
+            -10,
+            -10,
+            -10
+        ],
         "next": [
             "灯塔获得奖励",
             "灯塔点击查看"
         ]
     },
-    "灯塔准备营救": {
-        "recognition": {
-            "type": "TemplateMatch",
+    "灯塔点击专家": {
+        "action": {
+            "type": "Click",
             "param": {
-                "template": "./灯塔-营救",
-                "roi": [
-                    0,
-                    0,
-                    0,
-                    0
-                ],
-                "threshold": 0.8
+                "target": [
+                    32,
+                    179,
+                    60,
+                    63
+                ]
             }
         },
-        "action": "Click",
         "next": [
-            "灯塔获得奖励",
-            "灯塔点击查看"
-        ]
-    },
-    "灯塔准备战斗": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "./灯塔-战斗",
-                "roi": [
-                    0,
-                    0,
-                    0,
-                    0
-                ],
-                "threshold": 0.8
-            }
-        },
-        "action": "Click",
-        "next": [
-            "灯塔获得奖励",
-            "灯塔点击查看"
+            "灯塔准备"
         ]
     },
     "灯塔点击查看": {
@@ -140,8 +122,22 @@
         },
         "action": "Click",
         "next": [
-            "灯塔领取免费体力",
+            "灯塔体力不足",
             "灯塔入口"
+        ]
+    },
+    "灯塔体力不足": {
+        "pre_delay": 300,
+        "recognition": "OCR",
+        "expected": "获取更多",
+        "roi": [
+            229,
+            63,
+            267,
+            147
+        ],
+        "next": [
+            "灯塔领取免费体力"
         ]
     },
     "灯塔领取免费体力": {
@@ -228,7 +224,7 @@
         },
         "action": "Click",
         "next": [
-            "灯塔领取免费体力",
+            "灯塔体力不足",
             "灯塔开始探险战斗"
         ]
     },
@@ -271,19 +267,28 @@
     },
     "灯塔识别奖励": {
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "ColorMatch",
             "param": {
-                "template": "灯塔-奖励领取.png",
+                "upper": [
+                    37,
+                    183,
+                    86
+                ],
+                "lower": [
+                    37,
+                    183,
+                    86
+                ],
                 "roi": [
-                    0,
-                    0,
-                    0,
-                    0
+                    223,
+                    1095,
+                    54,
+                    61
                 ]
             }
         },
         "action": "Click",
-        "post_delay": 500,
+        "post_delay": 200,
         "next": [
             "灯塔获得奖励"
         ]
@@ -314,9 +319,7 @@
         "action": "Click",
         "post_delay": 300,
         "next": [
-            "灯塔准备野兽",
-            "灯塔准备营救",
-            "灯塔准备战斗",
+            "灯塔准备",
             "灯塔识别奖励"
         ]
     },
@@ -337,9 +340,7 @@
         "post_delay": 300,
         "next": [
             "灯塔升级",
-            "灯塔准备野兽",
-            "灯塔准备营救",
-            "灯塔准备战斗",
+            "灯塔准备",
             "灯塔识别奖励"
         ],
         "on_error": [
