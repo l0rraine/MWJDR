@@ -1,4 +1,48 @@
 {
+    "自动集结_吉娜_识别体力入口": {
+        "next": [
+            "自动集结_吉娜_开始识别体力",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]关闭搜索",
+            "[JumpBack]转到城外",
+            "[JumpBack]后退"
+        ]
+    },
+    "自动集结_吉娜_开始识别体力": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "灯塔.png",
+                "roi": [
+                    584,
+                    783,
+                    136,
+                    163
+                ]
+            }
+        },
+        "action": "Click",
+        "target": [
+            644,
+            843,
+            39,
+            38
+        ],
+        "post_delay": 600,
+        "next": [
+            "自动集结_吉娜_识别体力"
+        ]
+    },
+    "自动集结_吉娜_识别体力": {
+        "action": "Custom",
+        "custom_action": "识别体力",
+        "custom_action_param": {
+            "体力消耗": 20
+        },
+        "next": [
+            "自动集结_吉娜入口"
+        ]
+    },
     "自动集结_吉娜入口": {
         "next": [
             "自动集结_点击背包",
@@ -74,7 +118,7 @@
             "param": {
                 "begin": [
                     425,
-                    1066,
+                    766,
                     39,
                     43
                 ],
@@ -145,7 +189,6 @@
             28,
             42
         ],
-        "focus": "点击雪怪",
         "next": [
             "自动集结_吉娜点击集结"
         ]
@@ -181,10 +224,6 @@
     },
     "自动吉娜_准备出征": {
         "action": "Custom",
-        "custom_action": "开始出征",
-        "custom_action_param": {
-            "出征次数": 0,
-            "巨兽种类": 1
-        }
+        "custom_action": "吉娜出征"
     }
 }

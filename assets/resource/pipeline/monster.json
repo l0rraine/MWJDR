@@ -3,6 +3,7 @@
         "next": [
             "自动集结_点击放大镜",
             "[JumpBack]关闭礼包",
+            "[JumpBack]关闭搜索",
             "[JumpBack]转到城外",
             "[JumpBack]后退"
         ]
@@ -86,15 +87,13 @@
             "自动集结_点击搜索"
         ]
     },
-    "调整等级": {
-        "pre_delay": 500,
-        "action": "Custom",
-        "custom_action": "调整巨兽等级",
-        "custom_action_param": {
-            "巨兽等级": "0"
-        },
-        "next": [
-            "自动集结_点击搜索"
+    "自动集结_点击怪兽": {
+        "action": "Click",
+        "target": [
+            342,
+            631,
+            50,
+            50
         ]
     },
     "自动集结_点击搜索": {
@@ -109,9 +108,48 @@
                 ]
             }
         },
+        "post_delay": 1500,
         "next": [
+            "自动集结_查看次数",
             "自动集结_点击集结"
         ]
+    },
+    "自动集结_查看次数": {
+        "enabled": false,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "查看怪兽次数.png",
+                "roi": [
+                    529,
+                    287,
+                    19,
+                    19
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "自动集结_设置怪兽次数"
+        ]
+    },
+    "自动集结_设置怪兽次数": {
+        "action": "Custom",
+        "custom_action": "设置怪兽次数"
+    },
+    "自动集结_识别次数": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "\\d+",
+                "roi": [
+                    462,
+                    1132,
+                    28,
+                    38
+                ]
+            }
+        }
     },
     "自动集结_点击集结": {
         "action": {
@@ -125,7 +163,6 @@
                 ]
             }
         },
-        "pre_delay": 1500,
         "next": [
             "自动集结_发起集结"
         ]
@@ -159,12 +196,27 @@
             "自动集结_准备出征"
         ]
     },
+    "自动集结_与别人队伍重复": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确定",
+                "roi": [
+                    410,
+                    710,
+                    202,
+                    156
+                ]
+            }
+        }
+    },
     "自动集结_准备出征": {
         "action": "Custom",
         "custom_action": "开始出征",
         "custom_action_param": {
             "出征次数": 0,
-            "巨兽种类": 0
+            "吉娜": 0,
+            "罐头数量": 0
         }
     },
     "自动集结_集结中": {
