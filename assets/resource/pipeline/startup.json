@@ -14,15 +14,14 @@
             "type": "TemplateMatch",
             "param": {
                 "roi": [
+                    488,
                     0,
-                    51,
-                    130,
-                    134
+                    140,
+                    139
                 ],
                 "template": [
                     "主界面标志.png"
-                ],
-                "green_mask": true
+                ]
             }
         }
     },
