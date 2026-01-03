@@ -75,60 +75,62 @@ class MakeSureQueueAvailable(CustomAction):
         context.run_task("自动加入集结_关闭_入口")  
         context.run_task("转到城外") 
         context.run_task("开始查看队列")
-        img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("当前队列已满", img)
-        max_score_item = max(detail.all_results, key=lambda x: x.score)
-        logger.debug(f"队列情况：{max_score_item.text}")
-        if detail.hit:
-            context.run_task("后退")
-            _, b = map(int, detail.best_result.text.split('/'))
-            
-            logger.info(f"当前队列已满，队列总数为{b}")
-            # 2.如果有不是挖矿的队伍，等待 
-            action_region = [
-                [15,540,230,60],
-                [15,480,230,60],
-                [15,420,230,60],
-                [15,360,230,60],
-                [15,300,230,60],
-                [15,240,230,60],
-            ]
-            flag = 0
+        detail = None
+        while detail is None or not detail.hit:
             img = context.tasker.controller.post_screencap().wait().get()
-            for region in action_region[-b:]:
-                detail = context.run_recognition("识别队列动作", img, {
-                    "识别队列动作":{
-                        "roi": region
+            detail = context.run_recognition("当前队列已满", img)
+            time.sleep(1)
+        logger.debug(f"队列情况：{detail.best_result.text}")
+
+        context.run_task("后退")
+        _, b = map(int, detail.best_result.text.split('/'))
+        
+        logger.info(f"当前队列已满，队列总数为{b}")
+        # 2.如果有不是挖矿的队伍，等待 
+        action_region = [
+            [15,540,230,60],
+            [15,480,230,60],
+            [15,420,230,60],
+            [15,360,230,60],
+            [15,300,230,60],
+            [15,240,230,60],
+        ]
+        flag = 0
+        img = context.tasker.controller.post_screencap().wait().get()
+        for region in action_region[-b:]:
+            detail = context.run_recognition("识别队列动作", img, {
+                "识别队列动作":{
+                    "roi": region
+                }
+            })
+            #logger.debug(f"识别出队列动作为：{detail.all_results}")
+            if detail.hit:
+                flag = 1
+                break
+        if flag==1:
+            logger.info("开始等待出征队伍回归")
+            
+        
+        # 3. 如果全部在挖矿，召回最后一队
+        if flag == 0:
+            recall_region = [
+                [200,544,43,56],
+                [200,484,43,56],
+                [200,424,43,56],
+                [200,364,43,56],
+                [200,304,43,56],
+                [200,244,43,56]
+                
+            ]
+            img = context.tasker.controller.post_screencap().wait().get()
+            for region in recall_region[-b:]:
+                context.run_task("点击召回",{
+                    "点击召回": {
+                        "target": region
                     }
                 })
-                #logger.debug(f"识别出队列动作为：{detail.all_results}")
-                if detail.hit:
-                    flag = 1
-                    break
-            if flag==1:
-                logger.info("开始等待出征队伍回归")
-                
-            
-            # 3. 如果全部在挖矿，召回最后一队
-            if flag == 0:
-                recall_region = [
-                    [200,544,43,56],
-                    [200,484,43,56],
-                    [200,424,43,56],
-                    [200,364,43,56],
-                    [200,304,43,56],
-                    [200,244,43,56]
-                    
-                ]
-                img = context.tasker.controller.post_screencap().wait().get()
-                for region in recall_region[-b:]:
-                    context.run_task("点击召回",{
-                        "点击召回": {
-                            "target": region
-                        }
-                    })
-                    break
-                logger.info("已取消挖矿队伍，开始等待")
+                break
+            logger.info("已取消挖矿队伍，开始等待")
 
             context.run_task("开始查看队列")
             while True:
