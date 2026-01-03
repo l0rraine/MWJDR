@@ -176,10 +176,10 @@
         "action": {
             "type": "Click",
             "param": {
-                "target": true,
-                "repeat": 2
+                "target": true
             }
         },
+        "repeat": 2,
         "next": [
             "点击左上角"
         ]
