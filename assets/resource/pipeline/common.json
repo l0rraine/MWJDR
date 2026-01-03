@@ -42,9 +42,21 @@
     },
     "转到城外": {
         "next": [
-            "在城外",
+            "已在城外",
             "[JumpBack]在城内",
             "[JumpBack]后退"
+        ]
+    },
+    "已在城外": {
+        "recognition": "OCR",
+        "expected": [
+            "城镇"
+        ],
+        "roi": [
+            566,
+            1188,
+            154,
+            92
         ]
     },
     "在城外": {
@@ -57,7 +69,9 @@
             1188,
             154,
             92
-        ]
+        ],
+        "action": "Click",
+        "post_delay": 2000
     },
     "在城内": {
         "recognition": "OCR",
@@ -85,6 +99,23 @@
                 ]
             }
         }
+    },
+    "关闭搜索": {
+        "recognition": "OCR",
+        "expected": "搜索",
+        "roi": [
+            237,
+            1137,
+            244,
+            143
+        ],
+        "action": "Click",
+        "target": [
+            628,
+            727,
+            15,
+            18
+        ]
     },
     "断线重连": {
         "recognition": "OCR",
