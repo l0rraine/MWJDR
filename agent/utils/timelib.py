@@ -41,18 +41,13 @@ def split_time_str(time_str):
 
 def get_time_from_ocr(context, img, task_name):
     detail = None       
-    count = 3
-    while count > 0 and (detail is None or not detail.hit):
-        try:
-            img = context.tasker.controller.post_screencap().wait().get()   
-            detail = context.run_recognition(task_name, img)
-            logger.debug(f"时间识别结果:{detail.best_result.text}")
-            hours, minutes, seconds = split_time_str(detail.best_result.text)
-        except Exception as e:
-            logger.debug(f"识别时间 第 {4 - count} 次执行出错: {e}")
+    while detail is None or not detail.hit:
+        img = context.tasker.controller.post_screencap().wait().get()   
+        detail = context.run_recognition(task_name, img)
+        if not detail.hit:
             time.sleep(2)
-        finally:                
-            count -= 1
+            
+    hours, minutes, seconds = split_time_str(detail.best_result.text)                
     return hours,minutes,seconds
                 
 def is_current_period(timestamp_ms, timezone="Asia/Shanghai"):
