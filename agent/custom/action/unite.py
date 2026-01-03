@@ -67,6 +67,7 @@ class UniteScan(CustomAction):
             img = context.tasker.controller.post_screencap().wait().get()
             
             detail = context.run_recognition("联盟总动员_识别时间", img, {"联盟总动员_识别时间": {"roi": time_roi[i]}})
+
             if detail.hit:
                 hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
                 need_wait_seconds[i] = hours * 3600 + minutes * 60 + seconds
@@ -109,14 +110,11 @@ class UniteScan(CustomAction):
                 rate = "120%"
             else:
                 rate = "200%"
-            
-           
             all = context.get_node_data("联盟总动员_点击详情")["next"]
             
-            filtered = [s.replace("[JumpBack]","") for s in all]
-            need = [d["recognition"]["param"]["expected"] for item in filtered if (d := context.get_node_data(item))["enabled"]]
+            name_list = [item['name'] for item in all]
+            need = [d["recognition"]["param"]["expected"] for item in name_list if (d := context.get_node_data(item))["enabled"]]
             flattened = [item for sublist in need for item in sublist]
-
             if not flattened:
                 refresh = 1
             else:
@@ -135,14 +133,16 @@ class UniteScan(CustomAction):
             if refresh == 1:
                 logger.debug(f"开始刷新位置{i+1}")
                 context.run_task("联盟总动员_开始刷新")
-                img = context.tasker.controller.post_screencap().wait().get()
-                detail = context.run_recognition("联盟总动员_识别时间", img, {"联盟总动员_识别时间": {"roi": time_roi[i]}})
-                if detail.hit:
-                    hours, minutes, seconds = timelib.split_time_str(detail.best_result.text)
-                    need_wait_seconds[i] = hours * 3600 + minutes * 60 + seconds
-                    
-                    ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+need_wait_seconds[i]})
-                    logger.debug(f"{i+1}号位置需要等待：{minutes}:{seconds},共计{need_wait_seconds[i]}秒")
+                detail = None
+                while detail is None or not detail.hit:
+                    img = context.tasker.controller.post_screencap().wait().get()
+                    detail = context.run_recognition("联盟总动员_识别时间", img, {"联盟总动员_识别时间": {"roi": time_roi[i]}})
+                    time.sleep(1)
+                _, minutes, seconds = timelib.split_time_str(detail.best_result.text)
+                need_wait_seconds[i] = minutes * 60 + seconds
+                
+                ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+need_wait_seconds[i]})
+                logger.debug(f"{i+1}号位置需要等待：{minutes}:{seconds},共计{need_wait_seconds[i]}秒")
             else:
                 prefix=f"{current_cha_index}号在位置{i+1}"
                 logger.info(f"{prefix}已刷新出{matched}，倍率{rate}")
@@ -152,63 +152,13 @@ class UniteScan(CustomAction):
         # logger.debug(f"当前信息：{ChaInfo.get_char_data(kingdom)}")        
             
             
-        if not only_1_charater:    
-            next_char = current_cha_index #self.find_next_char(ChaInfo.get_char_data(kingdom))
-        else:
-            next_char = current_cha_index
-            
-        if next_char == current_cha_index:
-            # 当前用户处理完毕后不需要处理下个角色，有可能
-            # 1. 当前是单用户模式
-            # 2. 另外一个用户的刷新时间大于当前用户的
-            
-            # 如果2个等待时间不都是一天，那继续等待即可
-            if min(need_wait_seconds) != 86400:
+        if min(need_wait_seconds) != 86400:
                 logger.debug(f"开始等待{min(need_wait_seconds)}秒")
                 time.sleep(min(need_wait_seconds))
-                context.run_task("联盟总动员_入口",{
-                        "联盟总动员_入口":{
-                            "custom_action_param": {
-                            "current_cha_index": next_char
-                            
-                        }
-                        }
-                        
-                    })
-            else:
-                logger.info(f"已全部得到2个满意的结果，停止刷新")
+                context.run_task("联盟总动员_入口")
                 return CustomAction.RunResult(success=True)
         else:
-            # 当前用户处理完毕后继续处理下个角色，需要切换角色的操作
-            
-            # 当前用户已经得到2个满意的结果则打开单角色选项
-            if min(need_wait_seconds) == 86400:
-                context.override_pipeline({
-                "联盟总动员_参数_是否单角色": {
-                            "enabled": True
-                        }
-                })
-                logger.info(f"{current_cha_index}号已得到2个满意的结果，停止刷新，切换至{next_char}")
-            
-            # 切换到下一个角色进行处理
-            context.override_pipeline({
-                            "确定角色": {
-                                "custom_action_param": {
-                                    "王国内序号": next_char,
-                                    "王国编号": kingdom
-                                }
-                            }
-                        })
-            context.override_pipeline({
-                            "联盟总动员_开始扫描": {
-                                "custom_action_param": {
-                                "current_cha_index": next_char
-                                
-                            }
-                            }
-                        })
-            context.override_next("确定角色",["联盟总动员_入口"])
-            context.run_task("启动游戏")
+            logger.info(f"已全部得到2个满意的结果，停止刷新")   
                 
         return CustomAction.RunResult(success=True)
     
