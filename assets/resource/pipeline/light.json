@@ -3,6 +3,7 @@
         "next": [
             "点击灯塔",
             "[JumpBack]关闭礼包",
+            "[JumpBack]关闭搜索",
             "[JumpBack]转到城外",
             "[JumpBack]后退"
         ]
@@ -121,36 +122,42 @@
             "Node.Action.Starting": "开始执行 营救幸存者"
         },
         "action": "Click",
+        "post_delay": 500,
         "next": [
             "灯塔体力不足",
             "灯塔入口"
         ]
     },
     "灯塔体力不足": {
-        "pre_delay": 300,
         "recognition": "OCR",
         "expected": "获取更多",
         "roi": [
-            229,
-            63,
-            267,
-            147
+            240,
+            65,
+            236,
+            146
         ],
         "next": [
             "灯塔领取免费体力"
         ]
     },
     "灯塔领取免费体力": {
-        "pre_delay": 300,
-        "recognition": "OCR",
-        "expected": [
-            "领取"
+        "recognition": "ColorMatch",
+        "upper": [
+            37,
+            183,
+            86
+        ],
+        "lower": [
+            37,
+            183,
+            86
         ],
         "roi": [
-            465,
-            318,
-            231,
-            261
+            508,
+            359,
+            45,
+            45
         ],
         "action": "Click",
         "next": [
@@ -223,6 +230,7 @@
             }
         },
         "action": "Click",
+        "post_delay": 500,
         "next": [
             "灯塔体力不足",
             "灯塔开始探险战斗"
