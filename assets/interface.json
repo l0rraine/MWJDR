@@ -1,6 +1,6 @@
 {
-    "name": "无尽冬日助手",
     "interface_version": 2,
+    "name": "MWJDR",
     "github": "https://github.com/l0rraine/MWJDR",
     "controller": [
         {
@@ -40,19 +40,19 @@
             ]
         },
         {
-            "name": "自动集结",
+            "name": "集结巨兽",
             "entry": "自动集结_巨兽入口",
             "option": [
                 "巨兽队伍设置",
-                "巨兽战斗设置"
+                "巨兽作战设置"
             ]
         },
         {
-            "name": "自动吉娜",
-            "entry": "自动集结_吉娜入口",
+            "name": "集结吉娜",
+            "entry": "自动集结_吉娜_识别体力入口",
             "option": [
                 "吉娜队伍设置",
-                "吉娜战斗设置"
+                "吉娜体力设置"
             ]
         },
         {
@@ -77,12 +77,8 @@
             ]
         },
         {
-            "name": "半夜挖矿",
-            "entry": "挖矿_入口",
-            "option": [
-                "先采联盟矿",
-                "保留自动加入"
-            ]
+            "name": "自动游历",
+            "entry": "自动游历_入口"
         },
         {
             "name": "结束",
@@ -302,6 +298,8 @@
         },
         "切换角色": {
             "type": "switch",
+            "label": "设置角色",
+            "description": "关闭时为使用当前角色，打开时会检查当前是否为特定角色",
             "cases": [
                 {
                     "name": "No",
@@ -374,32 +372,138 @@
                 }
             }
         },
-        "巨兽战斗设置": {
-            "type": "select",
+        "巨兽作战设置": {
+            "type": "switch",
+            "label": "作战设置",
             "cases": [
                 {
-                    "name": "清空体力",
-                    "pipeline_override": {
-                        "自动集结_准备出征": {
-                            "custom_action_param": {
-                                "出征次数": "-1",
-                                "巨兽种类": 0
-                            }
-                        }
-                    }
+                    "name": "No",
+                    "pipeline_override": {},
+                    "option": [
+                        "巨兽作战-多余体力吉娜"
+                    ]
                 },
                 {
-                    "name": "智能(未实现)",
+                    "name": "Yes",
+                    "option": [
+                        "巨兽作战高级设置"
+                    ]
+                }
+            ],
+            "description": "关闭时为普通模式，清空所有体力集结，打开时为高级模式"
+        },
+        "巨兽作战-多余体力吉娜": {
+            "type": "switch",
+            "label": "10次巨兽后打吉娜",
+            "cases": [
+                {
+                    "name": "Yes",
                     "pipeline_override": {
                         "自动集结_准备出征": {
                             "custom_action_param": {
-                                "出征次数": "0",
-                                "巨兽种类": 0
+                                "出征次数": "10",
+                                "吉娜": 1,
+                                "罐头数量": 0
                             }
+                        },
+                        "自动集结_查看次数": {
+                            "enabled": true
                         }
+                    },
+                    "option": [
+                        "吉娜体力设置"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {}
+                }
+            ],
+            "description": "每天只打10次巨兽，打完怪兽多余体力打吉娜"
+        },
+        "巨兽作战高级设置": {
+            "type": "switch",
+            "label": "高级设置",
+            "cases": [
+                {
+                    "name": "No",
+                    "option": [
+                        "巨兽次数设置-精确次数"
+                    ]
+                },
+                {
+                    "name": "Yes",
+                    "option": [
+                        "巨兽体力设置-罐头个数"
+                    ]
+                }
+            ],
+            "description": "打开时为体力模式，关闭为次数模式"
+        },
+        "巨兽体力设置-罐头个数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "使用罐头个数",
+                    "pattern_msg": "输入罐头个数",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "输入罐头个数"
+                }
+            ],
+            "pipeline_override": {
+                "自动集结_准备出征": {
+                    "custom_action_param": {
+                        "出征次数": 0,
+                        "吉娜": 0,
+                        "罐头数量": "{使用罐头个数}"
                     }
                 }
-            ]
+            }
+        },
+        "巨兽次数设置-精确次数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "战斗次数",
+                    "pattern_msg": "输入打巨兽的次数，最多4位",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^[1-9]\\d{0,3}$",
+                    "description": "输入打巨兽的次数，最多4位"
+                }
+            ],
+            "pipeline_override": {
+                "自动集结_准备出征": {
+                    "custom_action_param": {
+                        "出征次数": "{战斗次数}",
+                        "吉娜": 0,
+                        "罐头数量": 0
+                    }
+                }
+            }
+        },
+        "吉娜体力设置": {
+            "type": "input",
+            "label": "体力设置",
+            "inputs": [
+                {
+                    "name": "吉娜出征需要体力",
+                    "pattern_msg": "出征吉娜消耗的体力",
+                    "pipeline_type": "string",
+                    "default": "20",
+                    "verify": "^\\d+$",
+                    "description": "出征吉娜消耗的体力"
+                }
+            ],
+            "pipeline_override": {
+                "自动集结_吉娜_识别体力": {
+                    "custom_action_param": {
+                        "体力消耗": "{吉娜出征需要体力}"
+                    }
+                }
+            }
         },
         "吉娜队伍设置": {
             "type": "input",
@@ -410,7 +514,7 @@
                     "pattern_msg": "请输入队伍序号，0表示默认队伍",
                     "pipeline_type": "string",
                     "default": "0",
-                    "verify": "^(\\d+)$",
+                    "verify": "^\\d+$",
                     "description": "请输入队伍序号，0表示默认队伍"
                 }
             ],
@@ -425,33 +529,6 @@
                     }
                 }
             }
-        },
-        "吉娜战斗设置": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "清空体力",
-                    "pipeline_override": {
-                        "自动吉娜_准备出征": {
-                            "custom_action_param": {
-                                "出征次数": "-1",
-                                "巨兽种类": 1
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "智能(未实现)",
-                    "pipeline_override": {
-                        "自动吉娜_准备出征": {
-                            "custom_action_param": {
-                                "出征次数": "0",
-                                "巨兽种类": 1
-                            }
-                        }
-                    }
-                }
-            ]
         },
         "灯塔出征队伍设置": {
             "type": "input",
