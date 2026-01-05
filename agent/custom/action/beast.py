@@ -32,7 +32,15 @@ class BeastBeginCombat(CustomAction):
                 context.run_task("点击出征")
             else:
                 return CustomAction.RunResult(success=True)
-            
+        
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("自动集结_与别人队伍重复", img)
+        if detail.hit:
+            context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+            context.run_task("自动野兽_入口")
+            return CustomAction.RunResult(success=True)
+        
+           
         time.sleep(return_time*2 + 0.5)
         context.run_task("自动野兽_入口")       
         return CustomAction.RunResult(success=True)

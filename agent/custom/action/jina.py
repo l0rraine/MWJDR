@@ -77,6 +77,13 @@ class JinaCombat(CustomAction):
                 logger.info(f"体力耗尽，共出征吉娜 {CombatRepetitionCount.count}次，停止出征")               
                 return CustomAction.RunResult(success=True)
         
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("自动集结_与别人队伍重复", img)
+        if detail.hit:
+            context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+            context.run_task("自动集结_吉娜入口")
+            return CustomAction.RunResult(success=True)
+        
         CombatRepetitionCount.addCount()
         logger.info(f"已出征吉娜 {CombatRepetitionCount.count} 次")
         # 80s后查看集结状态

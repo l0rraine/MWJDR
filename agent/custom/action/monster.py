@@ -104,19 +104,32 @@ class BeginCombat(CustomAction):
                 context.run_task("点击出征")
             elif can_limit != 0:        
                 logger.debug("无免费体力，尝试使用罐头")
-                context.run_task("使用罐头")
-                CombatRepetitionCount.addCount(2)
-                logger.info(f"已使用罐头 {CombatRepetitionCount.count} 次")
+                c = min(20,CombatRepetitionCount.limit-CombatRepetitionCount.count)
+                context.run_task("使用罐头",{
+                    "使用罐头":{
+                        "repeat": c
+                    }
+                })
+                CombatRepetitionCount.addCount(c)
+                logger.info(f"使用罐头 {c} 次")
                 context.run_task("点击出征")
                 
             else:
                 logger.debug("无免费体力，结束")
                 context.run_task("转到城外")
-                return CustomAction.RunResult(success=True)
+                return CustomAction.RunResult(success=False)
 
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("自动集结_与别人队伍重复", img)
+        if detail.hit:
+            context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+            context.run_task("自动集结_巨兽入口")
+            return CustomAction.RunResult(success=False)
+        
         if repeat_limit != 0:
             CombatRepetitionCount.addCount()
             logger.info(f"已出征 {CombatRepetitionCount.count} 次")
+        
         
         # 80s后查看集结状态
         time.sleep(80)
