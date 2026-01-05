@@ -78,9 +78,13 @@ class MakeSureQueueAvailable(CustomAction):
         detail = None
         while detail is None or not detail.hit:
             img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("当前队列已满", img)
+            detail = context.run_recognition("识别当前队列数量", img)
             time.sleep(1)
         logger.debug(f"队列情况：{detail.best_result.text}")
+        match = re.search(r'\d+', detail.best_result.text)
+        if match and int(match.group())>0:
+            return CustomAction.RunResult(success=True)
+        
 
         context.run_task("后退")
         _, b = map(int, detail.best_result.text.split('/'))
