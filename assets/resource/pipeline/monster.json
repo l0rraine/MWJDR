@@ -198,14 +198,14 @@
     },
     "自动集结_与别人队伍重复": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
-                "expected": "确定",
+                "template": "取消.png",
                 "roi": [
-                    410,
+                    95,
                     710,
-                    202,
-                    156
+                    233,
+                    151
                 ]
             }
         }
