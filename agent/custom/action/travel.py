@@ -28,12 +28,11 @@ class DoDig(CustomAction):
             [361,975,79,74],
             [445,814,75,73]
         ]
-        param = json.loads(argv.custom_action_param)
-        img = context.tasker.controller.post_screencap().wait().get()
         for i in range(8):
-            
-            detail = context.run_recognition("自动游历_挖掘_空白地块", img, {
-                "自动游历_挖掘_空白地块":{
+            logger.debug(f"查看地块{i+1}")
+            img = context.tasker.controller.post_screencap().wait().get()
+            detail = context.run_recognition("自动游历_挖宝_空白地块", img, {
+                "自动游历_挖宝_空白地块":{
                     "roi": board[i]
                 }
             })
@@ -43,10 +42,8 @@ class DoDig(CustomAction):
                     
                 ).wait()
                 logger.debug(f"点击地块{i+1}")
-                img = context.tasker.controller.post_screencap().wait().get()
-                time.sleep(500)
+                time.sleep(1)
         
-        context.run_task("自动游历_挖掘_开始")
         return CustomAction.RunResult(success=True)
     
     
