@@ -42,10 +42,10 @@
             "param": {
                 "template": "./灯塔",
                 "roi": [
-                    0,
-                    0,
-                    0,
-                    0
+                    4,
+                    223,
+                    715,
+                    816
                 ],
                 "green_mask": true
             }
@@ -59,8 +59,36 @@
             -10
         ],
         "next": [
+            "灯塔点击查看",
             "灯塔获得奖励",
-            "灯塔点击查看"
+            "[[JumpBack]灯塔准备2"
+        ]
+    },
+    "灯塔准备2": {
+        "recognition": {
+            "type": "FeatureMatch",
+            "param": {
+                "template": "./灯塔",
+                "roi": [
+                    4,
+                    223,
+                    715,
+                    816
+                ],
+                "green_mask": true
+            }
+        },
+        "action": "Click",
+        "target": true,
+        "target_offset": [
+            -10,
+            -10,
+            -10,
+            -10
+        ],
+        "next": [
+            "灯塔点击查看",
+            "灯塔获得奖励"
         ]
     },
     "灯塔点击专家": {
@@ -80,6 +108,7 @@
         ]
     },
     "灯塔点击查看": {
+        "pre_delay": 500,
         "post_delay": 800,
         "recognition": {
             "type": "OCR",
@@ -107,14 +136,14 @@
     },
     "灯塔点击营救": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
-                "expected": "营救",
+                "template": "灯塔-营救.png",
                 "roi": [
-                    293,
-                    585,
-                    119,
-                    102
+                    281,
+                    552,
+                    157,
+                    128
                 ]
             }
         },
@@ -129,13 +158,13 @@
         ]
     },
     "灯塔体力不足": {
-        "recognition": "OCR",
-        "expected": "获取更多",
+        "recognition": "TemplateMatch",
+        "template": "获取更多.png",
         "roi": [
-            240,
-            65,
-            236,
-            146
+            237,
+            63,
+            241,
+            147
         ],
         "next": [
             "灯塔领取免费体力"
@@ -161,7 +190,8 @@
         ],
         "action": "Click",
         "next": [
-            "灯塔领取免费体力后继续"
+            "灯塔领取免费体力后继续",
+            "[JumpBack]后退"
         ]
     },
     "灯塔领取免费体力后继续": {
@@ -218,14 +248,14 @@
     },
     "灯塔点击探险": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
-                "expected": "探险",
+                "template": "灯塔-探险.png",
                 "roi": [
-                    279,
-                    552,
-                    158,
-                    129
+                    285,
+                    555,
+                    150,
+                    124
                 ]
             }
         },
@@ -296,9 +326,11 @@
             }
         },
         "action": "Click",
+        "repeat": 2,
+        "repeat_delay": 200,
         "post_delay": 200,
         "next": [
-            "灯塔获得奖励"
+            "灯塔准备"
         ]
     },
     "灯塔升级": {
