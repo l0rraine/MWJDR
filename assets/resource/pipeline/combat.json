@@ -115,11 +115,13 @@
         "action": "Click"
     },
     "识别队列动作": {
-        "recognition": "OCR",
-        "expected": [
-            "集结",
-            "行",
-            "返"
+        "recognition": "TemplateMatch",
+        "template": "./队列",
+        "roi": [
+            10,
+            240,
+            53,
+            363
         ]
     },
     "体力不足": {
@@ -152,36 +154,51 @@
         ]
     },
     "免费体力": {
-        "target": [
-            480,
-            303,
-            191,
-            151
-        ],
         "action": "Click",
+        "target": [
+            538,
+            362,
+            89,
+            40
+        ],
         "focus": "领取了免费的体力罐头",
         "next": [
             "点击左上角"
         ]
     },
     "使用罐头": {
-        "recognition": "OCR",
-        "expected": "使用",
-        "roi": [
-            487,
-            452,
-            178,
-            144
+        "recognition": "ColorMatch",
+        "upper": [
+            37,
+            183,
+            86
         ],
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        },
+        "lower": [
+            37,
+            183,
+            86
+        ],
+        "roi": [
+            510,
+            502,
+            31,
+            41
+        ],
+        "action": "Click",
         "repeat": 2,
+        "repeat_delay": 500,
         "next": [
             "点击左上角"
+        ]
+    },
+    "识别罐头数量": {
+        "recognition": "OCR",
+        "expected": "\\d+",
+        "roi": [
+            56,
+            493,
+            144,
+            126
         ]
     },
     "当前体力": {
