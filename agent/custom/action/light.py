@@ -3,7 +3,7 @@ from maa.custom_action import CustomAction
 from maa.context import Context
 import time
 
-from utils import timelib
+from utils import timelib,logger
 
 @AgentServer.custom_action("灯塔开始出征")
 class LightBeginCombat(CustomAction):
@@ -13,9 +13,11 @@ class LightBeginCombat(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         img = context.tasker.controller.post_screencap().wait().get()             
-        hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")
+        _, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")
                 
-        return_time = hours * 3600 + minutes * 60 + seconds
+        return_time = minutes * 60 + seconds
+        
+        logger.debug(f"返回时间：{return_time}")
         
         # 开始出征
         context.run_task("点击出征")
