@@ -53,14 +53,14 @@
     },
     "自动集结_点击背包": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
-                "expected": "背包",
+                "template": "背包.png",
                 "roi": [
-                    226,
-                    1165,
-                    163,
-                    115
+                    222,
+                    1168,
+                    172,
+                    112
                 ]
             }
         },
