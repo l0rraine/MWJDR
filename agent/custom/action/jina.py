@@ -85,24 +85,12 @@ class JinaCombat(CustomAction):
         
         detail = None
         while detail is None or not detail.hit:
-            img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("自动集结_集结中", img)
-            time.sleep(1)
-        logger.debug("已识别到集结中标识")
-        context.tasker.controller.post_click(
-            6 + detail.box.x + 195, detail.box.y
-            
-        ).wait()
-        
-        detail = None
-        while detail is None or not detail.hit:
             time.sleep(1)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("自动集结_行军中",img)
-        logger.debug(f"已识别到行军：{detail.best_result.text}")
+        logger.debug(f"已识别到行军")
         
         
-        context.run_task("后退")
         time.sleep(return_time*2 + 0.5)
         
         if CombatRepetitionCount.count>=CombatRepetitionCount.limit:
