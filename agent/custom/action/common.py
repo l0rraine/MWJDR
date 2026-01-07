@@ -91,32 +91,14 @@ class MakeSureQueueAvailable(CustomAction):
         
         logger.info(f"当前队列已满，队列总数为{b}")
         # 2.如果有不是挖矿的队伍，等待 
-        action_region = [
-            [15,540,230,60],
-            [15,480,230,60],
-            [15,420,230,60],
-            [15,360,230,60],
-            [15,300,230,60],
-            [15,240,230,60],
-        ]
-        flag = 0
         img = context.tasker.controller.post_screencap().wait().get()
-        for region in action_region[-b:]:
-            detail = context.run_recognition("识别队列动作", img, {
-                "识别队列动作":{
-                    "roi": region
-                }
-            })
-            #logger.debug(f"识别出队列动作为：{detail.all_results}")
-            if detail.hit:
-                flag = 1
-                break
-        if flag==1:
+        detail = context.run_recognition("识别队列动作",img)
+        if detail.hit:
             logger.info("开始等待出征队伍回归")
             
         
         # 3. 如果全部在挖矿，召回最后一队
-        if flag == 0:
+        else:
             recall_region = [
                 [200,544,43,56],
                 [200,484,43,56],
@@ -128,24 +110,32 @@ class MakeSureQueueAvailable(CustomAction):
             ]
             img = context.tasker.controller.post_screencap().wait().get()
             for region in recall_region[-b:]:
-                context.run_task("点击召回",{
-                    "点击召回": {
-                        "target": region
+                detail = context.run_recognition("识别召回",img,{
+                    "识别找回":{
+                        "recognition": "TemplateMatch",
+                        "template": "召回.png",
+                        "region": region
                     }
                 })
-                break
-            logger.info("已取消挖矿队伍，开始等待")
+                if detail.hit:
+                    context.run_task("点击召回",{
+                        "点击召回": {
+                            "target": region
+                        }
+                    })
+                    logger.info("已召回队伍，开始等待")
+                    break
+                
 
-            context.run_task("开始查看队列")
-            while True:
-                time.sleep(3)
-                img = context.tasker.controller.post_screencap().wait().get()
-                detail = context.run_recognition("识别当前队列数量", img)
-                if detail.all_results:
-                    max_score_item = max(detail.all_results, key=lambda x: x.score)
-                    match = re.search(r'\d+', max_score_item.text)
-                    if match and int(match.group())>0:
-                        break                
+        context.run_task("开始查看队列")
+        while True:
+            time.sleep(1)
+            img = context.tasker.controller.post_screencap().wait().get()
+            detail = context.run_recognition("识别当前队列数量", img)
+            if detail.hit:
+                match = re.search(r'\d+', detail.best_result.text)
+                if match and int(match.group())>0:
+                    break                
 
         
         return CustomAction.RunResult(success=True)
