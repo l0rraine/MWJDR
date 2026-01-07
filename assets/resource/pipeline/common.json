@@ -27,7 +27,6 @@
         "post_delay": 500
     },
     "点击后退": {
-        "pre_delay": 300,
         "action": {
             "type": "Click",
             "param": {
@@ -38,7 +37,8 @@
                     37
                 ]
             }
-        }
+        },
+        "post_delay": 300
     },
     "转到城外": {
         "next": [
@@ -101,13 +101,13 @@
         }
     },
     "关闭搜索": {
-        "recognition": "OCR",
-        "expected": "搜索",
+        "recognition": "TemplateMatch",
+        "template": "搜索.png",
         "roi": [
-            237,
-            1137,
-            244,
-            143
+            255,
+            1138,
+            217,
+            142
         ],
         "action": "Click",
         "target": [

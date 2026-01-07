@@ -24,10 +24,19 @@
         "action": "Click",
         "post_delay": 300,
         "next": [
-            "自动集结_确定巨兽位置"
+            "自动集结_确定巨兽位置",
+            "[JumpBack]自动集结_巨兽入口"
         ]
     },
     "自动集结_确定巨兽位置": {
+        "recognition": "TemplateMatch",
+        "template": "搜索.png",
+        "roi": [
+            265,
+            1136,
+            206,
+            144
+        ],
         "next": [
             "自动集结_识别冰原巨兽",
             "[JumpBack]自动集结_滑动到左边"
@@ -35,14 +44,16 @@
     },
     "自动集结_识别冰原巨兽": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
-                "expected": "^冰.*$",
+                "template": [
+                    "冰原巨兽.png"
+                ],
                 "roi": [
-                    4,
+                    1,
                     849,
-                    711,
-                    148
+                    719,
+                    147
                 ]
             }
         },
@@ -236,15 +247,15 @@
     },
     "自动集结_行军中": {
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
+                "template": "队列/行军中.png",
                 "roi": [
-                    354,
-                    354,
-                    89,
-                    41
-                ],
-                "expected": "行军"
+                    12,
+                    249,
+                    51,
+                    350
+                ]
             }
         }
     }
