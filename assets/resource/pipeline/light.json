@@ -28,60 +28,56 @@
             39,
             38
         ],
-        "post_delay": 600,
+        "post_delay": 1000,
         "next": [
             "灯塔识别奖励",
             "灯塔点击专家",
-            "灯塔准备",
             "灯塔返回"
         ]
     },
     "灯塔准备": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "./灯塔",
-                "roi": [
-                    4,
-                    223,
-                    715,
-                    816
-                ],
-                "green_mask": true
-            }
-        },
+        "next": [
+            "灯塔准备-1",
+            "灯塔准备-2"
+        ]
+    },
+    "灯塔准备-1": {
+        "recognition": "TemplateMatch",
+        "template": "./灯塔",
+        "roi": [
+            4,
+            223,
+            715,
+            816
+        ],
+        "green_mask": true,
         "action": "Click",
         "target": true,
         "target_offset": [
-            -10,
+            10,
             -10,
             -10,
             -10
         ],
         "next": [
             "灯塔点击查看",
-            "灯塔获得奖励",
-            "[[JumpBack]灯塔准备2"
+            "灯塔获得奖励"
         ]
     },
-    "灯塔准备2": {
-        "recognition": {
-            "type": "FeatureMatch",
-            "param": {
-                "template": "./灯塔",
-                "roi": [
-                    4,
-                    223,
-                    715,
-                    816
-                ],
-                "green_mask": true
-            }
-        },
+    "灯塔准备-2": {
+        "recognition": "TemplateMatch",
+        "template": "./灯塔",
+        "roi": [
+            4,
+            223,
+            715,
+            816
+        ],
+        "green_mask": true,
         "action": "Click",
         "target": true,
         "target_offset": [
-            -10,
+            10,
             -10,
             -10,
             -10
