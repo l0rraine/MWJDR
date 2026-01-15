@@ -108,6 +108,14 @@
         ]
     },
     "自动集结_点击搜索": {
+        "recognition": "TemplateMatch",
+        "template": "搜索.png",
+        "roi": [
+            189,
+            1144,
+            354,
+            131
+        ],
         "action": {
             "type": "Click",
             "param": {
@@ -119,7 +127,6 @@
                 ]
             }
         },
-        "post_delay": 1500,
         "next": [
             "自动集结_查看次数",
             "自动集结_点击集结"
@@ -163,17 +170,15 @@
         }
     },
     "自动集结_点击集结": {
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": [
-                    320,
-                    472,
-                    84,
-                    35
-                ]
-            }
-        },
+        "recognition": "TemplateMatch",
+        "template": "集结.png",
+        "roi": [
+            268,
+            416,
+            180,
+            126
+        ],
+        "action": "Click",
         "next": [
             "自动集结_发起集结"
         ]
@@ -225,6 +230,7 @@
         "action": "Custom",
         "custom_action": "开始出征",
         "custom_action_param": {
+            "高级模式": 0,
             "出征次数": 0,
             "吉娜": 0,
             "罐头数量": 0
