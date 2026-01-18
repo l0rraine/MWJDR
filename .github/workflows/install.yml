@@ -166,15 +166,6 @@ jobs:
         run: |
           PLATFORM_TAG="win-${{ steps.platform.outputs.tag }}"
           ./install/python/python.exe ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
-          cp -rpvn tools/registry/. install/
-
-      - name: Create CLI version
-        shell: bash
-        run: |
-          ./install/python/python.exe ./tools/ci/install_cli.py ${{ needs.meta.outputs.tag }}
-          cp -rpvn tools/registry/. install-cli/
-          cp -rpvn install/python/. install-cli/python/
-          rm -rf install-cli/deps 2>/dev/null || true
 
       - name: Copy MFA files to main version
         shell: bash
@@ -302,12 +293,6 @@ jobs:
           echo "Using Python executable: $PYTHON_EXECUTABLE for macOS"
           $PYTHON_EXECUTABLE ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
 
-      - name: Create CLI version
-        shell: bash
-        run: |
-          ./install/python/bin/python3 ./tools/ci/install_cli.py ${{ needs.meta.outputs.tag }}
-          cp -rpvn install/python/. install-cli/python/
-          rm -rf install-cli/deps 2>/dev/null || true
 
       - name: Copy MFA files to main version
         shell: bash
@@ -343,35 +328,10 @@ jobs:
           name: MWJDR-macos-${{ matrix.arch }}-${{ needs.meta.outputs.tag }}-Full
           path: "install"
 
-  changelog:
-    name: Generate changelog
-    needs: meta
-    runs-on: ubuntu-latest
-    outputs:
-      release_body: ${{ steps.git-cliff.outputs.content }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
-        id: git-cliff
-        with:
-          config: .github/cliff.toml
-          # 正式版：使用 tag-pattern 只匹配正式版标签，包含所有从上一个正式版以来的提交
-          # 预发布版：正常生成，只包含从上一个标签以来的提交
-          args: >-
-            -vv --latest --strip header
-            ${{ needs.meta.outputs.is_prerelease == 'false' && '--tag-pattern "^v[0-9]+\\.[0-9]+\\.[0-9]+$"' || '' }}
-        env:
-          OUTPUT: CHANGES.md
-          GITHUB_REPO: ${{ github.repository }}
 
   release:
     if: ${{ needs.meta.outputs.is_release == 'true' }}
-    needs: [meta, windows, macos, changelog]
+    needs: [meta, windows, macos]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
