@@ -3,7 +3,7 @@ from .common import *
 from .unite import *
 from .mine import *
 from .monster import *
-from .jina import *
+from .itemBattle import *
 from .light import *
 from .beast import *
 from .travel import *
@@ -17,7 +17,7 @@ __all__ = [
     "UniteScan",
     "MakeSureQueueAvailable",
     "RecallAllQueue",
-    "JinaCombat",
+    "ItemCombat",
     "SetMonsterCount",
     "RecoVigor",
     "SwitchCharacter",

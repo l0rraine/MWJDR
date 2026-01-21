@@ -36,7 +36,7 @@ class RecoVigor(CustomAction):
         if left < cost:
             logger.info(f"体力耗尽，停止出征")
             context.override_pipeline({
-                "自动集结_吉娜_识别体力":{
+                "集结物品_识别体力":{
                     "next":[]
                 }
             })
@@ -46,8 +46,8 @@ class RecoVigor(CustomAction):
         return CustomAction.RunResult(success=True)
     
     
-@AgentServer.custom_action("吉娜出征")
-class JinaCombat(CustomAction):
+@AgentServer.custom_action("物品集结")
+class ItemCombat(CustomAction):
     def run(
         self,
         context: Context,
@@ -70,15 +70,15 @@ class JinaCombat(CustomAction):
             if detail.hit:
                 logger.debug("领取免费体力")
                 context.run_task("免费体力")
-                context.run_task("自动集结_吉娜_识别体力入口")
+                context.run_task("集结物品_识别体力入口")
                 return CustomAction.RunResult(success=True)
             else:
                 #logger.debug("无免费体力") 
-                logger.info(f"体力耗尽，共出征吉娜 {CombatRepetitionCount.count}次，停止出征")               
+                logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")               
                 return CustomAction.RunResult(success=True)
         
         CombatRepetitionCount.addCount()
-        logger.info(f"已出征吉娜 {CombatRepetitionCount.count} 次")
+        logger.info(f"已出征 {CombatRepetitionCount.count} 次")
         # 80s后查看集结状态
         time.sleep(80)
         context.run_task("转到城外")
@@ -94,8 +94,8 @@ class JinaCombat(CustomAction):
         time.sleep(return_time*2 + 0.5)
         
         if CombatRepetitionCount.count>=CombatRepetitionCount.limit:
-            logger.info(f"体力耗尽，共出征吉娜 {CombatRepetitionCount.count}次，停止出征")
+            logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")
             return CustomAction.RunResult(success=True)
         
-        context.run_task("自动集结_吉娜入口")
+        context.run_task("集结物品入口")
         return CustomAction.RunResult(success=True)

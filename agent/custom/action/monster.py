@@ -46,9 +46,9 @@ class SetMonsterCount(CustomAction):
         # count=0
         if CombatRepetitionCount.isReachLimit():
             # 吉娜模式下，执行出征怪兽次数够10次则直接打吉娜
-            logger.info(f"已达到出征次数上限：10 次，开始打吉娜")
+            logger.info(f"已达到出征次数上限：10 次，开始使用物品集结")
             CombatRepetitionCount.reset()
-            context.run_task("自动集结_吉娜_识别体力入口")
+            context.run_task("集结物品_识别体力入口")
                 
         else:
             context.run_task("自动集结_巨兽入口")
@@ -67,7 +67,7 @@ class BeginCombat(CustomAction):
         logger.debug(f"出征参数：{param}")        
 
         repeat_limit = int(param.get("出征次数"))
-        jina = int(param.get("吉娜"))
+        use_item = int(param.get("使用物品"))
         can_limit = int(param.get("罐头数量"))
         advanced_mode = int(param.get("高级模式",0))
         
@@ -180,7 +180,7 @@ class BeginCombat(CustomAction):
             # 当前出征次数已达到限制次数
             # 当前为吉娜模式
             # 则重新查看出征次数
-            if jina == 1:
+            if use_item == 1:
                 logger.info("已到达次数上限，重新查看次数")
                 # 重新查看次数
                 context.override_pipeline(
@@ -193,8 +193,6 @@ class BeginCombat(CustomAction):
                 context.run_task("后退")
                 time.sleep(0.5)
                 context.run_task("自动集结_巨兽入口")
-                time.sleep(0.5)
-                context.run_task("自动集结_查看次数")
             else:
                 logger.info(f"已达到出征次数上限：{repeat_limit} 次，停止出征")
             
