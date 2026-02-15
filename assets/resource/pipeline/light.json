@@ -36,6 +36,7 @@
         ]
     },
     "灯塔准备": {
+        "timeout": 5000,
         "next": [
             "灯塔准备-1",
             "灯塔准备-2"
@@ -184,6 +185,7 @@
             45,
             45
         ],
+        "timeout": 5000,
         "action": "Click",
         "next": [
             "灯塔领取免费体力后继续",
@@ -323,10 +325,11 @@
         },
         "action": "Click",
         "repeat": 2,
-        "repeat_delay": 200,
-        "post_delay": 200,
+        "repeat_delay": 500,
+        "post_delay": 300,
         "next": [
-            "灯塔准备"
+            "灯塔准备",
+            "灯塔获得奖励"
         ]
     },
     "灯塔升级": {

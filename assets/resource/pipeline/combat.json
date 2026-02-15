@@ -136,6 +136,7 @@
     },
     "是否有免费体力": {
         "recognition": "ColorMatch",
+        "timeout": 5000,
         "upper": [
             37,
             183,

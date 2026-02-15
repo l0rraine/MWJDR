@@ -143,7 +143,7 @@
         }
     },
     "联盟总动员_开始刷新": {
-        "pre_delay": 500,
+        "pre_delay": 1000,
         "target": [
             123,
             794,
@@ -202,7 +202,9 @@
             "[JumpBack]联盟总动员_任务_648礼包",
             "[JumpBack]联盟总动员_任务_328礼包",
             "[JumpBack]联盟总动员_任务_领主装备-8900",
-            "[JumpBack]联盟总动员_任务_50000钻石"
+            "[JumpBack]联盟总动员_任务_50000钻石",
+            "[JumpBack]联盟总动员_任务_68碎片",
+            "[JumpBack]联盟总动员_任务_150火晶"
         ],
         "action": "DoNothing"
     },
@@ -239,9 +241,17 @@
         "recognition": "OCR",
         "expected": "50[\\D+]?000.*钻石"
     },
+    "联盟总动员_任务_68碎片": {
+        "recognition": "OCR",
+        "expected": "68个传说"
+    },
+    "联盟总动员_任务_150火晶": {
+        "recognition": "OCR",
+        "expected": "150个火晶"
+    },
     "联盟总动员_识别描述": {
         "recognition": "OCR",
-        "expected": "write in code",
+        "expected": [],
         "roi": [
             216,
             486,
