@@ -97,7 +97,10 @@ class UniteScan(CustomAction):
                     "联盟总动员_识别200%倍率": {"roi": rate_roi[i]}
                     })
                 
-                
+            if not detail.hit:
+                rate = "120%"
+            else:
+                rate = "200%"    
             
             # 确保接下来处于任务详情页面
             context.run_task("点击",{
@@ -106,10 +109,7 @@ class UniteScan(CustomAction):
                         "target": time_roi[i],
                     }
                 })
-            if not detail.hit:
-                rate = "120%"
-            else:
-                rate = "200%"
+            
             all = context.get_node_data("联盟总动员_点击详情")["next"]
             
             name_list = [item['name'] for item in all]
@@ -158,10 +158,9 @@ class UniteScan(CustomAction):
                 context.run_task("联盟总动员_入口")
                 return CustomAction.RunResult(success=True)
         else:
-            logger.info(f"已全部得到2个满意的结果，停止刷新")   
-                
-        return CustomAction.RunResult(success=True)
-    
+            logger.info(f"已全部得到2个满意的结果，停止刷新")
+            return CustomAction.RunResult(success=False)
+                            
     def find_next_char(self, data):
         for item in ("1","2"):
             if item not in data:
