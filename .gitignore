@@ -440,12 +440,23 @@ enc_temp_folder/*
 .nuke/temp/*
 
 # Build
-deps
+deps/*
+!deps/tools/
+deps/tools/*
+!deps/tools/*.schema.json
 build
 install
 
 # Tools
 tools/ImageCropper/**/*.png
 
-config
-debug
+# MacOS
+.DS_Store
+.nicegui/storage-general.json
+
+# M9A
+python/
+.venv/
+config/
+tmp/
+agent/libs/*.pyd
