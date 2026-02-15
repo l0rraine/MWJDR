@@ -38,10 +38,7 @@
         "custom_action": "识别体力",
         "custom_action_param": {
             "体力消耗": 20
-        },
-        "next": [
-            "集结物品入口"
-        ]
+        }
     },
     "集结物品入口": {
         "next": [
