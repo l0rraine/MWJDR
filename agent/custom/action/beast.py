@@ -16,10 +16,9 @@ class BeastBeginCombat(CustomAction):
     ) -> bool:
         json_data = json.loads(argv.custom_action_param)
         logger.debug(json_data)
-        img = context.tasker.controller.post_screencap().wait().get()
-        hours, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")
-                
-        return_time = hours * 3600 + minutes * 60 + seconds
+        
+        _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)                
+        return_time = minutes * 60 + seconds
         
         # 开始出征
         context.run_task("点击出征")

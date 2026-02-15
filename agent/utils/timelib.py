@@ -35,19 +35,22 @@ def ms_timestamp_diff_to_dhm(timestamp1_ms, timestamp2_ms):
 def split_time_str(time_str):
     parts = re.split(r'\D+', time_str)
     numeric_parts = [int(part) for part in parts if part]
-    hours, minutes, seconds = (numeric_parts + [None, None, None])[:3]
+    hours, minutes, seconds = (numeric_parts + [0, 0, 0])[:3]
     return hours,minutes,seconds
 
 
-def get_time_from_ocr(context, img, task_name):
-    detail = None       
-    while detail is None or not detail.hit:
+def get_time_from_ocr(context, task_name, max_time=300):
+    detail = None  
+    hours, minutes, seconds = 0, 0, 0     
+    while detail is None or not detail.hit or max_time>=300 or max_time==0:
         img = context.tasker.controller.post_screencap().wait().get()   
         detail = context.run_recognition(task_name, img)
         if not detail.hit:
-            time.sleep(2)
-            
-    hours, minutes, seconds = split_time_str(detail.best_result.text)                
+            time.sleep(1)
+        else:
+            hours, minutes, seconds = split_time_str(detail.best_result.text)   
+            max_time = hours*3600 + minutes*60 + seconds
+        
     return hours,minutes,seconds
                 
 def is_current_period(timestamp_ms, timezone="Asia/Shanghai"):

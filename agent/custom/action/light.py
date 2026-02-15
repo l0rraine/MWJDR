@@ -12,9 +12,8 @@ class LightBeginCombat(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        img = context.tasker.controller.post_screencap().wait().get()             
-        _, minutes, seconds = timelib.get_time_from_ocr(context,img,"识别集结时间")
-                
+        
+        _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)                
         return_time = minutes * 60 + seconds
         
         logger.debug(f"返回时间：{return_time}")
