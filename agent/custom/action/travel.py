@@ -46,4 +46,25 @@ class DoDig(CustomAction):
         
         return CustomAction.RunResult(success=True)
     
+
     
+@AgentServer.custom_action("米娅宝藏")
+class MiaTreasure(CustomAction):
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        board = [
+            [175,801,46,45],
+            [338,808,46,46],
+            [503,815,37,40],
+            [90,949,48,45],
+            [250,951,60,39],
+            [423,950,39,38],
+            [580,959,39,30],
+            [172,1094,39,34],
+            [336,1088,41,48],
+            [510,1090,36,39]
+        ]
+        return CustomAction.RunResult(success=True)
