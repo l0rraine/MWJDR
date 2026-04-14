@@ -18,8 +18,8 @@ on:
   workflow_dispatch:
 
 env:
-  MAA_FRAMEWORK_VERSION: "v5.6.0"
-  MFAA_VERSION: "v2.7.2"
+  MAA_FRAMEWORK_VERSION: "v5.10.0"
+  MFAA_VERSION: "v2.12.0-beta.2"
 
 permissions:
   contents: write
@@ -148,7 +148,7 @@ jobs:
         shell: bash
         run: |
           python tools/ci/setup_embed_python.py
-          
+
       - name: Download Python dependencies
         shell: bash
         run: |
