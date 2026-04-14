@@ -16,10 +16,10 @@ class BeastBeginCombat(CustomAction):
     ) -> bool:
         json_data = json.loads(argv.custom_action_param)
         logger.debug(json_data)
-        
-        _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)                
+
+        _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)
         return_time = minutes * 60 + seconds
-        
+
         # 开始出征
         context.run_task("点击出征")
         img = context.tasker.controller.post_screencap().wait().get()
@@ -30,16 +30,16 @@ class BeastBeginCombat(CustomAction):
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
-                return CustomAction.RunResult(success=True)
-        
-        img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("自动集结_与别人队伍重复", img)
-        if detail.hit:
-            context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
-            context.run_task("自动野兽_入口")
-            return CustomAction.RunResult(success=True)
-        
-           
+                return CustomAction.RunResult(success=False)
+
+        # img = context.tasker.controller.post_screencap().wait().get()
+        # detail = context.run_recognition("自动集结_与别人队伍重复", img)
+        # if detail.hit:
+        #     context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+        #     context.run_task("自动野兽_入口")
+        #     return CustomAction.RunResult(success=True)
+
+
         time.sleep(return_time*2 + 0.5)
-        context.run_task("自动野兽_入口")       
+        context.run_task("自动野兽_入口")
         return CustomAction.RunResult(success=True)

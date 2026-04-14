@@ -60,6 +60,17 @@ class UniteScan(CustomAction):
             [71,803,32,21],
             [394,803,32,21]
         ]
+        img = context.tasker.controller.post_screencap().wait().get()            
+        detail = context.run_recognition("联盟总动员_巴尔德", img)
+        if detail.hit:
+            logger.debug("发现巴尔德，修正坐标")
+            rate_roi[0][1] += 60
+            rate_roi[1][1] += 60
+            time_roi[0][1] += 60
+            time_roi[1][1] += 60
+            running_roi[0][1] += 60
+            running_roi[1][1] += 60
+        
         need_wait_seconds = [86400,86400]
         for i in slot_list:
             
@@ -144,7 +155,7 @@ class UniteScan(CustomAction):
                 ChaInfo.set_char_data(kingdom,current_cha_index,{f"slot{i+1}": time.time()+need_wait_seconds[i]})
                 logger.debug(f"{i+1}号位置需要等待：{minutes}:{seconds},共计{need_wait_seconds[i]}秒")
             else:
-                prefix=f"{current_cha_index}号在位置{i+1}"
+                prefix=f"{i+1}号位置"
                 logger.info(f"{prefix}已刷新出{matched}，倍率{rate}")
                 context.run_task("点击左上角")
             
