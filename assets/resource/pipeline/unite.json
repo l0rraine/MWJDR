@@ -121,6 +121,12 @@
         "focus": "滑动至联盟总动员活动",
         "post_delay": 1000
     },
+    "联盟总动员_已在活动界面_包": {
+        "next": [
+            "联盟总动员_已在活动界面",
+            "[JumpBack]联盟总动员_向上滚动"
+        ]
+    },
     "联盟总动员_已在活动界面": {
         "recognition": "OCR",
         "expected": "联盟总动员",
@@ -131,16 +137,66 @@
             174
         ],
         "next": [
-            "联盟总动员_开始扫描"
+            "联盟总动员_开始扫描",
+            "[JumpBack]联盟总动员_向上滚动"
         ]
     },
     "联盟总动员_开始扫描": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "200%.png",
+            "120%.png",
+            "钻石刷新.png"
+        ],
+        "roi": [
+            38,
+            572,
+            650,
+            331
+        ],
+        "next": [
+            "联盟总动员_执行扫描"
+        ]
+    },
+    "联盟总动员_向上滚动": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    341,
+                    625,
+                    32,
+                    28
+                ],
+                "end": [
+                    346,
+                    1155,
+                    36,
+                    37
+                ],
+                "duration": 200
+            }
+        }
+    },
+    "联盟总动员_执行扫描": {
         "action": "Custom",
         "custom_action": "联盟总动员_扫描",
         "custom_action_param": {
             "just_double": "0",
             "current_cha_index": "0"
         }
+    },
+    "联盟总动员_巴尔德": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "巴尔德.png"
+        ],
+        "roi": [
+            76,
+            537,
+            159,
+            160
+        ]
     },
     "联盟总动员_开始刷新": {
         "pre_delay": 1000,
