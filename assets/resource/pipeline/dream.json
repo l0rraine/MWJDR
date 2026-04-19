@@ -1,0 +1,390 @@
+{
+  "梦境寻忆_入口": {
+    "next": [
+      "梦境寻忆_闯关",
+      "梦境寻忆_组队"
+    ]
+  },
+  "梦境寻忆_组队": {
+    "next": [
+      "梦境寻忆_组队_指挥部",
+      "梦境寻忆_组队_里程碑"
+    ]
+  },
+  "梦境寻忆_组队_指挥部": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "指挥部",
+    "next": [
+      "梦境寻忆_组队_开始_指挥部"
+    ]
+  },
+  "梦境寻忆_组队_开始_指挥部": {
+    "focus": "关卡:指挥部",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "指挥部"
+    }
+  },
+  "梦境寻忆_组队_里程碑": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "里程碑",
+    "next": [
+      "梦境寻忆_组队_开始_里程碑"
+    ]
+  },
+  "梦境寻忆_组队_开始_里程碑": {
+    "focus": "关卡:里程碑",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "里程碑"
+    }
+  },
+  "梦境寻忆_闯关": {
+    "recognition": "TemplateMatch",
+    "template": "梦境寻忆/闯关模式.png",
+    "action": "Click",
+    "green_mask": true,
+    "next": [
+      "梦境寻忆_已在闯关界面",
+      "[JumpBack]梦境寻忆_向左滑动"
+    ]
+  },
+  "梦境寻忆_已在闯关界面": {
+    "recognition": "OCR",
+    "expected": "梦境寻忆",
+    "roi": [
+      9,
+      180,
+      222,
+      96
+    ],
+    "next": [
+      "梦境寻忆_闯关_点击开始游戏"
+    ]
+  },
+  "梦境寻忆_向左滑动": {
+    "action": {
+      "type": "Swipe",
+      "param": {
+        "begin": [
+          185,
+          130,
+          30,
+          28
+        ],
+        "end": [
+          472,
+          140,
+          44,
+          23
+        ]
+      }
+    },
+    "focus": "滑动至梦境寻忆活动",
+    "post_delay": 1000
+  },
+  "梦境寻忆_闯关_点击开始游戏": {
+    "action": "Click",
+    "target": [
+      417,
+      1147,
+      142,
+      53
+    ],
+    "next": [
+      "梦境寻忆_开始闯关",
+      "[JumpBack]梦境寻忆_关闭关卡信息"
+    ]
+  },
+  "梦境寻忆_关闭关卡信息": {
+    "recognition": "OCR",
+    "roi": [
+      194,
+      758,
+      313,
+      104
+    ],
+    "expected": [
+      "点击任意位置开始"
+    ],
+    "action": "Click"
+  },
+  "梦境寻忆_开始闯关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/铃铛.png"
+    ],
+    "threshold": 0.8,
+    "roi": [
+      499,
+      0,
+      106,
+      106
+    ],
+    "next": [
+      "梦境寻忆_盾兵营关",
+      "梦境寻忆_锻造厂关",
+      "梦境寻忆_谷仓关",
+      "梦境寻忆_矛兵营关",
+      "梦境寻忆_工具间关",
+      "梦境寻忆_极光营地关",
+      "梦境寻忆_礼堂关",
+      "梦境寻忆_竞技场关",
+      "梦境寻忆_弓兵营关",
+      "梦境寻忆_办公室关"
+    ]
+  },
+  "梦境寻忆_盾兵营关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/盾兵营.png"
+    ],
+    "roi": [
+      474,
+      652,
+      137,
+      289
+    ],
+    "focus": "关卡:盾兵营",
+    "next": "梦境寻忆_开始_盾兵营关"
+  },
+  "梦境寻忆_开始_盾兵营关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "盾兵营"
+    }
+  },
+  "梦境寻忆_办公室关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/办公室.png"
+    ],
+    "roi": [
+      217,
+      194,
+      106,
+      124
+    ],
+    "focus": "关卡:办公室",
+    "next": "梦境寻忆_开始_办公室关"
+  },
+  "梦境寻忆_开始_办公室关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "办公室"
+    }
+  },
+  "梦境寻忆_锻造厂关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/锻造厂.png"
+    ],
+    "roi": [
+      297,
+      501,
+      95,
+      128
+    ],
+    "focus": "关卡:锻造厂",
+    "next": "梦境寻忆_开始_锻造厂关"
+  },
+  "梦境寻忆_开始_锻造厂关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "锻造厂"
+    }
+  },
+  "梦境寻忆_谷仓关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/谷仓.png"
+    ],
+    "roi": [
+      156,
+      159,
+      167,
+      150
+    ],
+    "focus": "关卡:谷仓",
+    "next": "梦境寻忆_开始_谷仓关"
+  },
+  "梦境寻忆_开始_谷仓关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "谷仓"
+    }
+  },
+  "梦境寻忆_矛兵营关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/矛兵营.png"
+    ],
+    "roi": [
+      482,
+      249,
+      107,
+      138
+    ],
+    "focus": "关卡:矛兵营",
+    "next": "梦境寻忆_开始_矛兵营关"
+  },
+  "梦境寻忆_开始_矛兵营关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "矛兵营"
+    }
+  },
+  "梦境寻忆_工具间关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/工具间.png"
+    ],
+    "roi": [
+      38,
+      743,
+      90,
+      194
+    ],
+    "focus": "关卡:工具间",
+    "next": "梦境寻忆_开始_工具间关"
+  },
+  "梦境寻忆_开始_工具间关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "工具间"
+    }
+  },
+  "梦境寻忆_竞技场关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/竞技场.png"
+    ],
+    "roi": [
+      61,
+      273,
+      100,
+      154
+    ],
+    "focus": "关卡:竞技场",
+    "next": "梦境寻忆_开始_竞技场关"
+  },
+  "梦境寻忆_开始_竞技场关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "竞技场"
+    }
+  },
+  "梦境寻忆_弓兵营关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/弓兵营.png"
+    ],
+    "roi": [
+      476,
+      390,
+      94,
+      108
+    ],
+    "focus": "关卡:弓兵营",
+    "next": "梦境寻忆_开始_弓兵营关"
+  },
+  "梦境寻忆_开始_弓兵营关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "弓兵营"
+    }
+  },
+  "梦境寻忆_极光营地关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/极光营地.png"
+    ],
+    "roi": [
+      117,
+      681,
+      82,
+      143
+    ],
+    "focus": "关卡:极光营地",
+    "next": "梦境寻忆_开始_极光营地关"
+  },
+  "梦境寻忆_开始_极光营地关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "极光营地"
+    }
+  },
+  "梦境寻忆_礼堂关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/礼堂.png"
+    ],
+    "roi": [
+      148,
+      105,
+      140,
+      113
+    ],
+    "focus": "关卡:礼堂",
+    "next": "梦境寻忆_开始_礼堂关"
+  },
+  "梦境寻忆_开始_礼堂关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "礼堂"
+    }
+  },
+  "梦境寻忆_找到所有物品": {
+    "recognition": "OCR",
+    "roi": [
+      119,
+      292,
+      437,
+      673
+    ],
+    "expected": [
+      "已找到.*",
+      "继续",
+      ".*完成.*",
+      ".*增加了.*"
+    ],
+    "pre_delay": 1500,
+    "action": "Click"
+  }
+}
