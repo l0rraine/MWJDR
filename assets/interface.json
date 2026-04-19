@@ -89,6 +89,13 @@
                 "礼包-328",
                 "钻石-50000"
             ]
+        },
+        {
+            "name": "梦境寻忆",
+            "entry": "梦境寻忆_入口",
+            "option": [
+                "梦境寻忆模式选择"
+            ]
         }
     ],
     "option": {
@@ -648,6 +655,33 @@
                     }
                 }
             }
+        },
+        "梦境寻忆模式选择": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "闯关模式",
+                    "pipeline_override": {
+                        "梦境寻忆_组队": {
+                            "enabled": false
+                        },
+                        "梦境寻忆_闯关": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "协梦同行",
+                    "pipeline_override": {
+                        "梦境寻忆_组队": {
+                            "enabled": true
+                        },
+                        "梦境寻忆_闯关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
         }
     }
 }

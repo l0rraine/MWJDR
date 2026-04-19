@@ -7,6 +7,7 @@ from .itemBattle import *
 from .light import *
 from .beast import *
 from .travel import *
+from .dream import *
 
 __all__ = [
     "ChangeTeam",
@@ -21,5 +22,6 @@ __all__ = [
     "SetMonsterCount",
     "RecoVigor",
     "SwitchCharacter",
-    "DoDig"
+    "DoDig",
+    "Memories"
 ]
