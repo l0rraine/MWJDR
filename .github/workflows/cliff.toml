@@ -1,8 +1,7 @@
 [remote.github]
-owner = "MaaXYZ"
-repo = "MaaPracticeBoilerplate"
-#自用时换成自己的仓库owner和repo
-#注意，本地git user需与github一致才能实现成功@
+owner = "l0rraine"
+repo = "MWJDR"
+
 [changelog]
 # 标题
 header = """
@@ -18,7 +17,7 @@ body = """
     - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
         {% if commit.breaking %}[**breaking**] {% endif %}\
         {{ commit.message | split(pat="\n") | first | upper_first }} \
-        @{{ commit.author.name }}
+        {% if commit.github.username %} @{{ commit.github.username }}{% else %} {{ commit.author.name }}{% endif %}
         {%- if commit.footers -%}
             {%- for footer in commit.footers -%}
                 {%- if footer.token == "Co-authored-by" -%}
@@ -66,13 +65,15 @@ footer = """
 
 [git]
 # 过滤提交
-conventional_commits = true # 使用约定式提交格式
-filter_unconventional = false # 不过滤非约定式提交
+conventional_commits = true
+filter_unconventional = false
 # 启用完整的 commit 信息
 split_commits = false
 # 保留完整的 commit body
 protect_breaking_commits = false
 commit_parsers = [
+    { message = ".*\\[skip changelog\\].*", skip = true },
+    { body = ".*\\[skip changelog\\].*", skip = true },
     { message = "^feat", group = "<!-- 0 -->✨ 新功能" },
     { message = "^fix", group = "<!-- 1 -->🐛 Bug修复" },
     { message = "^docs", group = "<!-- 4 -->📚 文档" },
@@ -93,6 +94,6 @@ ignore_tags = "rc"
 # 排序规则
 sort_commits = "oldest"
 
-# 启用GitHub集成
+# 启用 GitHub 集成
 [git.github]
 commits = true
