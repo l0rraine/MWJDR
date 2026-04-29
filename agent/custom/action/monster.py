@@ -66,7 +66,6 @@ class BeginCombat(CustomAction):
         repeat_limit = int(param.get("出征次数"))
         can_limit = int(param.get("罐头数量"))
         advanced_mode = int(param.get("高级模式",0))
-        use_12_can = int(param.get("使用12点罐头",0))
         use_19_can = int(param.get("使用19点罐头",0))
         
         #debug
@@ -101,17 +100,10 @@ class BeginCombat(CustomAction):
                 if advanced_mode == 0:
                     current_hour = time.localtime().tm_hour
                     can_use_free = False
-                    if current_hour < 12:
-                        # 0点~12点之前，无条件使用免费罐头
+                    if current_hour < 19:
+                        # 0点~19点，无条件使用免费罐头
                         can_use_free = True
-                        logger.debug("0点~12点前，无条件领取免费体力")
-                    elif current_hour < 19:
-                        # 12点~19点，根据12点罐头选项决定
-                        if use_12_can == 1:
-                            can_use_free = True
-                            logger.debug("12点罐头选项已启用，领取免费体力")
-                        else:
-                            logger.debug("12点罐头选项未启用，不领取免费体力")
+                        logger.debug("0点~19点，无条件领取免费体力")
                     else:
                         # 19点~0点，根据19点罐头选项决定
                         if use_19_can == 1:
