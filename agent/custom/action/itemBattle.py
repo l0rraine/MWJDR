@@ -15,6 +15,8 @@ from .combat import CombatRepetitionCount
 
 @AgentServer.custom_action("识别体力")
 class RecoVigor(CustomAction):
+    _in_loop = False
+
     def run(
         self,
         context: Context,
@@ -32,14 +34,23 @@ class RecoVigor(CustomAction):
             )
             time.sleep(1)
         left = int(detail.best_result.text)
-        logger.debug(f"识别剩余体力：{left}")        
+        remaining = math.floor(left / cost)
         if left < cost:
-            logger.info(f"体力耗尽，停止出征")
+            logger.info(f"剩余体力：{left}，不足出征（需{cost}），停止出征")
             disable_battle_tasks("集结物品_识别体力入口")
+            RecoVigor._in_loop = False
             return CustomAction.RunResult(success=False)
-        CombatRepetitionCount.reset()
-        CombatRepetitionCount.setLimit(math.floor(left/cost))
-        logger.debug(f"当前剩余体力：{left}，剩余次数：{CombatRepetitionCount.limit}")
+
+        # 首次进入物品战斗时重置计数，循环中不重置让计数累积
+        if not RecoVigor._in_loop:
+            CombatRepetitionCount.reset()
+            RecoVigor._in_loop = True
+            logger.info(f"剩余体力：{left}，可出征{remaining}次")
+        else:
+            logger.info(f"剩余体力：{left}，还可出征{remaining}次")
+
+        # limit = 已出征次数 + 剩余可出征次数，确保 count 累积后能正确判断
+        CombatRepetitionCount.setLimit(CombatRepetitionCount.count + remaining)
         return CustomAction.RunResult(success=True)
     
     
@@ -69,9 +80,9 @@ class ItemCombat(CustomAction):
                 context.run_task("免费体力")
                 return CustomAction.RunResult(success=True)
             else:
-                #logger.debug("无免费体力") 
                 logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")  
                 disable_battle_tasks("集结物品_识别体力入口")
+                RecoVigor._in_loop = False
                 return CustomAction.RunResult(success=False)
         
         CombatRepetitionCount.addCount()
@@ -92,9 +103,10 @@ class ItemCombat(CustomAction):
         logger.debug(f"已识别到行军")
         time.sleep(return_time*2 + 0.5)
         
-        if CombatRepetitionCount.count>=CombatRepetitionCount.limit:
+        if CombatRepetitionCount.count >= CombatRepetitionCount.limit:
             logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")
             disable_battle_tasks("集结物品_识别体力入口")
+            RecoVigor._in_loop = False
             return CustomAction.RunResult(success=False)
         
         return CustomAction.RunResult(success=True)
