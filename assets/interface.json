@@ -467,6 +467,7 @@
         },
         "19点后使用免费罐头": {
             "type": "switch",
+            "default_case": "No",
             "cases": [
                 {
                     "name": "Yes",
