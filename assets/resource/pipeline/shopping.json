@@ -1,0 +1,93 @@
+{
+    "联盟商店入口": {},
+    "点击商店": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "商店.png"
+        ],
+        "action": "Click"
+    },
+    "游荡商人入口": {
+        "recognition": "OCR",
+        "expected": [
+            "游荡商人"
+        ],
+        "roi": [
+            4,
+            1188,
+            184,
+            92
+        ],
+        "next": [
+            "游荡商人_开始购买",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]后退",
+            "[JumpBack]点击商店"
+        ]
+    },
+    "游荡商人_免费刷新": {
+        "recognition": "OCR",
+        "expected": [
+            "免费刷新"
+        ],
+        "roi": [
+            513,
+            212,
+            169,
+            98
+        ],
+        "action": "Click"
+    },
+    "游荡商人_刷新": {
+        "next": [
+            "游荡商人_免费刷新"
+        ]
+    },
+    "游荡商人_开始购买": {
+        "next": [
+            "游荡商人_非钻石",
+            "游荡商人_钻石",
+            "[JumpBack]游荡商人_刷新"
+        ]
+    },
+    "游荡商人_非钻石": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/肉.png",
+            "流浪商人/木.png",
+            "流浪商人/煤.png",
+            "流浪商人/铁.png"
+        ],
+        "action": "Click",
+        "next": [
+            "游荡商人_开始购买"
+        ]
+    },
+    "游荡商人_钻石": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/统帅经验.png"
+        ],
+        "action": "Click",
+        "next": [
+            "游荡商人_钻石_购买"
+        ]
+    },
+    "游荡商人_钻石_购买": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/钻石购买.png"
+        ],
+        "roi": [
+            194,
+            701,
+            334,
+            184
+        ],
+        "action": "Click",
+        "next": [
+            "游荡商人_钻石_购买",
+            "游荡商人_开始购买"
+        ]
+    }
+}
