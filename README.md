@@ -1,123 +1,210 @@
-<!-- markdownlint-disable MD033 MD041 -->
-<p align="center">
-  <img alt="LOGO" src="https://cdn.jsdelivr.net/gh/MaaAssistantArknights/design@main/logo/maa-logo_512x512.png" width="256" height="256" />
-</p>
+# MWJDR - 无尽冬日自动化
 
-<div align="center">
+基于 [MaaFramework](https://github.com/MaaXYZ/MaaFramework) 的《无尽冬日》（Whiteout Survival）自动化工具，通过 [MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia) 提供图形界面。
 
-# MaaPracticeBoilerplate
+## 功能一览
 
-</div>
+### 战斗任务
 
-本仓库为 [MaaFramework](https://github.com/MaaXYZ/MaaFramework) 所提供的项目模板，开发者可基于此模板直接创建自己的 MaaXXX 项目。
+| 任务 | 说明 | 可配置项 |
+|------|------|----------|
+| 集结巨兽 | 自动参与巨兽集结，支持普通/高级/吉娜模式 | 队伍序号、作战模式、次数/体力、多余体力转物品集结 |
+| 自动野兽 | 自动搜索并攻击野兽 | 队伍序号 |
+| 自动灯塔 | 自动探索灯塔（救援/野兽/冒险） | 队伍序号 |
+| 使用物品集结 | 使用吉娜角/收割者镰刀等物品发起集结 | 物品选择、队伍序号、体力设置 |
 
-> **MaaFramework** 是基于图像识别技术、运用 [MAA](https://github.com/MaaAssistantArknights/MaaAssistantArknights) 开发经验去芜存菁、完全重写的新一代自动化黑盒测试框架。
-> 低代码的同时仍拥有高扩展性，旨在打造一款丰富、领先、且实用的开源库，助力开发者轻松编写出更好的黑盒测试程序，并推广普及。
+### 非战斗任务
 
-## 即刻开始
+| 任务 | 说明 | 可配置项 |
+|------|------|----------|
+| 启动游戏 | 启动游戏并初始化环境 | 切换角色（王国编号+序号）、确保有队伍可用 |
+| 自动游历 | 自动完成游历小游戏（钓鱼、挖掘、烹饪等） | — |
+| 联盟总动员 | 扫描联盟任务并刷新高价值奖励 | 槽位开关、各任务类型筛选 |
+| 梦境寻忆 | 自动完成梦境寻忆找物玩法 | 闯关模式 / 协梦同行 |
+| 结束 | 任务结束后清理环境 | 是否打开自动加入集结 |
 
-- [📄 快速开始](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/1.1-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B.md)
-- [🎞️ 视频教程](https://www.bilibili.com/video/BV1yr421E7MW)
+### 智能特性
 
-## 如何开发
+- **自动队列管理**：执行战斗任务前自动确保有空闲队列（关闭自动加入、等待/召回队伍），若无战斗任务则自动跳过
+- **智能体力控制**：巨兽作战支持精确次数模式、罐头体力模式、以及打完 N 次后自动转物品集结
+- **角色切换**：支持按王国编号和序号自动切换到指定角色
+- **多实例支持**：通过 MFAAvalonia 环境变量识别当前实例，多开时互不干扰
 
-0. 使用右上角 `Use this template` - `Create a new repository` 来基于本模板创建您自己的项目。
+## 项目结构
 
-1. 克隆本项目及子项目（地址请修改为您基于本模板创建的新项目地址）。
+```
+MWJDR/
+├── assets/                          # MaaFramework 资源目录
+│   ├── interface.json               # 界面配置（任务列表、选项、pipeline_override）
+│   └── resource/
+│       ├── pipeline/                # Pipeline 定义（16 个 JSON）
+│       │   ├── startup.json         #   启动游戏、角色切换、队列管理
+│       │   ├── monster.json         #   集结巨兽
+│       │   ├── beast.json           #   自动野兽
+│       │   ├── light.json           #   自动灯塔
+│       │   ├── item-battle.json     #   使用物品集结
+│       │   ├── dream.json           #   梦境寻忆
+│       │   ├── unite.json           #   联盟总动员
+│       │   ├── travel.json          #   自动游历
+│       │   ├── mine.json            #   挖矿
+│       │   ├── combat.json          #   战斗辅助（OCR 时间、出征状态、体力识别）
+│       │   ├── common.json          #   通用节点（关闭礼包、后退、导航城外）
+│       │   ├── autojoin.json        #   自动加入集结开关
+│       │   ├── end.json             #   结束清理
+│       │   ├── gift.json            #   礼包领取
+│       │   ├── help.json            #   联盟帮助
+│       │   └── reddot.json          #   红点通知、邮件、联盟科技
+│       ├── model/                   # OCR 模型
+│       └── image/                   # 模板图片
+│
+├── agent/                           # Python 自定义动作
+│   ├── main.py                      # 入口：venv 管理 → AgentServer 启动
+│   ├── custom/action/               # 自定义动作实现
+│   │   ├── combat.py                #   切换队伍、撤回队伍
+│   │   ├── monster.py               #   巨兽次数识别、出征循环
+│   │   ├── beast.py                 #   野兽出征循环
+│   │   ├── light.py                 #   灯塔出征循环
+│   │   ├── itemBattle.py            #   体力识别、物品集结循环
+│   │   ├── dream.py                 #   梦境寻忆（坐标字典找物）
+│   │   ├── unite.py                 #   联盟总动员扫描
+│   │   ├── travel.py                #   游历宝藏挖掘
+│   │   ├── mine.py                  #   挖矿队伍派遣/召回
+│   │   └── common.py                #   角色切换、队列管理、节点控制
+│   └── utils/                       # 工具模块
+│       ├── logger.py                #   日志
+│       ├── timelib.py               #   OCR 时间解析
+│       ├── chainfo.py               #   联盟总动员状态管理
+│       └── mfa_config.py            #   MFAAvalonia 实例配置读取
+│
+├── configure.py                     # 资源配置脚本
+├── requirements.txt                 # Python 依赖
+└── docs/                            # 文档
+```
 
-    ```bash
-    git clone https://github.com/MaaXYZ/MaaPracticeBoilerplate.git
-    ```
+## 架构设计
 
-2. 下载 MaaFramework 的 [Release 包](https://github.com/MaaXYZ/MaaFramework/releases)，解压到 `deps` 文件夹中。
+本项目采用 **声明式 Pipeline + 命令式 Custom Action** 的双层架构：
 
-3. 下载通用资源子模块（MaaCommonAssets）
+```
+MFAAvalonia (GUI)
+  │
+  ├─ 用户选择任务 + 配置选项
+  │     │
+  │     ▼
+  │  interface.json → 收集 pipeline_override
+  │     │
+  │     ▼
+  │  MaaFramework 引擎
+  │     │
+  │     ├─ 加载 pipeline JSON
+  │     ├─ 合并 pipeline_override
+  │     └─ 从 entry 节点开始执行
+  │           │
+  │           ▼
+  │     Pipeline 执行循环
+  │       ├─ 节点 enabled: false → 跳过
+  │       ├─ 识别（TemplateMatch / OCR / ColorMatch）
+  │       ├─ 动作（Click / Swipe / Custom / DoNothing）
+  │       ├─ Custom Action → 调用 Python 代码
+  │       │     ├─ context.run_task() / run_recognition() → 执行子任务
+  │       │     ├─ context.override_pipeline() → 运行时修改节点
+  │       │     └─ context.run_recognition_direct() / run_action_direct() → 直接调用
+  │       └─ 跟随 next 数组进入下一节点
+  │
+  └─ 任务完成
+```
 
-    ```bash
-    git submodule update --init --recursive
-    ```
+### Pipeline 节点控制
 
-    请注意，子模块仓库体积较大，请确认您已经成功下载，否则后续 OCR（文字识别）将报错并无识别结果。  
-    若 git 命令始终无法成功下载，也可尝试前往 [Mirror酱](https://mirrorchyan.com/zh/projects?rid=MaaCommonAssets&source=ghtempl-readme) 手动下载后解压到 `assets/MaaCommonAssets` 文件夹中，目录结构为 `assets/MaaCommonAssets/OCR`。
+节点有三种 enable/disable 方式：
 
-4. 配置资源文件。
+1. **静态 `pipeline_override`**：`interface.json` 中选项的 cases 定义，任务启动前由 MFAAvalonia 合并
+2. **运行时 `override_pipeline()`**：Custom Action 在执行过程中动态修改节点属性
+3. **默认 `enabled: false`**：Pipeline JSON 中某些节点默认禁用，由选项或代码激活
 
-    ```bash
-    python ./configure.py
-    ```
+### 自定义动作注册
 
-    若报错 `File Not Found: XXXXXX`，则说明上一步 MaaCommonAssets 未正常下载，请再次检查！
+所有 Custom Action 通过装饰器注册到 AgentServer：
 
-5. 进行开发工作，按您的业务需求修改 `assets` 中的资源文件，请参考 [MaaFramework 相关文档](https://github.com/MaaXYZ/MaaFramework/blob/main/docs/zh_cn/1.1-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B.md#%E8%B5%84%E6%BA%90%E5%87%86%E5%A4%87)。
+```python
+@AgentServer.custom_action("动作名称")
+class MyAction(CustomAction):
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        # argv.custom_action_param: JSON 字符串参数
+        # context: 可调用 pipeline API
+        return CustomAction.RunResult(success=True)
+```
 
-6. 完成开发后，上传您的代码并发布版本。
+### 战斗任务自动检测
 
-    ```bash
-    # 配置 git 信息（仅第一次需要，后续不用再配置）
-    git config user.name "您的 GitHub 昵称"
-    git config user.email "您的 GitHub 邮箱"
-    
-    # 提交修改
-    git add .
-    git commit -m "XX 新功能"
-    git push origin HEAD -u
-    ```
+`MakeSureQueueAvailable` 在执行前会读取 MFAAvalonia 实例配置，判断用户是否勾选了战斗任务：
 
-7. 发布您的版本
+```python
+from utils.mfa_config import has_battle_tasks
 
-    需要**先**修改仓库设置 `Settings` - `Actions` - `General` - `Read and write permissions` - `Save`
+battle_status = has_battle_tasks()
+if battle_status is False:
+    # 无战斗任务，跳过确保空闲队列
+    return CustomAction.RunResult(success=True)
+```
 
-    ```bash
-    # CI 检测到 tag 会自动进行发版
-    git tag v1.0.0
-    git push origin v1.0.0
-    ```
+实现原理：MFAAvalonia 启动 Agent 进程时注入 `MFA_INSTANCE_ID` 环境变量，Python 端据此读取 `config/instances/{id}.json` 中的 `TaskItems`，检查战斗任务的 `default_check` 状态。
 
-8. 更多操作，请参考 [个性化配置](./docs/zh_cn/个性化配置.md)（可选）
+## 快速开始
 
-## 生态共建
+### 前置条件
 
-MAA 正计划建设为一类项目，而非舟的单一软件。
+- Windows 系统
+- [MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia) 已安装
+- 安卓设备已通过 ADB 连接
 
-若您的项目依赖于 MaaFramework，我们欢迎您将它命名为 MaaXXX, MXA, MAX 等等。当然，这是许可而不是限制，您也可以自由选择其他与 MAA 无关的名字，完全取决于您自己的想法！
+### 安装
 
-同时，我们也非常欢迎您提出 PR，在 [社区项目列表](https://github.com/MaaXYZ/MaaFramework#%E7%A4%BE%E5%8C%BA%E9%A1%B9%E7%9B%AE) 中添加上您的项目！
+1. 下载最新 Release 或克隆本仓库
 
-## FAQ
+   ```bash
+   git clone https://github.com/l0rraine/MWJDR.git
+   ```
 
-### 0. 我是第一次使用 git，这是什么？视频演示中那个黑框框命令行哪来的？
+2. 配置资源文件
 
-黑框框是 git bash，几乎任何现代软件的开发都离不开 git，建议先参考 [菜鸟教程](https://www.runoob.com/git/git-install-setup.html) 或搜索一些视频，学习完 git 后再来进行后续开发工作。
+   ```bash
+   python ./configure.py
+   ```
 
-### 1. 我是第一次使用 Python，在命令行输入 `python ./configure.py` 或 `python -m pip install MaaFW` 之后没有反应？没有报错，也没有提示成功，什么都没有
+3. 将项目目录添加到 MFAAvalonia 作为资源路径
 
-Win10 或者 Win11 系统自带了一份 "Python"，但它其实只是一个安装器，是没法用的。  
-你需要做的是关闭它或者删除它的环境变量，然后自己去 Python 官网下载并安装一份 Python。  
-[参考方法](https://www.bilibili.com/read/cv24692025/)
+### 使用
 
-### 2. 使用 MaaDebugger 或 MaaPicli 时弹窗报错，应用程序错误：应用程序无法正常启动
+1. 启动 MFAAvalonia，选择本项目
+2. 连接安卓设备
+3. 选择要执行的任务并配置选项
+4. 点击开始
 
-![缺少运行库](https://github.com/user-attachments/assets/942df84b-f47d-4bb5-98b5-ab5d44bc7c2a)
+## 开发指南
 
-一般是电脑缺少某些运行库，请安装一下 [vc_redist](https://aka.ms/vs/17/release/vc_redist.x64.exe) 。
+### 添加新的 Pipeline 节点
 
-### 3. 我在这个仓库里提了 Issue 很久没人回复
+1. 在 `assets/resource/pipeline/` 对应的 JSON 文件中添加节点定义
+2. 在 `assets/interface.json` 中注册任务入口和可配置选项
+3. 如需复杂逻辑，在 `agent/custom/action/` 中实现 Custom Action
 
-这里是《项目模板》仓库，它仅仅是一个模板，一般很少会修改，开发者也较少关注。  
-在此仓库请仅提问模板相关问题，其他问题最好前往对应的仓库提出，如果有 log，最好也带上它（`debug/maa.log` 文件）
+### 添加新的 Custom Action
 
-- MaaFW 本身及 MaaPiCli 的问题：[MaaFramework/issues](https://github.com/MaaXYZ/MaaFramework/issues)
-- MaaDebugger 的问题：[MaaDebugger/issues](https://github.com/MaaXYZ/MaaDebugger/issues)
-- 不知道算是哪里的、其他疑问等：[讨论区](https://github.com/MaaXYZ/MaaFramework/discussions)
+1. 在 `agent/custom/action/` 下创建或修改 Python 文件
+2. 使用 `@AgentServer.custom_action("名称")` 装饰器注册
+3. 在 Pipeline JSON 中通过 `"action": "Custom"` + `"custom_action": "名称"` 引用
 
-### 4. OCR 文字识别一直没有识别结果，报错 "Failed to load det or rec", "ocrer_ is null"
+### 调试
 
-**请仔细阅读文档**，你无视了前面步骤的报错。我不想解释了，请再把本文档仔细阅读一遍！
+开发模式下（`assets/` 目录下存在 `interface.json`），agent 会自动启用 DEBUG 日志级别。
 
 ## 鸣谢
 
-本项目由 **[MaaFramework](https://github.com/MaaXYZ/MaaFramework)** 强力驱动！
+- **[MaaFramework](https://github.com/MaaXYZ/MaaFramework)** — 核心自动化引擎
+- **[MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia)** — 跨平台图形界面
+- **[MaaAssistantArknights](https://github.com/MaaAssistantArknights/MaaAssistantArknights)** — MAA 系列项目的起点
 
-感谢以下开发者对本项目作出的贡献（下面链接改成你自己的项目地址）:
+## 许可证
 
-[![Contributors](https://contrib.rocks/image?repo=MaaXYZ/MaaFramework&max=1000)](https://github.com/MaaXYZ/MaaFramework/graphs/contributors)
+本项目基于 [LICENSE](./LICENSE) 发布。
