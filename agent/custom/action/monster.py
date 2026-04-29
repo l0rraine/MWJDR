@@ -30,10 +30,15 @@ class SetMonsterCount(CustomAction):
             detail = context.run_recognition("自动集结_识别次数", img)
             time.sleep(1)
         count = int(detail.best_result.text)
+        remaining = 10 - count
 
-        CombatRepetitionCount.init(10)
-        CombatRepetitionCount.setCount(10-count)
-        logger.debug(f"已识别当前怪兽次数：{count}")
+        if remaining <= 0:
+            logger.info(f"已达到出征次数上限：10 次，停止出征")
+            CombatRepetitionCount.reset()
+            return CustomAction.RunResult(success=False)
+
+        CombatRepetitionCount.init(remaining)
+        logger.info(f"已识别当前怪兽次数：{count}，还剩余{remaining}次")
         context.override_pipeline(
             {
                 "自动集结_查看次数":{
@@ -43,10 +48,6 @@ class SetMonsterCount(CustomAction):
         )
         context.run_task("后退")
         time.sleep(0.5)
-        if CombatRepetitionCount.isReachLimit():
-            logger.info(f"已达到出征次数上限：10 次，停止出征")
-            CombatRepetitionCount.reset()
-            return CustomAction.RunResult(success=False)
                 
         return CustomAction.RunResult(success=True)
 
@@ -177,7 +178,7 @@ class BeginCombat(CustomAction):
             context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
             return CustomAction.RunResult(success=True)
             
-        if repeat_limit != 0:
+        if CombatRepetitionCount.limit > 0:
             CombatRepetitionCount.addCount()
             logger.info(f"已出征 {CombatRepetitionCount.count} 次")
         
@@ -200,8 +201,8 @@ class BeginCombat(CustomAction):
         
         
         # 判断作战次数是否达到上限
-        if repeat_limit > 0 and repeat_limit <= CombatRepetitionCount.count:             
-            logger.info(f"已达到出征次数上限：{repeat_limit} 次，停止出征")
+        if CombatRepetitionCount.isReachLimit():
+            logger.info(f"已达到出征次数上限，停止出征")
             CombatRepetitionCount.reset()
             return CustomAction.RunResult(success=False)
             
