@@ -4,9 +4,9 @@
         "timeout": 60000,
         "next": [
             "开始切换角色",
-            "识别角色ID",
             "[JumpBack]关闭礼包",
-            "[JumpBack]后退"
+            "[JumpBack]后退",
+            "识别角色ID"
         ]
     },
     "主界面标志": {
@@ -111,10 +111,24 @@
             }
         },
         "next": [
-            "识别角色ID"
+            "确保有空闲队列"
         ]
     },
     "识别角色ID": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    488,
+                    0,
+                    140,
+                    139
+                ],
+                "template": [
+                    "主界面标志.png"
+                ]
+            }
+        },
         "action": "Custom",
         "custom_action": "识别角色ID",
         "next": [

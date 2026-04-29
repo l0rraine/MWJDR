@@ -19,6 +19,11 @@ class SwitchCharacter(CustomAction):
         region = json_data.get('王国编号') or "3194"
         index = json_data.get('王国内序号')
         logger.debug(f"王国编号:{region},王国内序号:{index}")
+
+        # 从参数直接设置角色ID，用于数据分桶
+        from ..reco.record_id import RecordID
+        RecordID._account_id = f"{region}_{index}"
+        logger.info(f"角色ID已设置：{RecordID._account_id}")
         expected = f"王国\\D+{region}"
         
         cha_detail = None
