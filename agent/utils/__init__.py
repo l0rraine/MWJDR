@@ -1,5 +1,4 @@
 from .logger import *
-from .chainfo import *
 
 try:
     from .timelib import *

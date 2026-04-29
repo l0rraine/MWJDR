@@ -181,10 +181,9 @@
     "联盟总动员_执行扫描": {
         "action": "Custom",
         "custom_action": "联盟总动员_扫描",
-        "custom_action_param": {
-            "just_double": "0",
-            "current_cha_index": "0"
-        }
+        "next": [
+            "联盟总动员_入口"
+        ]
     },
     "联盟总动员_巴尔德": {
         "recognition": "TemplateMatch",
