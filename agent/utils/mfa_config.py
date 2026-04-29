@@ -102,9 +102,13 @@ def has_battle_tasks() -> Optional[bool]:
         if not isinstance(task, dict):
             continue
         entry = task.get("entry", "")
-        # check 字段默认为 True（与 MFAAvalonia 的 Check != false 逻辑一致）
-        check = task.get("check", True)
-        if entry in BATTLE_TASK_ENTRIES and check:
+        if entry not in BATTLE_TASK_ENTRIES:
+            continue
+        # MFAAvalonia 中 MaaInterfaceTask.Check 映射自 JSON 的 "default_check" 字段
+        # 默认值为 false（与 C# 中 public bool? Check = false 一致）
+        # 只有 default_check 为 true 时才表示该任务被启用
+        default_check = task.get("default_check", False)
+        if default_check is True:
             logger.info(f"发现已启用的战斗任务: {task.get('name', entry)}")
             return True
 
