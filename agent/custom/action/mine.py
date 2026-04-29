@@ -39,7 +39,7 @@ class RecallAllQueue(CustomAction):
     ) -> bool:
         # 1. 关闭自动加入
         logger.debug("关闭自动加入集结")
-        context.run_task("关闭自动加入集结入口")
+        context.run_task("自动加入集结_关闭_入口")
         context.run_task("转到城外")
         context.run_task("开始查看队列")
         img = context.tasker.controller.post_screencap().wait().get()

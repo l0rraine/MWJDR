@@ -463,7 +463,8 @@
     "自动游历_雪人_攻击": {
         "recognition": "OCR",
         "expected": [
-            "出征"
+            "出征",
+            "开始出征"
         ],
         "repeat": 15,
         "repeat_delay": 200,
@@ -722,7 +723,7 @@
             39,
             61
         ],
-        "duration": 350,
+        "duration": 200,
         "next": [
             "自动垂钓_垂钓_向右"
         ]
@@ -741,7 +742,7 @@
             45,
             61
         ],
-        "duration": 350
+        "duration": 200
     },
     "自动游历_垂钓_满": {
         "recognition": "TemplateMatch",

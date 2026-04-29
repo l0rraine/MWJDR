@@ -84,19 +84,17 @@ class MakeSureQueueAvailable(CustomAction):
         match = re.search(r'\d+', detail.best_result.text)
         if match and int(match.group())>0:
             return CustomAction.RunResult(success=True)
-        
 
         context.run_task("后退")
         _, b = map(int, detail.best_result.text.split('/'))
-        
+
         logger.info(f"当前队列已满，队列总数为{b}")
-        # 2.如果有不是挖矿的队伍，等待 
+        # 2.如果有不是挖矿的队伍，等待
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("识别队列动作",img)
         if detail.hit:
             logger.info("开始等待出征队伍回归")
-            
-        
+
         # 3. 如果全部在挖矿，召回最后一队
         else:
             recall_region = [
@@ -110,13 +108,17 @@ class MakeSureQueueAvailable(CustomAction):
             ]
             img = context.tasker.controller.post_screencap().wait().get()
             for region in recall_region[-b:]:
-                detail = context.run_recognition("识别召回",img,{
-                    "识别找回":{
-                        "recognition": "TemplateMatch",
-                        "template": "召回.png",
-                        "region": region
-                    }
-                })
+                detail = context.run_recognition(
+                    "识别召回",
+                    img,
+                    {
+                        "识别召回": {
+                            "recognition": "TemplateMatch",
+                            "template": "召回.png",
+                            "roi": region,
+                        }
+                    },
+                )
                 if detail.hit:
                     context.run_task("点击召回",{
                         "点击召回": {
@@ -125,7 +127,6 @@ class MakeSureQueueAvailable(CustomAction):
                     })
                     logger.info("已召回队伍，开始等待")
                     break
-                
 
         context.run_task("开始查看队列")
         while True:
@@ -137,9 +138,8 @@ class MakeSureQueueAvailable(CustomAction):
                 if match and int(match.group())>0:
                     break                
 
-        
         return CustomAction.RunResult(success=True)
- 
+
 @AgentServer.custom_action("NodeParaCombine")
 class NodeParaCombine(CustomAction):   
     """
