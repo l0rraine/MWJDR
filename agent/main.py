@@ -33,6 +33,9 @@ def safe_print(text, is_error=False, encoding=None):
         print(f"打印失败: {e}", file=sys.stderr)
 
 
+# 保存 MFAAvalonia DataRoot（chdir 前的 CWD 即为 MFAAvalonia 的工作目录）
+os.environ["MFA_DATA_ROOT"] = os.getcwd()
+
 # 更改CWD到项目根目录
 if os.getcwd() != project_root_dir:
     os.chdir(project_root_dir)

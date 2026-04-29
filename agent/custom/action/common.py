@@ -63,7 +63,7 @@ class SwitchCharacter(CustomAction):
             logger.debug(f"SwitchCharacter:{json_data}")        
         return CustomAction.RunResult(success=True)
 
-# 确保所有任务执行前有队列可用，1. 关闭自动加入 2.如果有不是挖矿的队伍，等待  3. 如果全部在挖矿，召回最后一队
+# 确保所有任务执行前有队列可用，1. 判断是否有战斗任务 2. 关闭自动加入 3.如果有不是挖矿的队伍，等待  4. 如果全部在挖矿，召回最后一队
 @AgentServer.custom_action("确保有队列可用")
 class MakeSureQueueAvailable(CustomAction):
     def run(
@@ -71,6 +71,13 @@ class MakeSureQueueAvailable(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
+        # 0. 如果后续没有战斗任务，跳过确保空闲队列
+        from utils.mfa_config import has_battle_tasks
+        battle_status = has_battle_tasks()
+        if battle_status is False:
+            logger.info("后续无战斗任务，跳过确保空闲队列")
+            return CustomAction.RunResult(success=True)
+
         # 1. 关闭自动加入
         logger.debug("关闭自动加入集结")
         context.run_task("自动加入集结_关闭_入口")  
