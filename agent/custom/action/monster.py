@@ -42,13 +42,10 @@ class SetMonsterCount(CustomAction):
         )
         context.run_task("后退")
         time.sleep(0.5)
-        # debug
-        # count=0
         if CombatRepetitionCount.isReachLimit():
-            # 吉娜模式下，执行出征怪兽次数够10次则直接打吉娜
-            logger.info(f"已达到出征次数上限：10 次，开始使用物品集结")
+            logger.info(f"已达到出征次数上限：10 次，停止出征")
             CombatRepetitionCount.reset()
-            context.run_task("集结物品_识别体力入口")
+            return CustomAction.RunResult(success=False)
                 
         else:
             context.run_task("自动集结_巨兽入口")
@@ -67,9 +64,10 @@ class BeginCombat(CustomAction):
         logger.debug(f"出征参数：{param}")        
 
         repeat_limit = int(param.get("出征次数"))
-        use_item = int(param.get("使用物品"))
         can_limit = int(param.get("罐头数量"))
         advanced_mode = int(param.get("高级模式",0))
+        use_12_can = int(param.get("使用12点罐头",0))
+        use_19_can = int(param.get("使用19点罐头",0))
         
         #debug
         # repeat_limit=7
@@ -94,12 +92,38 @@ class BeginCombat(CustomAction):
         time.sleep(0.5)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        # repeat_limit > 0 and advanced_mode == 1 and not CombatRepetitionCount.isReachLimit():
         logger.debug(f"{repeat_limit > 0} {advanced_mode == 1} {not CombatRepetitionCount.isReachLimit()}")
         if detail.hit:
             logger.debug(f"体力不足，尝试领取免费体力：{detail.best_result.text}")
             detail = context.run_recognition("是否有免费体力",img)
             if detail.hit:
+                # 普通模式下，根据免费罐头选项判断是否领取
+                if advanced_mode == 0:
+                    current_hour = time.localtime().tm_hour
+                    can_use_free = False
+                    if current_hour < 12:
+                        # 0点~12点之前，无条件使用免费罐头
+                        can_use_free = True
+                        logger.debug("0点~12点前，无条件领取免费体力")
+                    elif current_hour < 19:
+                        # 12点~19点，根据12点罐头选项决定
+                        if use_12_can == 1:
+                            can_use_free = True
+                            logger.debug("12点罐头选项已启用，领取免费体力")
+                        else:
+                            logger.debug("12点罐头选项未启用，不领取免费体力")
+                    else:
+                        # 19点~0点，根据19点罐头选项决定
+                        if use_19_can == 1:
+                            can_use_free = True
+                            logger.debug("19点罐头选项已启用，领取免费体力")
+                        else:
+                            logger.debug("19点罐头选项未启用，不领取免费体力")
+                    
+                    if not can_use_free:
+                        logger.info("免费罐头未启用，不领取免费体力，停止出征")
+                        return CustomAction.RunResult(success=False)
+                
                 logger.debug("领取免费体力")
                 context.run_task("免费体力")
                 context.run_task("点击出征")
@@ -179,30 +203,8 @@ class BeginCombat(CustomAction):
         
         # 判断作战次数是否达到上限
         if repeat_limit > 0 and repeat_limit <= CombatRepetitionCount.count:             
-            # 当前出征次数已达到限制次数
-            # 当前为吉娜模式
-            # 则重新查看出征次数
-            if use_item == 1:
-                logger.info("已到达次数上限，重新查看次数")
-                # 重新查看次数
-                context.override_pipeline(
-                    {
-                        "自动集结_查看次数":{
-                            "enabled": True
-                        }
-                    }
-                )
-                context.run_task("后退")
-                time.sleep(0.5)
-                context.run_task("自动集结_巨兽入口")
-            else:
-                logger.info(f"已达到出征次数上限：{repeat_limit} 次，停止出征")
-                return CustomAction.RunResult(success=False)
+            logger.info(f"已达到出征次数上限：{repeat_limit} 次，停止出征")
+            return CustomAction.RunResult(success=False)
             
-            return CustomAction.RunResult(success=True)
-            
-            
-        
-        
         context.run_task("自动集结_巨兽入口")
         return CustomAction.RunResult(success=True)

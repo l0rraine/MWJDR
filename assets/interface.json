@@ -424,7 +424,9 @@
                     "name": "No",
                     "pipeline_override": {},
                     "option": [
-                        "巨兽作战-多余体力使用物品集结"
+                        "巨兽作战-只执行10次",
+                        "巨兽-12点免费罐头",
+                        "巨兽-19点免费罐头"
                     ]
                 },
                 {
@@ -436,9 +438,9 @@
             ],
             "description": "关闭时为普通模式，清空所有体力集结，打开时为高级模式"
         },
-        "巨兽作战-多余体力使用物品集结": {
+        "巨兽作战-只执行10次": {
             "type": "switch",
-            "label": "10次巨兽后使用物品集结",
+            "label": "只执行10次",
             "cases": [
                 {
                     "name": "Yes",
@@ -447,26 +449,61 @@
                             "custom_action_param": {
                                 "高级模式": 0,
                                 "出征次数": "10",
-                                "使用物品": 1,
+                                "使用物品": 0,
                                 "罐头数量": 0
                             }
                         },
                         "自动集结_查看次数": {
                             "enabled": true
                         }
-                    },
-                    "option": [
-                        "集结物品选择",
-                        "使用物品队伍设置",
-                        "使用物品体力设置"
-                    ]
+                    }
                 },
                 {
                     "name": "No",
                     "pipeline_override": {}
                 }
             ],
-            "description": "每天只打10次巨兽，打完怪兽多余体力使用物品集结"
+            "description": "每天只打10次巨兽，打完停止"
+        },
+        "巨兽-12点免费罐头": {
+            "type": "switch",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "自动集结_准备出征": {
+                            "custom_action_param": {
+                                "使用12点罐头": 1
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {}
+                }
+            ],
+            "description": "打开时，12点免费罐头可用时自动使用"
+        },
+        "巨兽-19点免费罐头": {
+            "type": "switch",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "自动集结_准备出征": {
+                            "custom_action_param": {
+                                "使用19点罐头": 1
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {}
+                }
+            ],
+            "description": "打开时，19点免费罐头可用时自动使用"
         },
         "集结物品选择": {
             "type": "select",
