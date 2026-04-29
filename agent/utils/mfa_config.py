@@ -151,23 +151,31 @@ def disable_battle_tasks(current_entry: str = "") -> bool:
     if not task_items:
         return False
 
-    # 找到当前任务在列表中的位置，只禁用其之后的战斗任务
-    past_current = False
+    # 在配置文件中查找当前任务的位置
+    current_index = -1
+    for i, task in enumerate(task_items):
+        if isinstance(task, dict) and task.get("entry", "") == current_entry:
+            current_index = i
+            break
+
+    # 如果未找到当前任务，回退到禁用所有已启用的战斗任务（安全兜底）
+    if current_index == -1:
+        logger.warning(
+            f"未在配置文件中找到当前任务 '{current_entry}'，"
+            f"将禁用所有已启用的战斗任务"
+        )
+
+    # 只禁用配置文件中排在当前任务之后的、已启用的战斗任务
     disabled_names = []
-    for task in task_items:
+    for i, task in enumerate(task_items):
         if not isinstance(task, dict):
             continue
         entry = task.get("entry", "")
-        
-        # 判断是否已过当前任务
-        if entry == current_entry:
-            past_current = True
+
+        # 跳过当前任务及之前的任务（仅在找到当前任务时）
+        if current_index != -1 and i <= current_index:
             continue
-        
-        # 只禁用当前任务之后的战斗任务
-        if not past_current:
-            continue
-            
+
         if entry not in BATTLE_TASK_ENTRIES:
             continue
         if task.get("default_check", False) is True:
