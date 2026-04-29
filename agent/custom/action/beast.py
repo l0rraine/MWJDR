@@ -43,5 +43,4 @@ class BeastBeginCombat(CustomAction):
 
 
         time.sleep(return_time*2 + 0.5)
-        context.run_task("自动野兽_入口")
         return CustomAction.RunResult(success=True)

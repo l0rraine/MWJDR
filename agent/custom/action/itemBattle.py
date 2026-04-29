@@ -39,7 +39,6 @@ class RecoVigor(CustomAction):
             return CustomAction.RunResult(success=False)
         CombatRepetitionCount.setLimit(math.floor(left/cost))
         logger.debug(f"当前剩余体力：{left}，剩余次数：{CombatRepetitionCount.limit}")
-        context.run_task("集结物品入口")
         return CustomAction.RunResult(success=True)
     
     
@@ -67,7 +66,6 @@ class ItemCombat(CustomAction):
             if detail.hit:
                 logger.debug("领取免费体力")
                 context.run_task("免费体力")
-                context.run_task("集结物品_识别体力入口")
                 return CustomAction.RunResult(success=True)
             else:
                 #logger.debug("无免费体力") 
@@ -98,5 +96,4 @@ class ItemCombat(CustomAction):
             disable_battle_tasks()
             return CustomAction.RunResult(success=False)
         
-        context.run_task("集结物品入口")
         return CustomAction.RunResult(success=True)

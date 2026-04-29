@@ -48,9 +48,6 @@ class SetMonsterCount(CustomAction):
             CombatRepetitionCount.reset()
             return CustomAction.RunResult(success=False)
                 
-        else:
-            context.run_task("自动集结_巨兽入口")
-        
         return CustomAction.RunResult(success=True)
 
 
@@ -178,9 +175,8 @@ class BeginCombat(CustomAction):
         detail = context.run_recognition("自动集结_与别人队伍重复", img)
         if detail.hit:
             context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
-            context.run_task("自动集结_巨兽入口")
+            return CustomAction.RunResult(success=True)
             
-        
         if repeat_limit != 0:
             CombatRepetitionCount.addCount()
             logger.info(f"已出征 {CombatRepetitionCount.count} 次")
@@ -208,5 +204,4 @@ class BeginCombat(CustomAction):
             logger.info(f"已达到出征次数上限：{repeat_limit} 次，停止出征")
             return CustomAction.RunResult(success=False)
             
-        context.run_task("自动集结_巨兽入口")
         return CustomAction.RunResult(success=True)

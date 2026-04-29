@@ -99,6 +99,9 @@
         "custom_action": "野兽开始出征",
         "custom_action_param": {
             "出征次数": 0
-        }
+        },
+        "next": [
+            "自动野兽_入口"
+        ]
     }
 }

@@ -33,5 +33,4 @@ class LightBeginCombat(CustomAction):
                 disable_battle_tasks()
                 return CustomAction.RunResult(success=False)
         time.sleep(return_time*2 + 0.5)
-        context.run_task("灯塔入口")        
         return CustomAction.RunResult(success=True)

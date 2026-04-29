@@ -248,7 +248,10 @@
         "custom_action": "灯塔开始出征",
         "focus": {
             "Node.Action.Starting": "开始执行 击败野兽"
-        }
+        },
+        "next": [
+            "灯塔入口"
+        ]
     },
     "灯塔点击探险": {
         "recognition": {
