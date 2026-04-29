@@ -3,8 +3,7 @@
         "next": [
             "游荡商人_开关",
             "神秘商人_开关",
-            "联盟商店_开关",
-            "点击商店"
+            "联盟商店_开关"
         ]
     },
     "游荡商人_开关": {
@@ -30,9 +29,23 @@
         "template": [
             "商店.png"
         ],
+        "roi": [
+            340,
+            1130,
+            171,
+            150
+        ],
         "action": "Click"
     },
     "游荡商人入口": {
+        "next": [
+            "游荡商人_已在界面",
+            "[JumpBack]点击商店",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]后退"
+        ]
+    },
+    "游荡商人_已在界面": {
         "recognition": "OCR",
         "expected": [
             "游荡商人"
@@ -44,10 +57,7 @@
             92
         ],
         "next": [
-            "游荡商人_开始购买",
-            "[JumpBack]关闭礼包",
-            "[JumpBack]后退",
-            "[JumpBack]点击商店"
+            "游荡商人_开始购买"
         ]
     },
     "游荡商人_免费刷新": {
@@ -61,9 +71,25 @@
             169,
             98
         ],
-        "action": "Click"
+        "action": "Click",
+        "post_delay": 1500
     },
     "游荡商人_钻石刷新": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/钻石刷新.png"
+        ],
+        "roi": [
+            523,
+            229,
+            137,
+            68
+        ],
+        "next": [
+            "游荡商人_执行钻石刷新"
+        ]
+    },
+    "游荡商人_执行钻石刷新": {
         "action": "Custom",
         "custom_action": "游荡商人_钻石刷新",
         "custom_action_param": {
@@ -85,23 +111,58 @@
     },
     "游荡商人_非钻石": {
         "recognition": "TemplateMatch",
+        "rate_limit": 100,
         "template": [
             "流浪商人/肉.png",
             "流浪商人/木.png",
             "流浪商人/煤.png",
             "流浪商人/铁.png"
         ],
+        "roi": [
+            15,
+            398,
+            696,
+            695
+        ],
         "action": "Click",
+        "repeat": 6,
+        "repeat_delay": 300,
+        "next": [
+            "游荡商人_点击取消"
+        ]
+    },
+    "游荡商人_点击取消": {
+        "action": "Click",
+        "target": [
+            246,
+            245,
+            59,
+            39
+        ],
+        "post_delay": 500,
         "next": [
             "游荡商人_开始购买"
         ]
     },
     "游荡商人_钻石": {
         "recognition": "TemplateMatch",
+        "rate_limit": 100,
         "template": [
             "流浪商人/统帅经验.png"
         ],
+        "roi": [
+            15,
+            398,
+            696,
+            695
+        ],
         "action": "Click",
+        "target_offset": [
+            27,
+            128,
+            -37,
+            -18
+        ],
         "next": [
             "游荡商人_钻石_购买"
         ]
@@ -124,5 +185,12 @@
         ]
     },
     "神秘商人入口": {},
+    "神秘商人_钻石刷新": {
+        "action": "Custom",
+        "custom_action": "游荡商人_钻石刷新",
+        "custom_action_param": {
+            "钻石刷新次数": 0
+        }
+    },
     "联盟商店入口": {}
 }
