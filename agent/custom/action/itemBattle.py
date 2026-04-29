@@ -83,7 +83,6 @@ class ItemCombat(CustomAction):
         context.run_task("转到城外")
         
         detail = None
-        march_found = False
         while detail is None or not detail.hit:
             if time.time() - march_start_time >= 301:
                 logger.info("已超过5分01秒未识别到行军，认为行军已经开始")
@@ -91,13 +90,8 @@ class ItemCombat(CustomAction):
             time.sleep(1)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("自动集结_行军中",img)
-        
-        if detail is not None and detail.hit:
-            logger.debug(f"已识别到行军")
-            march_found = True
-        
-        if march_found:
-            time.sleep(return_time*2 + 0.5)
+        logger.debug(f"已识别到行军")
+        time.sleep(return_time*2 + 0.5)
         
         if CombatRepetitionCount.count>=CombatRepetitionCount.limit:
             logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")
