@@ -1,6 +1,7 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
+from maa.pipeline import JActionType, JClick
 import json
 import random
 import time
@@ -60,12 +61,10 @@ class ChangeTeam(CustomAction):
         team_index = int(json_data.get('队伍序号'))
         logger.debug(f"切换队伍到：{team_index}")
         if team_index != 0:
-            context.run_task("custom", {
-            "custom": {
-                "target": team_roi[team_index],
-                "action": "Click",
-            }
-        })
+            context.run_action_direct(
+                JActionType.Click,
+                JClick(target=team_roi[team_index]),
+            )
         return CustomAction.RunResult(success=True)
 @AgentServer.custom_action("撤回最后一个队伍")
 class RecallTeam(CustomAction):
@@ -88,10 +87,8 @@ class RecallTeam(CustomAction):
         json_data = json.loads(argv.custom_action_param)
         team_index = int(json_data.get('队伍序号'))
         if team_index != 0:
-            context.run_task("custom", {
-            "custom": {
-                "target": team_roi[team_index],
-                "action": "Click",
-            }
-        })
+            context.run_action_direct(
+                JActionType.Click,
+                JClick(target=team_roi[team_index]),
+            )
         return CustomAction.RunResult(success=True)

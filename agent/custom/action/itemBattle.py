@@ -1,6 +1,7 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
+from maa.pipeline import JRecognitionType, JOCR
 import json
 import random
 import time
@@ -23,13 +24,11 @@ class RecoVigor(CustomAction):
         detail = None
         while detail is None or not detail.hit:
             img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("开始识别", img,{
-                "开始识别": {
-                    "recognition": "OCR",
-                    "expected": "\\d+",
-                    "roi" : [583,21,87,36]
-                }
-            })
+            detail = context.run_recognition_direct(
+                JRecognitionType.OCR,
+                JOCR(expected=["\\d+"], roi=[583, 21, 87, 36]),
+                img,
+            )
             time.sleep(1)
         left = int(detail.best_result.text)
         logger.debug(f"识别剩余体力：{left}")        

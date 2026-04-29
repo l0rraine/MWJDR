@@ -1,6 +1,7 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
+from maa.pipeline import JActionType, JClick
 import json
 import random
 import time
@@ -114,12 +115,10 @@ class UniteScan(CustomAction):
                 rate = "200%"    
             
             # 确保接下来处于任务详情页面
-            context.run_task("点击",{
-                    "点击":{
-                        "action": "Click",
-                        "target": time_roi[i],
-                    }
-                })
+            context.run_action_direct(
+                JActionType.Click,
+                JClick(target=time_roi[i]),
+            )
             
             all = context.get_node_data("联盟总动员_点击详情")["next"]
             

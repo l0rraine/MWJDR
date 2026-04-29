@@ -9,6 +9,7 @@ from datetime import datetime
 from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
+from maa.pipeline import JRecognitionType, JOCR
 from utils import logger
 from PIL import Image
 
@@ -552,9 +553,11 @@ class Memories(CustomAction):
         while detail is None or not detail.hit:
             for area in areas:
                 img = context.tasker.controller.post_screencap().wait().get()
-                d = context.run_recognition("temp", img,{
-                    "temp":{"recognition": "OCR","roi": area,"expected": expected,"only_rec":False,"threshold": 0.8}
-                    })
+                d = context.run_recognition_direct(
+                    JRecognitionType.OCR,
+                    JOCR(expected=expected, roi=area, only_rec=False, threshold=0.8),
+                    img,
+                )
 
                 if d.best_result is None:
                     continue 
@@ -684,9 +687,11 @@ class Memories(CustomAction):
         while detail is None or not detail.hit:
             for area in areas:
                 img = context.tasker.controller.post_screencap().wait().get()
-                d = context.run_recognition("temp", img,{
-                    "temp":{"recognition": "OCR","roi": area,"expected": expected,"only_rec":True}
-                    })
+                d = context.run_recognition_direct(
+                    JRecognitionType.OCR,
+                    JOCR(expected=expected, roi=area, only_rec=True),
+                    img,
+                )
 
                 if d.best_result is None:
                     continue 

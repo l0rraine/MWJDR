@@ -2,6 +2,7 @@ import re
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
+from maa.pipeline import JRecognitionType, JTemplateMatch
 import json
 import random
 import time
@@ -108,16 +109,10 @@ class MakeSureQueueAvailable(CustomAction):
             ]
             img = context.tasker.controller.post_screencap().wait().get()
             for region in recall_region[-b:]:
-                detail = context.run_recognition(
-                    "识别召回",
+                detail = context.run_recognition_direct(
+                    JRecognitionType.TemplateMatch,
+                    JTemplateMatch(template=["召回.png"], roi=region),
                     img,
-                    {
-                        "识别召回": {
-                            "recognition": "TemplateMatch",
-                            "template": "召回.png",
-                            "roi": region,
-                        }
-                    },
                 )
                 if detail.hit:
                     context.run_task("点击召回",{
