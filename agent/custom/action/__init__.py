@@ -8,6 +8,7 @@ from .light import *
 from .beast import *
 from .travel import *
 from .dream import *
+from .shopping import *
 
 __all__ = [
     "ChangeTeam",
@@ -23,5 +24,8 @@ __all__ = [
     "RecoVigor",
     "SwitchCharacter",
     "DoDig",
-    "Memories"
+    "Memories",
+    "MerchantDailyCheck",
+    "MerchantDiamondRefresh",
+    "MerchantRecordDate",
 ]

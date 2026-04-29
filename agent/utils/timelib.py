@@ -53,6 +53,23 @@ def get_time_from_ocr(context, task_name, max_time=300):
         
     return hours,minutes,seconds
                 
+def is_today(timestamp_ms, timezone="Asia/Shanghai"):
+    """
+    判断毫秒级时间戳是否在今天（以0点为分界，游戏重置时间）
+
+    参数:
+        timestamp_ms: 毫秒级时间戳
+        timezone: 时区字符串，默认为"Asia/Shanghai"（北京时间）
+
+    返回:
+        bool: 是否是今天
+    """
+    tz = pytz.timezone(timezone)
+    ts_date = datetime.fromtimestamp(timestamp_ms / 1000.0, tz).date()
+    today = datetime.now(tz).date()
+    return ts_date == today
+
+
 def is_current_period(timestamp_ms, timezone="Asia/Shanghai"):
     """
     判断毫秒级时间戳是否在当前周和当前月
