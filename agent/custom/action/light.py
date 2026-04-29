@@ -4,6 +4,7 @@ from maa.context import Context
 import time
 
 from utils import timelib,logger
+from utils.mfa_config import disable_battle_tasks
 
 @AgentServer.custom_action("灯塔开始出征")
 class LightBeginCombat(CustomAction):
@@ -29,6 +30,7 @@ class LightBeginCombat(CustomAction):
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
+                disable_battle_tasks()
                 return CustomAction.RunResult(success=False)
         time.sleep(return_time*2 + 0.5)
         context.run_task("灯塔入口")        

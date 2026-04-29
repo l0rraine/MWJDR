@@ -6,6 +6,7 @@ import time
 
 from utils import logger
 from utils import timelib
+from utils.mfa_config import disable_battle_tasks
 
 @AgentServer.custom_action("野兽开始出征")
 class BeastBeginCombat(CustomAction):
@@ -30,6 +31,7 @@ class BeastBeginCombat(CustomAction):
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
+                disable_battle_tasks()
                 return CustomAction.RunResult(success=False)
 
         # img = context.tasker.controller.post_screencap().wait().get()

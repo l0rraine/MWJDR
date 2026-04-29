@@ -114,3 +114,61 @@ def has_battle_tasks() -> Optional[bool]:
 
     logger.info("后续无战斗任务")
     return False
+
+
+def disable_battle_tasks() -> bool:
+    """
+    体力耗尽时，自动禁用所有当前已启用的战斗任务
+
+    将实例配置中所有 default_check=True 的战斗任务设置为 default_check=False，
+    使 MFAAvalonia 下次启动时不再自动执行这些任务。
+
+    Returns:
+        True:  成功禁用
+        False: 禁用失败或无需禁用
+    """
+    instance_id = get_instance_id()
+    if not instance_id:
+        logger.debug("非 MFAAvalonia 环境，跳过禁用战斗任务")
+        return False
+
+    config_path = _find_instance_config(instance_id)
+    if not config_path:
+        logger.warning(f"未找到实例配置文件，无法禁用战斗任务: instance_id={instance_id}")
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+    except Exception as e:
+        logger.warning(f"读取实例配置失败，无法禁用战斗任务: {e}")
+        return False
+
+    task_items = config.get("TaskItems", [])
+    if not task_items:
+        return False
+
+    disabled_names = []
+    for task in task_items:
+        if not isinstance(task, dict):
+            continue
+        entry = task.get("entry", "")
+        if entry not in BATTLE_TASK_ENTRIES:
+            continue
+        if task.get("default_check", False) is True:
+            task["default_check"] = False
+            disabled_names.append(task.get("name", entry))
+
+    if not disabled_names:
+        logger.debug("没有需要禁用的战斗任务")
+        return False
+
+    try:
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(config, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        logger.warning(f"写入实例配置失败，无法禁用战斗任务: {e}")
+        return False
+
+    logger.info(f"⚠ 体力耗尽，已自动禁用战斗任务: {', '.join(disabled_names)}")
+    return True

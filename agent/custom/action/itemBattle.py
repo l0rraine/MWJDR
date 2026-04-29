@@ -10,6 +10,7 @@ import math
 
 from utils import logger
 from utils import timelib
+from utils.mfa_config import disable_battle_tasks
 from .combat import CombatRepetitionCount
 
 @AgentServer.custom_action("识别体力")
@@ -34,6 +35,7 @@ class RecoVigor(CustomAction):
         logger.debug(f"识别剩余体力：{left}")        
         if left < cost:
             logger.info(f"体力耗尽，停止出征")
+            disable_battle_tasks()
             return CustomAction.RunResult(success=False)
         CombatRepetitionCount.setLimit(math.floor(left/cost))
         logger.debug(f"当前剩余体力：{left}，剩余次数：{CombatRepetitionCount.limit}")
@@ -70,6 +72,7 @@ class ItemCombat(CustomAction):
             else:
                 #logger.debug("无免费体力") 
                 logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")  
+                disable_battle_tasks()
                 return CustomAction.RunResult(success=False)
         
         CombatRepetitionCount.addCount()
@@ -90,6 +93,7 @@ class ItemCombat(CustomAction):
         
         if CombatRepetitionCount.count>=CombatRepetitionCount.limit:
             logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")
+            disable_battle_tasks()
             return CustomAction.RunResult(success=False)
         
         context.run_task("集结物品入口")

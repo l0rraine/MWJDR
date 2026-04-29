@@ -9,6 +9,7 @@ import math
 
 from utils import logger
 from utils import timelib
+from utils.mfa_config import disable_battle_tasks
 
 from .combat import CombatRepetitionCount
 
@@ -114,6 +115,7 @@ class BeginCombat(CustomAction):
                     
                     if not can_use_free:
                         logger.info("免费罐头未启用，不领取免费体力，停止出征")
+                        disable_battle_tasks()
                         return CustomAction.RunResult(success=False)
                 
                 logger.debug("领取免费体力")
@@ -124,6 +126,7 @@ class BeginCombat(CustomAction):
                 # 判断罐头次数是否达到上限
                 if can_limit > 0 and CombatRepetitionCount.isReachLimit():
                     logger.info(f"已达到罐头使用次数上限：{can_limit}次，停止出征")
+                    disable_battle_tasks()
                     return CustomAction.RunResult(success=False)
                 
                 detail = None
@@ -134,6 +137,7 @@ class BeginCombat(CustomAction):
                 max_can = int(detail.best_result.text)
                 if max_can<2:
                     logger.info("罐头已用完")
+                    disable_battle_tasks()
                     return CustomAction.RunResult(success=False)
                 
                 c = min(20,CombatRepetitionCount.limit-CombatRepetitionCount.count,max_can)
@@ -155,6 +159,7 @@ class BeginCombat(CustomAction):
                 logger.debug(f"罐头数量：{max_can}")
                 if max_can<2:
                     logger.info("罐头已用完")
+                    disable_battle_tasks()
                     return CustomAction.RunResult(success=False)
                 c = min(20,(CombatRepetitionCount.limit-CombatRepetitionCount.count)*2,max_can)
                 context.run_task("使用罐头",{
@@ -166,6 +171,7 @@ class BeginCombat(CustomAction):
                 context.run_task("点击出征")
             else:
                 logger.debug("无免费体力，结束")
+                disable_battle_tasks()
                 return CustomAction.RunResult(success=False)
 
         img = context.tasker.controller.post_screencap().wait().get()
