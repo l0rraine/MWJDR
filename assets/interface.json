@@ -96,6 +96,15 @@
             "option": [
                 "梦境寻忆模式选择"
             ]
+        },
+        {
+            "name": "商店购买",
+            "entry": "商店购买_入口",
+            "option": [
+                "游荡商人",
+                "神秘商人",
+                "联盟商店"
+            ]
         }
     ],
     "option": {
@@ -695,6 +704,118 @@
                             "enabled": true
                         },
                         "梦境寻忆_闯关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "游荡商人": {
+            "type": "switch",
+            "label": "游荡商人",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "游荡商人_开关": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "游荡商人-钻石刷新次数"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "游荡商人_开关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "游荡商人-钻石刷新次数": {
+            "type": "input",
+            "label": "钻石刷新次数",
+            "inputs": [
+                {
+                    "name": "钻石刷新次数",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "使用钻石刷新游荡商人的次数，0为不使用钻石刷新"
+                }
+            ],
+            "pipeline_override": {
+                "游荡商人_钻石刷新": {
+                    "custom_action_param": {
+                        "钻石刷新次数": "{钻石刷新次数}"
+                    }
+                }
+            }
+        },
+        "神秘商人": {
+            "type": "switch",
+            "label": "神秘商人",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "神秘商人_开关": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "神秘商人-钻石刷新次数"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商人_开关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商人-钻石刷新次数": {
+            "type": "input",
+            "label": "钻石刷新次数",
+            "inputs": [
+                {
+                    "name": "钻石刷新次数",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "使用钻石刷新神秘商人的次数，0为不使用钻石刷新"
+                }
+            ],
+            "pipeline_override": {
+                "神秘商人_钻石刷新": {
+                    "custom_action_param": {
+                        "钻石刷新次数": "{钻石刷新次数}"
+                    }
+                }
+            }
+        },
+        "联盟商店": {
+            "type": "switch",
+            "label": "联盟商店",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "联盟商店_开关": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_开关": {
                             "enabled": false
                         }
                     }
