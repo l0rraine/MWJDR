@@ -30,7 +30,7 @@ class LightBeginCombat(CustomAction):
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
-                disable_battle_tasks()
+                disable_battle_tasks("灯塔入口")
                 return CustomAction.RunResult(success=False)
         time.sleep(return_time*2 + 0.5)
         return CustomAction.RunResult(success=True)

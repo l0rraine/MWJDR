@@ -116,12 +116,15 @@ def has_battle_tasks() -> Optional[bool]:
     return False
 
 
-def disable_battle_tasks() -> bool:
+def disable_battle_tasks(current_entry: str = "") -> bool:
     """
-    体力耗尽时，自动禁用所有当前已启用的战斗任务
+    体力耗尽时，自动禁用当前任务之后已启用的战斗任务
 
-    将实例配置中所有 default_check=True 的战斗任务设置为 default_check=False，
-    使 MFAAvalonia 下次启动时不再自动执行这些任务。
+    只禁用 TaskItems 列表中排在当前任务之后的、已启用的战斗任务。
+    当前任务之前的战斗任务不会被禁用（因为它们已经执行过了）。
+
+    Args:
+        current_entry: 当前正在执行的任务入口名称，用于确定只禁用后续任务
 
     Returns:
         True:  成功禁用
@@ -148,11 +151,23 @@ def disable_battle_tasks() -> bool:
     if not task_items:
         return False
 
+    # 找到当前任务在列表中的位置，只禁用其之后的战斗任务
+    past_current = False
     disabled_names = []
     for task in task_items:
         if not isinstance(task, dict):
             continue
         entry = task.get("entry", "")
+        
+        # 判断是否已过当前任务
+        if entry == current_entry:
+            past_current = True
+            continue
+        
+        # 只禁用当前任务之后的战斗任务
+        if not past_current:
+            continue
+            
         if entry not in BATTLE_TASK_ENTRIES:
             continue
         if task.get("default_check", False) is True:
@@ -170,5 +185,5 @@ def disable_battle_tasks() -> bool:
         logger.warning(f"写入实例配置失败，无法禁用战斗任务: {e}")
         return False
 
-    logger.info(f"⚠ 体力耗尽，已自动禁用战斗任务: {', '.join(disabled_names)}")
+    logger.info(f"体力耗尽，已自动禁用后续战斗任务: {', '.join(disabled_names)}")
     return True
