@@ -45,7 +45,7 @@
     },
     "集结物品入口": {
         "next": [
-            "集结物品_点击背包",
+            "集结物品_点击其他",
             "[JumpBack]关闭礼包",
             "[JumpBack]转到城外",
             "[JumpBack]后退"
@@ -64,13 +64,17 @@
                 ]
             }
         },
-        "action": "Click",
-        "next": [
-            "集结物品_点击其他"
-        ],
-        "post_delay": 1000
+        "action": "Click"
     },
     "集结物品_点击其他": {
+        "recognition": "OCR",
+        "expected": "其他",
+        "roi": [
+            549,
+            64,
+            169,
+            113
+        ],
         "action": {
             "type": "Click",
             "param": {
@@ -83,7 +87,10 @@
             }
         },
         "next": [
-            "集结物品_点击物品_包"
+            "集结物品_点击物品_包",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]转到城外",
+            "[JumpBack]集结物品_点击背包"
         ],
         "post_delay": 500
     },
