@@ -14,6 +14,8 @@
 6. [`_direct` API 与普通 Pipeline 调用的区别？](#6-_direct-api-与普通-pipeline-调用的区别)
 7. [JRecognitionType / JActionType 的作用？](#7-jrecognitiontype--jactiontype-的作用)
 8. [Custom Action 中使用 context.run_task() 递归调用导致重复执行](#8-custom-action-中使用-contextrun_task-递归调用导致重复执行)
+9. [Custom Action 中应避免的 context.run_task() 递归调用模式](#9-custom-action-中应避免的-contextrun_task-递归调用模式)
+10. [行军识别无限等待问题与超时机制](#10-行军识别无限等待问题与超时机制)
 
 ---
 
@@ -471,3 +473,134 @@ class UniteScan(CustomAction):
 > **Custom Action 中避免使用 `context.run_task()` 调用自身入口节点来循环**。应通过 `return RunResult(success=True/False)` 配合 Pipeline 的 `next` / `on_error` 机制控制流程。`success=True` → 走 `next` 继续循环；`success=False` → 走 `on_error` 终止任务。
 
 这个原则适用于所有需要在 Custom Action 中实现"循环直到条件满足"的场景，例如集结巨兽的出征循环、物品集结的体力循环等。
+
+---
+
+## 9. Custom Action 中应避免的 `context.run_task()` 递归调用模式
+
+### 问题
+
+除了联盟总动员的重复执行 bug，项目中还存在大量 `context.run_task("入口节点")` 的递归调用，虽然暂未引发 bug，但本质上都存在相同的风险，应当统一消除。
+
+### 涉及的文件和调用
+
+| 文件 | Custom Action | 递归调用 | 替换方案 |
+|---|---|---|---|
+| `monster.py` | 设置怪兽次数 | `context.run_task("自动集结_巨兽入口")` | `success=True` + Pipeline `next` |
+| `monster.py` | 开始出征 | `context.run_task("自动集结_巨兽入口")` ×2 | `success=True` + Pipeline `next` |
+| `itemBattle.py` | 识别体力 | `context.run_task("集结物品入口")` | `success=True` + Pipeline `next` |
+| `itemBattle.py` | 物品集结 | `context.run_task("集结物品_识别体力入口")` + `context.run_task("集结物品入口")` | `success=True` + Pipeline `next` |
+| `beast.py` | 野兽开始出征 | `context.run_task("自动野兽_入口")` | `success=True` + Pipeline `next` |
+| `light.py` | 灯塔开始出征 | `context.run_task("灯塔入口")` | `success=True` + Pipeline `next` |
+
+### 修改模式
+
+**1. Python 代码：移除递归调用**
+
+```python
+# ❌ 修改前：递归调用入口 + success=True
+context.run_task("自动集结_巨兽入口")
+return CustomAction.RunResult(success=True)
+
+# ✅ 修改后：直接返回 success=True，由 Pipeline next 回到入口
+return CustomAction.RunResult(success=True)
+```
+
+**2. Pipeline JSON：为 Custom Action 节点添加 `next`**
+
+```json
+// ❌ 修改前：无 next，依赖 Python 递归调用
+"自动集结_准备出征": {
+    "action": "Custom",
+    "custom_action": "开始出征"
+}
+
+// ✅ 修改后：定义 next，由 Pipeline 控制循环
+"自动集结_准备出征": {
+    "action": "Custom",
+    "custom_action": "开始出征",
+    "next": ["自动集结_巨兽入口"]
+}
+```
+
+### 特殊情况：与别人队伍重复
+
+`开始出征` 中有一处特殊逻辑：发现与别人队伍重复时，点击取消后需要重新选择巨兽。原来的写法是递归调用入口后继续执行后续出征逻辑，这实际上存在隐患——递归执行完入口路径后回到当前代码继续执行，可能导致计数混乱。
+
+修改为发现重复后直接 `return success=True`，由 Pipeline next 回到入口重新走完整流程，语义更清晰。
+
+```python
+# ❌ 修改前：递归调用入口后继续往下执行
+if detail.hit:
+    context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+    context.run_task("自动集结_巨兽入口")
+    # 继续执行出征计数、等待行军等逻辑...
+
+# ✅ 修改后：直接返回，由 Pipeline 重新走完整流程
+if detail.hit:
+    context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+    return CustomAction.RunResult(success=True)
+```
+
+### 修改后的 Pipeline next 映射表
+
+| Pipeline 节点 | next 目标 | 含义 |
+|---|---|---|
+| `自动集结_设置怪兽次数` | `自动集结_巨兽入口` | 未达上限，继续出征 |
+| `自动集结_准备出征` | `自动集结_巨兽入口` | 出征完成，开始下一轮 |
+| `集结物品_识别体力` | `集结物品入口` | 体力够，开始找物品 |
+| `集结物品_准备出征` | `集结物品_识别体力入口` | 出征完成，重新识别体力 |
+| `自动野兽_准备出征` | `自动野兽_入口` | 出征完成，继续下一轮 |
+| `灯塔准备出征` | `灯塔入口` | 出征完成，继续下一轮 |
+
+---
+
+## 10. 行军识别无限等待问题与超时机制
+
+### 问题
+
+巨兽和物品集结在点击出征后，会等待识别"行军中"状态。原来的实现是一个无限循环：
+
+```python
+# ❌ 无限等待，可能永远卡住
+detail = None
+while detail is None or not detail.hit:
+    time.sleep(1)
+    img = context.tasker.controller.post_screencap().wait().get()
+    detail = context.run_recognition("自动集结_行军中", img)
+```
+
+如果行军状态识别不到（界面变化、识别率问题等），程序会无限等待，永远不会继续执行。
+
+### 解决方案
+
+增加 301 秒（5 分 01 秒）超时机制。从点击出征开始计时，超过 301 秒未识别到行军，则认为行军已经开始，继续执行后续逻辑。
+
+```python
+# ✅ 增加超时机制
+march_start_time = time.time()
+time.sleep(80)
+context.run_task("转到城外")
+
+detail = None
+while detail is None or not detail.hit:
+    if time.time() - march_start_time >= 301:
+        logger.info("已超过5分01秒未识别到行军，认为行军已经开始")
+        break
+    time.sleep(1)
+    img = context.tasker.controller.post_screencap().wait().get()
+    detail = context.run_recognition("自动集结_行军中", img)
+
+logger.debug("已识别到行军")
+time.sleep(return_time*2 + 0.5)
+```
+
+### 设计要点
+
+- **超时时间 301 秒**：从点击出征开始计算，包含 80s 初始等待 + 约 221s 识别循环
+- **超时后行为与识别到一致**：无论是否识别到行军，都认为行军已开始，后续等待返回时间的逻辑不变
+- **不区分识别结果**：`march_found` 等中间变量无意义，因为两种情况（识别到 / 超时）的后续行为完全一致
+
+### 适用范围
+
+此超时机制应用于巨兽 (`monster.py`) 和物品集结 (`itemBattle.py`) 两个战斗模块。野兽和灯塔的出征逻辑不同（无行军等待环节），不需要此机制。
