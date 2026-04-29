@@ -4,7 +4,7 @@
         "timeout": 60000,
         "next": [
             "开始切换角色",
-            "确保有空闲队列",
+            "识别角色ID",
             "[JumpBack]关闭礼包",
             "[JumpBack]后退"
         ]
@@ -110,6 +110,13 @@
                 }
             }
         },
+        "next": [
+            "识别角色ID"
+        ]
+    },
+    "识别角色ID": {
+        "action": "Custom",
+        "custom_action": "识别角色ID",
         "next": [
             "确保有空闲队列"
         ]
