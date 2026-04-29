@@ -19,48 +19,57 @@ class SwitchCharacter(CustomAction):
         region = json_data.get('王国编号') or "3194"
         index = json_data.get('王国内序号')
         logger.debug(f"王国编号:{region},王国内序号:{index}")
-        img = context.tasker.controller.post_screencap().wait().get()
         expected = f"王国\\D+{region}"
         
         cha_detail = None
+        region_detail = None
         count = 3
         while count > 0 and (cha_detail is None or not cha_detail.hit):
             try:
+                img = context.tasker.controller.post_screencap().wait().get()
                 region_detail = context.run_recognition(
                     "国度信息",
                     img,
                     {"国度信息": {"expected": expected}},
                 )
-                if region_detail.hit:
-                    logger.debug(f"国度信息：{region_detail.best_result.text}")
-                else:
+                if not region_detail or not region_detail.hit:
                     logger.debug(f"未找到国度信息,期望值：{expected}")
-                cha_detail = context.run_recognition(
-                    "选中角色",
-                    img,
-                    {"选中角色":{"roi":[region_detail.box.x+402,region_detail.box.y+70,119,231]}}
-                )
-                logger.debug(f"是否是第一个角色：{cha_detail.box.y-region_detail.box.y<170}")
+                else:
+                    logger.debug(f"国度信息：{region_detail.best_result.text}")
+                    cha_detail = context.run_recognition(
+                        "选中角色",
+                        img,
+                        {"选中角色":{"roi":[region_detail.best_result.box.x+402,region_detail.best_result.box.y+70,119,231]}}
+                    )
+                    if cha_detail and cha_detail.hit:
+                        logger.debug(f"是否是第一个角色：{cha_detail.best_result.box.y-region_detail.best_result.box.y<170}")
             except Exception as e:
                 logger.debug(f"第 {4 - count} 次执行出错: {e}")
-                time.sleep(2)
             finally:                
                 count -= 1
+                time.sleep(2)
         
-        if index=="1" and cha_detail.box.y-region_detail.box.y>170:
+        if not cha_detail or not cha_detail.hit or not region_detail or not region_detail.hit:
+            logger.warning("未能识别角色信息，跳过切换")
+            return CustomAction.RunResult(success=True)
+
+        offset_y = cha_detail.best_result.box.y - region_detail.best_result.box.y
+        if index == "1" and offset_y > 170:
             context.run_task(
                 "点击角色",
                 {"点击角色":
-                    {"target":[cha_detail.box.x,cha_detail.box.y-170,cha_detail.box.w,cha_detail.box.h]}
+                    {"target":[cha_detail.best_result.box.x,cha_detail.best_result.box.y-170,cha_detail.best_result.box.w,cha_detail.best_result.box.h]}
                 })
-            logger.debug(f"SwitchCharacter:{json_data}")
-        if index=="2" and cha_detail.box.y-region_detail.box.y<170:
+            logger.info(f"切换到第一个角色")
+        elif index == "2" and offset_y < 170:
             context.run_task(
                 "点击角色",
                 {"点击角色":
-                    {"target":[cha_detail.box.x,cha_detail.box.y+170,cha_detail.box.w,cha_detail.box.h]}
+                    {"target":[cha_detail.best_result.box.x,cha_detail.best_result.box.y+170,cha_detail.best_result.box.w,cha_detail.best_result.box.h]}
                 })
-            logger.debug(f"SwitchCharacter:{json_data}")        
+            logger.info(f"切换到第二个角色")
+        else:
+            logger.info(f"当前已是第{index}个角色，无需切换")
         return CustomAction.RunResult(success=True)
 
 # 确保所有任务执行前有队列可用，1. 判断是否有战斗任务 2. 关闭自动加入 3.如果有不是挖矿的队伍，等待  4. 如果全部在挖矿，召回最后一队
