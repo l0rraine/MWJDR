@@ -13,6 +13,7 @@
 5. [`CustomAction.RunResult(success=True/False)` 对任务执行有什么影响？](#5-customactionrunresultsuccesstruefalse-对任务执行有什么影响)
 6. [`_direct` API 与普通 Pipeline 调用的区别？](#6-_direct-api-与普通-pipeline-调用的区别)
 7. [JRecognitionType / JActionType 的作用？](#7-jrecognitiontype--jactiontype-的作用)
+8. [Custom Action 中使用 context.run_task() 递归调用导致重复执行](#8-custom-action-中使用-contextrun_task-递归调用导致重复执行)
 
 ---
 
@@ -385,3 +386,88 @@ run_action_direct(
 | `agent/custom/action/` | Custom Action 目录 |
 | `agent/pipeline/` | Pipeline JSON 定义目录 |
 | `config/instances/{id}.json` | MFAAvalonia 实例配置文件 |
+
+---
+
+## 8. Custom Action 中使用 `context.run_task()` 递归调用导致重复执行
+
+### 问题
+
+联盟总动员任务中，当两个槽位都已找到满意的任务后，仍然会重复执行若干次才停止。为什么？
+
+### 解答
+
+这是一个 **Custom Action 递归调用与 Pipeline 循环机制冲突** 的典型问题。
+
+#### 错误的写法
+
+在 Custom Action 内部使用 `context.run_task("入口节点")` 实现循环：
+
+```python
+# ❌ 错误示范
+@AgentServer.custom_action("联盟总动员_扫描")
+class UniteScan(CustomAction):
+    def run(self, context, argv):
+        # ... 扫描逻辑 ...
+        
+        if min(need_wait_seconds) != 86400:
+            time.sleep(min(need_wait_seconds))
+            context.run_task("联盟总动员_入口")  # ← 递归调用入口
+            return CustomAction.RunResult(success=True)
+        else:
+            return CustomAction.RunResult(success=False)
+```
+
+#### 问题根因
+
+当两个槽位都满意时，内层递归的 `context.run_task("联盟总动员_入口")` 执行后最终返回 `success=False`，这个 `False` 只终止了内层调用。但**外层 Custom Action 仍然返回 `success=True`**，Pipeline 认为 `联盟总动员_执行扫描` 节点执行成功，继续沿 `next` 走，最终通过 `[JumpBack]` 节点重新进入入口，造成已完成的任务被重复执行。
+
+```
+外层: 联盟总动员_执行扫描 → return success=True → Pipeline 走 next → [JumpBack]重新进入入口
+  └─ 内层: context.run_task("联盟总动员_入口") → 扫描 → return success=False → 仅终止内层
+```
+
+#### 正确的写法
+
+**不要在 Custom Action 中递归调用入口**，而是利用 Pipeline 的 `next` 机制自然循环：
+
+**1. Pipeline JSON 中为 Custom Action 节点定义 `next`：**
+
+```json
+"联盟总动员_执行扫描": {
+    "action": "Custom",
+    "custom_action": "联盟总动员_扫描",
+    "next": [
+        "联盟总动员_入口"   // ← success=True 时 Pipeline 自动回到入口
+    ]
+}
+```
+
+**2. Custom Action 中直接返回，不做递归调用：**
+
+```python
+# ✅ 正确写法
+@AgentServer.custom_action("联盟总动员_扫描")
+class UniteScan(CustomAction):
+    def run(self, context, argv):
+        # ... 扫描逻辑 ...
+        
+        if min(need_wait_seconds) != 86400:
+            time.sleep(min(need_wait_seconds))
+            return CustomAction.RunResult(success=True)   # ← Pipeline 走 next → 回到入口
+        else:
+            return CustomAction.RunResult(success=False)  # ← Pipeline 走 on_error（空）→ 任务终止
+```
+
+#### 执行流程对比
+
+| 方式 | 需要继续扫描 | 两个槽位都满意 |
+|---|---|---|
+| ❌ 递归调用 | 内层递归 + 外层 success=True → 可能重复 | 内层 False 仅终止内层，外层 True 导致重复 |
+| ✅ Pipeline next | return True → Pipeline 走 next → 入口 | return False → Pipeline 走 on_error（空）→ 终止 |
+
+#### 核心原则
+
+> **Custom Action 中避免使用 `context.run_task()` 调用自身入口节点来循环**。应通过 `return RunResult(success=True/False)` 配合 Pipeline 的 `next` / `on_error` 机制控制流程。`success=True` → 走 `next` 继续循环；`success=False` → 走 `on_error` 终止任务。
+
+这个原则适用于所有需要在 Custom Action 中实现"循环直到条件满足"的场景，例如集结巨兽的出征循环、物品集结的体力循环等。
