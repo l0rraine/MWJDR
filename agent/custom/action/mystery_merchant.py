@@ -51,7 +51,7 @@ class MysteryMerchantDailyCheck(CustomAction):
         timestamp = get_timestamp(data, SHOPPING_CATEGORY, account_id, "神秘商人")
 
         if timelib.is_today(timestamp):
-            logger.info("神秘商人今日已购买，跳过")
+            logger.info(f"神秘商人今日已购买，跳过 (timestamp={timestamp})")
             return CustomAction.RunResult(success=False)
 
         logger.info("神秘商人今日未购买，开始购买")
