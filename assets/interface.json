@@ -767,7 +767,12 @@
                         }
                     },
                     "option": [
-                        "神秘商人-钻石刷新次数"
+                        "神秘商人-钻石刷新次数",
+                        "神秘商人-当季专武",
+                        "神秘商人-宠物自选箱",
+                        "神秘商人-高级野性标记",
+                        "神秘商人-行军加速",
+                        "神秘商人-橙碎"
                     ]
                 },
                 {
@@ -793,12 +798,102 @@
                 }
             ],
             "pipeline_override": {
-                "神秘商人_钻石刷新": {
+                "神秘商人_购买": {
                     "custom_action_param": {
                         "钻石刷新次数": "{钻石刷新次数}"
                     }
                 }
             }
+        },
+        "神秘商人-当季专武": {
+            "type": "switch",
+            "label": "当季专武 50%",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商人_参数_当季专武": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商人-宠物自选箱": {
+            "type": "switch",
+            "label": "宠物自选箱",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商人_参数_宠物自选箱": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商人-高级野性标记": {
+            "type": "switch",
+            "label": "高级野性标记",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商人_参数_高级野性标记": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商人-行军加速": {
+            "type": "switch",
+            "label": "行军加速",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商人_参数_行军加速": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商人-橙碎": {
+            "type": "switch",
+            "label": "橙碎",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商人_参数_橙碎": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
         },
         "联盟商店": {
             "type": "switch",
