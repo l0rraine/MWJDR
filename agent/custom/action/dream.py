@@ -10,7 +10,9 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 from maa.pipeline import JRecognitionType, JOCR
+from maa.define import Rect
 from utils import logger
+from utils.click_util import click_rect
 from PIL import Image
 
 
@@ -569,10 +571,8 @@ class Memories(CustomAction):
                         miss_dict[t] = 1
                     continue
 
-                rx = random.randint(item_dict[t][0], item_dict[t][0] + item_dict[t][2])
-                ry = random.randint(item_dict[t][1], item_dict[t][1] + item_dict[t][3])
-                logger.debug(f"物品:{t},点击坐标：{rx},{ry}")
-                context.tasker.controller.post_click(rx,ry).wait()
+                logger.debug(f"物品:{t}")
+                click_rect(context, Rect(*item_dict[t]))
                 done_dict[t]=item_dict.pop(t)
                 time.sleep(0.5)     
 
@@ -701,10 +701,8 @@ class Memories(CustomAction):
                         logger.info(f"缺失:{t}")
                     continue
 
-                rx = random.randint(item_dict[t][0], item_dict[t][0] + item_dict[t][2])
-                ry = random.randint(item_dict[t][1], item_dict[t][1] + item_dict[t][3])
-                logger.debug(f"物品:{t},点击坐标：{rx},{ry}")
-                context.tasker.controller.post_click(rx,ry).wait()
+                logger.debug(f"物品:{t}")
+                click_rect(context, Rect(*item_dict[t]))
                 done_dict[t]=item_dict.pop(t)
                 time.sleep(0.5)     
 

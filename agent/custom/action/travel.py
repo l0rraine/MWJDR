@@ -9,6 +9,7 @@ import math
 
 from utils import logger
 from utils import timelib
+from utils.click_util import click_rect
 from .combat import CombatRepetitionCount
 
 @AgentServer.custom_action("挖掘宝藏")
@@ -37,10 +38,7 @@ class DoDig(CustomAction):
                 }
             })
             if detail.hit:
-                context.tasker.controller.post_click(
-                    detail.box.x, detail.box.y
-                    
-                ).wait()
+                click_rect(context, detail.box)
                 logger.debug(f"点击地块{i+1}")
                 time.sleep(1)
         
