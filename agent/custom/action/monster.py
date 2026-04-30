@@ -59,7 +59,7 @@ class BeginCombat(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         param = json.loads(argv.custom_action_param)
-        # logger.debug(f"出征参数：{param}")        
+        # logger.debug(f"出征参数：{param}")
 
         repeat_limit = int(param.get("出征次数"))
         can_limit = int(param.get("罐头数量"))
@@ -87,7 +87,7 @@ class BeginCombat(CustomAction):
         time.sleep(0.5)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        #logger.debug(f"{repeat_limit > 0} {advanced_mode == 1} {not CombatRepetitionCount.isReachLimit()}")
+        # logger.debug(f"{repeat_limit > 0} {advanced_mode == 1} {not CombatRepetitionCount.isReachLimit()}")
         if detail is not None and detail.hit:
             logger.debug(f"体力不足，尝试领取免费体力：{detail.best_result.text}")
             detail = context.run_recognition("是否有免费体力",img)
@@ -200,8 +200,14 @@ class BeginCombat(CustomAction):
 
         # 判断作战次数是否达到上限
         if CombatRepetitionCount.isReachLimit():
-            logger.info(f"已达到出征次数上限，停止出征")
-            CombatRepetitionCount.reset()
-            return CustomAction.RunResult(success=False)
+            if advanced_mode == 1:
+                logger.info(f"已达到出征次数上限：{CombatRepetitionCount.limit}次，停止出征")
+                CombatRepetitionCount.reset()
+                return CustomAction.RunResult(success=False)
+            else:
+                logger.info("已到达次数上限，重新查看次数")
+                # 重新查看次数
+                context.override_pipeline({"自动集结_查看次数": {"enabled": True}})
+                return CustomAction.RunResult(success=True)
 
         return CustomAction.RunResult(success=True)
