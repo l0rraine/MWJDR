@@ -112,7 +112,6 @@ def has_battle_tasks() -> Optional[bool]:
             logger.info(f"发现已启用的战斗任务: {task.get('name', entry)}")
             return True
 
-    logger.info("后续无战斗任务")
     return False
 
 

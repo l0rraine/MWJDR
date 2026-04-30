@@ -67,7 +67,7 @@ def ocr_until_consistent(
                 same_count += 1
                 logger.debug(f"OCR第{attempt}次：'{text}'一致（{same_count}/{consistent_count}）")
                 if same_count >= consistent_count:
-                    logger.info(f"OCR一致性校验通过：'{text}'（{consistent_count}次一致）")
+                    logger.debug(f"OCR一致性校验通过：'{text}'（{consistent_count}次一致）")
                     return text
             else:
                 last_result = text
