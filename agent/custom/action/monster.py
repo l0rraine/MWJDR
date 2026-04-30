@@ -10,6 +10,7 @@ import math
 from utils import logger
 from utils import timelib
 from utils.ocr_util import ocr_until_consistent_by_task
+from utils.click_util import click_rect
 from utils.mfa_config import disable_battle_tasks
 
 from .combat import CombatRepetitionCount
@@ -174,7 +175,7 @@ class BeginCombat(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("自动集结_与别人队伍重复", img)
         if detail is not None and detail.hit:
-            context.tasker.controller.post_click(detail.box.x, detail.box.y).wait()
+            click_rect(context, detail.box)
             return CustomAction.RunResult(success=True)
 
         if CombatRepetitionCount.limit > 0:
