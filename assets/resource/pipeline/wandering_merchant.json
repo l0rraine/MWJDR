@@ -1,0 +1,124 @@
+{
+    "游荡商人入口": {
+        "next": [
+            "游荡商人_每日检查"
+        ]
+    },
+    "游荡商人_已在界面": {
+        "recognition": "OCR",
+        "expected": [
+            "游荡商人"
+        ],
+        "roi": [
+            4,
+            1188,
+            184,
+            92
+        ],
+        "next": [
+            "游荡商人_开始购买"
+        ]
+    },
+    "游荡商人_每日检查": {
+        "action": "Custom",
+        "custom_action": "游荡商人_每日检查",
+        "next": [
+            "游荡商人_已在界面",
+            "[JumpBack]点击商店",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]后退"
+        ]
+    },
+    "游荡商人_开始购买": {
+        "next": [
+            "游荡商人_非钻石",
+            "游荡商人_钻石",
+            "游荡商人_刷新控制"
+        ]
+    },
+    "游荡商人_非钻石": {
+        "recognition": "TemplateMatch",
+        "rate_limit": 100,
+        "template": [
+            "流浪商人/肉.png",
+            "流浪商人/木.png",
+            "流浪商人/煤.png",
+            "流浪商人/铁.png"
+        ],
+        "roi": [
+            15,
+            398,
+            696,
+            695
+        ],
+        "action": "Click",
+        "repeat": 6,
+        "repeat_delay": 300,
+        "next": [
+            "游荡商人_点击取消"
+        ]
+    },
+    "游荡商人_点击取消": {
+        "action": "Click",
+        "target": [
+            246,
+            245,
+            59,
+            39
+        ],
+        "post_delay": 500,
+        "next": [
+            "游荡商人_开始购买"
+        ]
+    },
+    "游荡商人_钻石": {
+        "recognition": "TemplateMatch",
+        "rate_limit": 100,
+        "template": [
+            "流浪商人/统帅经验.png"
+        ],
+        "roi": [
+            15,
+            398,
+            696,
+            695
+        ],
+        "action": "Click",
+        "target_offset": [
+            27,
+            128,
+            -37,
+            -18
+        ],
+        "next": [
+            "游荡商人_钻石_购买"
+        ]
+    },
+    "游荡商人_钻石_购买": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/钻石购买.png"
+        ],
+        "roi": [
+            194,
+            701,
+            334,
+            184
+        ],
+        "action": "Click",
+        "next": [
+            "游荡商人_钻石_购买",
+            "游荡商人_开始购买"
+        ]
+    },
+    "游荡商人_刷新控制": {
+        "action": "Custom",
+        "custom_action": "游荡商人_钻石刷新",
+        "custom_action_param": {
+            "钻石刷新次数": 0
+        },
+        "next": [
+            "游荡商人_开始购买"
+        ]
+    }
+}

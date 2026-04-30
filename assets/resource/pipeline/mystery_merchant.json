@@ -1,0 +1,56 @@
+{
+    "神秘商人入口": {
+        "next": [
+            "神秘商人_每日检查"
+        ]
+    },
+    "神秘商人_每日检查": {
+        "action": "Custom",
+        "custom_action": "神秘商人_每日检查",
+        "next": [
+            "神秘商人_已在界面",
+            "[JumpBack]点击商店",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]后退"
+        ]
+    },
+    "神秘商人_已在界面": {
+        "recognition": "OCR",
+        "expected": [
+            "神秘商人"
+        ],
+        "roi": [
+            232,
+            1208,
+            139,
+            64
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "神秘商人_购买"
+        ]
+    },
+    "神秘商人_购买": {
+        "action": "Custom",
+        "custom_action": "神秘商人_购买",
+        "custom_action_param": {
+            "钻石刷新次数": 0
+        }
+    },
+    "神秘商人_参数_当季专武": {
+        "enabled": true
+    },
+    "神秘商人_参数_宠物自选箱": {
+        "enabled": true
+    },
+    "神秘商人_参数_高级野性标记": {
+        "enabled": true
+    },
+    "神秘商人_参数_行军加速": {
+        "enabled": true
+    },
+    "神秘商人_参数_橙碎": {
+        "enabled": true
+    }
+}
