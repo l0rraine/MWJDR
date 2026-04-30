@@ -12,8 +12,12 @@
             "[JumpBack]点击商店",
             "[JumpBack]关闭礼包",
             "[JumpBack]后退"
+        ],
+        "on_error": [
+            "神秘商人_跳过"
         ]
     },
+    "神秘商人_跳过": {},
     "神秘商人_已在界面": {
         "recognition": "OCR",
         "expected": [
