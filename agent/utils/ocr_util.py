@@ -100,7 +100,7 @@ def ocr_until_consistent_by_task(
     适用于已定义好识别参数的 pipeline 节点。
 
     Args:
-        context: Maa context
+        context: pipeline 节点名称
         task_name: pipeline 节点名称
         pipeline_override: pipeline 覆盖参数，默认为空
         expected_pattern: 正则表达式过滤，不匹配的结果直接丢弃
@@ -112,6 +112,7 @@ def ocr_until_consistent_by_task(
     """
     last_result = None
     same_count = 0
+    logger.info(f"OCR一致性校验开始[{task_name}]，预期{consistent_count}次一致")
 
     for attempt in range(1, max_attempts + 1):
         try:
