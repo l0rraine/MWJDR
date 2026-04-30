@@ -6,7 +6,7 @@
             "开始切换角色",
             "[JumpBack]关闭礼包",
             "[JumpBack]后退",
-            "识别角色ID"
+            "识别角色ID_入口"
         ]
     },
     "主界面标志": {
@@ -44,6 +44,86 @@
         "focus": "正在切换至指定角色",
         "next": [
             "点击头像"
+        ]
+    },
+    "识别角色ID_入口": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    488,
+                    0,
+                    140,
+                    139
+                ],
+                "template": [
+                    "主界面标志.png"
+                ]
+            }
+        },
+        "next": [
+            "识别角色ID_点击头像",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]后退"
+        ]
+    },
+    "识别角色ID_点击头像": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    29,
+                    23,
+                    32,
+                    40
+                ]
+            }
+        },
+        "next": [
+            "识别角色ID_点击角色管理"
+        ]
+    },
+    "识别角色ID_点击角色管理": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "角色管理",
+                "roi": [
+                    101,
+                    254,
+                    236,
+                    160
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "识别角色ID_执行"
+        ]
+    },
+    "识别角色ID_执行": {
+        "pre_delay": 1000,
+        "action": "Custom",
+        "custom_action": "识别角色ID",
+        "next": [
+            "识别角色ID_后退"
+        ]
+    },
+    "识别角色ID_后退": {
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    11,
+                    19,
+                    28,
+                    37
+                ]
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "确保有空闲队列"
         ]
     },
     "点击头像": {
@@ -114,27 +194,6 @@
             "确保有空闲队列"
         ]
     },
-    "识别角色ID": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "roi": [
-                    488,
-                    0,
-                    140,
-                    139
-                ],
-                "template": [
-                    "主界面标志.png"
-                ]
-            }
-        },
-        "action": "Custom",
-        "custom_action": "识别角色ID",
-        "next": [
-            "确保有空闲队列"
-        ]
-    },
     "国度信息": {
         "recognition": "OCR",
         "roi": [
@@ -185,7 +244,10 @@
                 475,
                 140
             ]
-        }
+        },
+        "next": [
+            "确保有空闲队列"
+        ]
     },
     "确保有空闲队列": {
         "action": "Custom",

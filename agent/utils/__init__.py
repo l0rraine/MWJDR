@@ -9,3 +9,8 @@ try:
     from .data_store import *
 except ImportError:
     logger.warning("data_store module import failed")
+
+try:
+    from .ocr_util import *
+except ImportError:
+    logger.warning("ocr_util module import failed")

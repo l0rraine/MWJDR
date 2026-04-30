@@ -19,11 +19,6 @@ class SwitchCharacter(CustomAction):
         region = json_data.get('王国编号') or "3194"
         index = json_data.get('王国内序号')
         logger.debug(f"王国编号:{region},王国内序号:{index}")
-
-        # 从参数直接设置角色ID，用于数据分桶
-        from ..reco.record_id import RecordID
-        RecordID._account_id = f"{region}_{index}"
-        logger.info(f"角色ID已设置：{RecordID._account_id}")
         expected = f"王国\\D+{region}"
         
         cha_detail = None
@@ -75,6 +70,22 @@ class SwitchCharacter(CustomAction):
             logger.info(f"切换到第二个角色")
         else:
             logger.info(f"当前已是第{index}个角色，无需切换")
+
+        # 在角色管理界面 OCR 角色ID
+        from ..reco.record_id import RecordID
+        from utils.ocr_util import ocr_until_consistent
+        account_id = ocr_until_consistent(
+            context,
+            roi=RecordID._id_roi,
+            expected_pattern=RecordID._id_pattern,
+        )
+        if account_id:
+            RecordID._account_id = account_id
+            logger.info(f"角色ID已识别：{account_id}")
+        else:
+            logger.warning("角色ID识别失败，将使用默认存储")
+            RecordID._account_id = ""
+
         return CustomAction.RunResult(success=True)
 
 # 确保所有任务执行前有队列可用，1. 判断是否有战斗任务 2. 关闭自动加入 3.如果有不是挖矿的队伍，等待  4. 如果全部在挖矿，召回最后一队
