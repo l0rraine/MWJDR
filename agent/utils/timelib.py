@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 import pytz
 import re
-import time
 from utils import logger
+from utils.ocr_util import ocr_until_consistent_by_task
 
 def ms_timestamp_diff_to_dhm(timestamp1_ms, timestamp2_ms):
     """
@@ -40,18 +40,28 @@ def split_time_str(time_str):
 
 
 def get_time_from_ocr(context, task_name, max_time=300):
-    detail = None  
-    hours, minutes, seconds = 0, 0, 0     
-    while detail is None or not detail.hit or max_time>=300 or max_time==0:
-        img = context.tasker.controller.post_screencap().wait().get()   
-        detail = context.run_recognition(task_name, img)
-        if not detail.hit:
-            time.sleep(1)
-        else:
-            hours, minutes, seconds = split_time_str(detail.best_result.text)   
-            max_time = hours*3600 + minutes*60 + seconds
-        
-    return hours,minutes,seconds
+    """
+    通过 OCR 识别时间文本并解析为时、分、秒
+
+    使用一致性校验确保 OCR 结果可靠。
+
+    Args:
+        context: Maa context
+        task_name: pipeline 识别节点名称
+        max_time: 未使用，保留兼容性
+
+    Returns:
+        tuple: (hours, minutes, seconds)，识别失败返回 (0, 0, 0)
+    """
+    text = ocr_until_consistent_by_task(
+        context,
+        task_name,
+        expected_pattern=r'\d+\D+\d+',
+    )
+    if text is None:
+        logger.warning(f"OCR识别时间失败: {task_name}")
+        return 0, 0, 0
+    return split_time_str(text)
                 
 def is_today(timestamp_ms, timezone="Asia/Shanghai"):
     """

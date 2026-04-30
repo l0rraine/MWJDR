@@ -14,3 +14,8 @@ try:
     from .ocr_util import *
 except ImportError:
     logger.warning("ocr_util module import failed")
+
+try:
+    from .click_util import *
+except ImportError:
+    logger.warning("click_util module import failed")

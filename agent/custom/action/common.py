@@ -7,6 +7,7 @@ import json
 import random
 import time
 from utils import logger
+from utils.ocr_util import ocr_until_consistent_by_task
 @AgentServer.custom_action("根据需要切换角色")
 class SwitchCharacter(CustomAction):
     def run(
@@ -108,18 +109,17 @@ class MakeSureQueueAvailable(CustomAction):
         context.run_task("自动加入集结_关闭_入口")  
         context.run_task("转到城外") 
         context.run_task("开始查看队列")
-        detail = None
-        while detail is None or not detail.hit:
-            img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("识别当前队列数量", img)
-            time.sleep(1)
-        logger.debug(f"队列情况：{detail.best_result.text}")
-        match = re.search(r'\d+', detail.best_result.text)
+        text = ocr_until_consistent_by_task(context, "识别当前队列数量", expected_pattern=r'\d+/\d+')
+        if text is None:
+            logger.warning("识别队列数量失败")
+            return CustomAction.RunResult(success=False)
+        logger.debug(f"队列情况：{text}")
+        match = re.search(r'\d+', text)
         if match and int(match.group())>0:
             return CustomAction.RunResult(success=True)
 
         context.run_task("后退")
-        _, b = map(int, detail.best_result.text.split('/'))
+        _, b = map(int, text.split('/'))
 
         logger.info(f"当前队列已满，队列总数为{b}")
         # 2.如果有不是挖矿的队伍，等待

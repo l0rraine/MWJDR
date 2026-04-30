@@ -6,6 +6,7 @@ OCR 工具
 
 import re
 import time
+from typing import Dict
 
 from maa.context import Context
 from maa.pipeline import JRecognitionType, JOCR
@@ -21,7 +22,7 @@ def ocr_until_consistent(
     max_attempts: int = 30,
 ) -> str | None:
     """
-    OCR 读取直到获得多次完全一致的结果
+    OCR 读取直到获得多次完全一致的结果（直接指定 ROI）
 
     适用于关键数据（如角色ID）的高可靠性读取。
     每次读取先用正则过滤不合法结果，合法结果与历史记录比较，
@@ -81,4 +82,72 @@ def ocr_until_consistent(
         time.sleep(0.3)
 
     logger.warning(f"OCR一致性校验失败：超过最大尝试次数{max_attempts}，最后结果'{last_result}'")
+    return None
+
+
+def ocr_until_consistent_by_task(
+    context: Context,
+    task_name: str,
+    pipeline_override: Dict = {},
+    expected_pattern: str = None,
+    consistent_count: int = 3,
+    max_attempts: int = 30,
+) -> str | None:
+    """
+    OCR 读取直到获得多次完全一致的结果（通过 pipeline 节点名）
+
+    与 ocr_until_consistent 功能相同，但通过 pipeline 节点名调用识别，
+    适用于已定义好识别参数的 pipeline 节点。
+
+    Args:
+        context: Maa context
+        task_name: pipeline 节点名称
+        pipeline_override: pipeline 覆盖参数，默认为空
+        expected_pattern: 正则表达式过滤，不匹配的结果直接丢弃
+        consistent_count: 需要连续一致的次数，默认 3
+        max_attempts: 最大尝试次数，默认 30
+
+    Returns:
+        str: 识别结果，失败返回 None
+    """
+    last_result = None
+    same_count = 0
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            img = context.tasker.controller.post_screencap().wait().get()
+            detail = context.run_recognition(task_name, img, pipeline_override)
+
+            if not detail or not detail.hit:
+                logger.debug(f"OCR第{attempt}次[{task_name}]：未识别到内容")
+                same_count = 0
+                continue
+
+            text = detail.best_result.text.strip()
+
+            # 正则过滤
+            if expected_pattern and not re.match(expected_pattern, text):
+                logger.debug(f"OCR第{attempt}次[{task_name}]：结果'{text}'不匹配正则'{expected_pattern}'，丢弃")
+                same_count = 0
+                continue
+
+            # 一致性校验
+            if text == last_result:
+                same_count += 1
+                logger.debug(f"OCR第{attempt}次[{task_name}]：'{text}'一致（{same_count}/{consistent_count}）")
+                if same_count >= consistent_count:
+                    logger.debug(f"OCR一致性校验通过[{task_name}]：'{text}'（{consistent_count}次一致）")
+                    return text
+            else:
+                last_result = text
+                same_count = 1
+                logger.debug(f"OCR第{attempt}次[{task_name}]：'{text}'（1/{consistent_count}）")
+
+        except Exception as e:
+            logger.debug(f"OCR第{attempt}次[{task_name}]异常：{e}")
+            same_count = 0
+
+        time.sleep(0.3)
+
+    logger.warning(f"OCR一致性校验失败[{task_name}]：超过最大尝试次数{max_attempts}，最后结果'{last_result}'")
     return None

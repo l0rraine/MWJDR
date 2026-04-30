@@ -8,7 +8,6 @@
 """
 
 import json
-import random
 import time
 
 from maa.agent.agent_server import AgentServer
@@ -19,6 +18,7 @@ from maa.pipeline import JRecognitionType, JOCR, JTemplateMatch
 from utils import logger
 from utils import timelib
 from utils.data_store import load_data, save_data, get_timestamp, set_timestamp
+from utils.click_util import random_click_point
 from ..reco.record_id import RecordID
 
 SHOPPING_CATEGORY = "shopping"
@@ -80,11 +80,9 @@ class MerchantDiamondRefresh(CustomAction):
             # 有免费刷新，点击并回到购买流程
             logger.info("发现免费刷新，点击刷新")
 
-            box = free_detail.box
-            rx = random.randint(box.x, box.x + box.w)
-            ry = random.randint(box.y, box.y + box.h)
-            logger.debug(f"点击{rx},{ry}进行免费刷新")
-            context.tasker.controller.post_click(rx,ry).wait()
+            rx, ry = random_click_point(free_detail.box)
+            logger.info(f"点击{rx},{ry}进行免费刷新")
+            context.tasker.controller.post_click(rx, ry).wait()
             time.sleep(1.5)
             return CustomAction.RunResult(success=True)
 
@@ -108,9 +106,7 @@ class MerchantDiamondRefresh(CustomAction):
 
             if diamond_detail and diamond_detail.hit:
                 # 点击钻石刷新
-                box = diamond_detail.box
-                rx = random.randint(box.x, box.x + box.w)
-                ry = random.randint(box.y, box.y + box.h)
+                rx, ry = random_click_point(diamond_detail.box)
                 context.tasker.controller.post_click(rx, ry).wait()
                 time.sleep(1.0)
 
@@ -122,9 +118,7 @@ class MerchantDiamondRefresh(CustomAction):
                     img,
                 )
                 if confirm_detail and confirm_detail.hit:
-                    box = confirm_detail.box
-                    rx = random.randint(box.x, box.x + box.w)
-                    ry = random.randint(box.y, box.y + box.h)
+                    rx, ry = random_click_point(confirm_detail.box)
                     context.tasker.controller.post_click(rx, ry).wait()
                     time.sleep(1.0)
 

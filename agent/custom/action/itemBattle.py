@@ -1,15 +1,14 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.pipeline import JRecognitionType, JOCR
 import json
-import random
 import time
 import re
 import math
 
 from utils import logger
 from utils import timelib
+from utils.ocr_util import ocr_until_consistent
 from utils.mfa_config import disable_battle_tasks
 from .combat import CombatRepetitionCount
 
@@ -22,16 +21,11 @@ class RecoVigor(CustomAction):
     ) -> bool:
         param = json.loads(argv.custom_action_param)
         cost = int(param.get("体力消耗"))
-        detail = None
-        while detail is None or not detail.hit:
-            img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition_direct(
-                JRecognitionType.OCR,
-                JOCR(expected=["\\d+"], roi=[583, 21, 87, 36]),
-                img,
-            )
-            time.sleep(1)
-        left = int(detail.best_result.text)
+        text = ocr_until_consistent(context, roi=[583, 21, 87, 36], expected_pattern=r'^\d+$')
+        if text is None:
+            logger.warning("识别体力失败")
+            return CustomAction.RunResult(success=False)
+        left = int(text)
         remaining = math.floor(left / cost)
         if left < cost:
             logger.info(f"剩余体力：{left}，不足出征（需{cost}），停止出征")

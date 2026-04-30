@@ -9,6 +9,7 @@ import math
 
 from utils import logger
 from utils import timelib
+from utils.ocr_util import ocr_until_consistent_by_task
 from utils.mfa_config import disable_battle_tasks
 
 from .combat import CombatRepetitionCount
@@ -21,12 +22,11 @@ class SetMonsterCount(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        detail = None
-        while detail is None or not detail.hit:            
-            img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("自动集结_识别次数", img)
-            time.sleep(1)
-        remaining = int(detail.best_result.text)
+        text = ocr_until_consistent_by_task(context, "自动集结_识别次数", expected_pattern=r'^\d+$')
+        if text is None:
+            logger.warning("识别怪兽次数失败")
+            return CustomAction.RunResult(success=False)
+        remaining = int(text)
         CombatRepetitionCount.reset()
         
         if remaining <= 0:
@@ -125,12 +125,11 @@ class BeginCombat(CustomAction):
                     CombatRepetitionCount.reset()
                     return CustomAction.RunResult(success=False)
 
-                detail = None
-                while detail is None or not detail.hit:
-                    img = context.tasker.controller.post_screencap().wait().get()
-                    detail = context.run_recognition("识别罐头数量",img)
-                    time.sleep(1)
-                max_can = int(detail.best_result.text)
+                text = ocr_until_consistent_by_task(context, "识别罐头数量", expected_pattern=r'^\d+$')
+                if text is None:
+                    logger.warning("识别罐头数量失败")
+                    return CustomAction.RunResult(success=False)
+                max_can = int(text)
                 if max_can<2:
                     logger.info("罐头已用完")
                     disable_battle_tasks("自动集结_巨兽入口")
@@ -147,12 +146,11 @@ class BeginCombat(CustomAction):
                 logger.info(f"使用罐头 {c} 次，当前总次数为 {CombatRepetitionCount.count} 次")
                 context.run_task("点击出征")
             elif repeat_limit > 0 and advanced_mode == 1 and not CombatRepetitionCount.isReachLimit():
-                detail = None
-                while detail is None or not detail.hit:
-                    img = context.tasker.controller.post_screencap().wait().get()
-                    detail = context.run_recognition("识别罐头数量",img)
-                    time.sleep(1)
-                max_can = int(detail.best_result.text)
+                text = ocr_until_consistent_by_task(context, "识别罐头数量", expected_pattern=r'^\d+$')
+                if text is None:
+                    logger.warning("识别罐头数量失败")
+                    return CustomAction.RunResult(success=False)
+                max_can = int(text)
                 logger.debug(f"罐头数量：{max_can}")
                 if max_can<2:
                     logger.info("罐头已用完")
