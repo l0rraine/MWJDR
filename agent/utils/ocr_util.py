@@ -112,7 +112,6 @@ def ocr_until_consistent_by_task(
     """
     last_result = None
     same_count = 0
-    logger.info(f"OCR一致性校验开始[{task_name}]，预期{consistent_count}次一致")
 
     for attempt in range(1, max_attempts + 1):
         try:
