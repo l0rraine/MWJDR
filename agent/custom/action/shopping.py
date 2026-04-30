@@ -13,7 +13,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
 from maa.define import Rect
-from maa.pipeline import JRecognitionType, JOCR, JTemplateMatch
+from maa.pipeline import JRecognitionType, JColorMatch, JOCR, JTemplateMatch
 
 from utils import logger
 from utils import timelib
@@ -300,7 +300,12 @@ class MysteryMerchantPurchase(CustomAction):
     def _try_buy_discount(
         self, context: Context, img, enabled_options: list[tuple[str, str]]
     ) -> bool:
-        """尝试购买50%折扣物品"""
+        """尝试购买50%折扣物品
+
+        条件：同时满足以下两个条件才购买
+        1. 取色检查：50%标签旁的区域颜色在指定范围内（upper [5,204,237] lower [4,170,224]）
+        2. 模板匹配：50%标签旁的物品图标与启用选项匹配
+        """
         discount_detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
             JTemplateMatch(template=["神秘商店/50%.png"], roi=self.SEARCH_ROI),
@@ -310,6 +315,23 @@ class MysteryMerchantPurchase(CustomAction):
             return False
 
         box = discount_detail.box
+        # 取色区域：50%匹配位置的偏移 [36, 171, -37, -31]
+        color_roi = [box.x + 36, box.y + 171, box.w - 37, box.h - 31]
+        color_detail = context.run_recognition_direct(
+            JRecognitionType.ColorMatch,
+            JColorMatch(
+                lower=[[4, 170, 224]],
+                upper=[[5, 204, 237]],
+                roi=color_roi,
+                method=4,
+                count=1,
+            ),
+            img,
+        )
+        if not color_detail or not color_detail.hit:
+            logger.debug("50%标签取色不匹配，跳过")
+            return False
+
         # 物品搜索区域: 50%匹配位置的偏移 [51, 42, 57, 72] 与box四项分别相加
         item_roi = [box.x + 51, box.y + 42, box.w + 57, box.h + 72]
 

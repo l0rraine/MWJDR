@@ -16,6 +16,11 @@
 8. [Custom Action 中使用 context.run_task() 递归调用导致重复执行](#8-custom-action-中使用-contextrun_task-递归调用导致重复执行)
 9. [Custom Action 中应避免的 context.run_task() 递归调用模式](#9-custom-action-中应避免的-contextrun_task-递归调用模式)
 10. [行军识别无限等待问题与超时机制](#10-行军识别无限等待问题与超时机制)
+11. [context.run_recognition 返回 None 的条件](#11-contextrun_recognition-返回-none-的条件)
+12. [JumpBack 机制与嵌套节点执行顺序](#12-jumpback-机制与嵌套节点执行顺序)
+13. [detail.box 与 detail.best_result.box 的关系](#13-detailbox-与-detailbest_resultbox-的关系)
+14. [ColorMatch 取色识别 API](#14-colormatch-取色识别-api)
+15. [Rect 偏移量计算规则](#15-rect-偏移量计算规则)
 
 ---
 
@@ -604,3 +609,245 @@ time.sleep(return_time*2 + 0.5)
 ### 适用范围
 
 此超时机制应用于巨兽 (`monster.py`) 和物品集结 (`itemBattle.py`) 两个战斗模块。野兽和灯塔的出征逻辑不同（无行军等待环节），不需要此机制。
+
+---
+
+## 11. context.run_recognition 返回 None 的条件
+
+### 问题
+
+`context.run_recognition(entry, img)` 什么情况下返回 `None`？
+
+### 解答
+
+`context.run_recognition` 在以下条件之一时返回 `None`：
+
+| 条件 | 说明 |
+|---|---|
+| entry 不存在 | Pipeline JSON 中没有定义该名称的节点 |
+| 节点被禁用 | 节点的 `enabled` 字段为 `false` |
+| 图片为空 | 传入的 `img` 参数为 `None` 或空 |
+| reco_id 查询失败 | 框架内部无法获取识别器 ID |
+
+返回 `None` 与返回 `RecognitionDetail(hit=False)` 是不同的：
+- `None`：识别根本没有执行
+- `hit=False`：识别执行了但未匹配到目标
+
+### 实现要点
+
+```python
+detail = context.run_recognition("某个节点", img)
+if detail is None:
+    # 节点不存在、被禁用或图片为空
+    logger.debug("识别未执行")
+    return False
+if not detail.hit:
+    # 识别执行了但未命中
+    logger.debug("识别未命中")
+    return False
+# 识别命中
+box = detail.box
+```
+
+> ⚠️ 必须先检查 `detail is None`，否则对 `None` 调用 `.hit` 会抛出 `AttributeError`。
+
+---
+
+## 12. JumpBack 机制与嵌套节点执行顺序
+
+### 问题
+
+当一个节点拥有 `is_jump_back: true`（即节点名以 `[JumpBack]` 前缀标记）时，执行顺序是怎样的？嵌套的 JumpBack 如何处理？
+
+### 解答
+
+JumpBack 的含义是：**识别成功后，重新从当前父节点 `next` 列表的开头执行**。
+
+#### 基本规则
+
+1. JumpBack 回到**直接父节点**的 `next` 列表开头，不是祖父节点
+2. 嵌套的 JumpBack 先处理内层，再处理外层
+3. DirectHit 节点（无 `recognition` 字段）总是匹配成功，配合 JumpBack 会形成无限循环，**必须**在其前放置有条件的识别节点
+
+#### 示例
+
+```json
+"入口": {
+    "next": [
+        "每日检查",
+        "已在界面",
+        "[JumpBack]点击商店",
+        "[JumpBack]后退"
+    ]
+}
+```
+
+执行顺序：
+1. 执行 `每日检查`（Custom Action），若 `success=True` → 继续
+2. 执行 `已在界面`（OCR），若识别到 → 进入其 `next`
+3. 若 `已在界面` 未识别到 → 执行 `[JumpBack]点击商店`
+4. `[JumpBack]点击商店` 识别成功 → **回到 `入口.next` 开头**，重新从 `每日检查` 开始
+5. 但 `每日检查` 在第二轮时如果返回 `success=True`，会直接跳到 `已在界面`，不会再触发 `[JumpBack]点击商店`
+
+#### 注意事项
+
+- JumpBack 是 Pipeline 级别的循环控制，不要与 Custom Action 内部的 Python 循环混淆
+- 当入口的 `next` 只有 `[每日检查]` 一个元素时，每日检查返回 `False` → 无后续节点 → 任务终止
+
+---
+
+## 13. detail.box 与 detail.best_result.box 的关系
+
+### 问题
+
+`context.run_recognition` 返回的 `detail.box` 和 `detail.best_result.box` 是否相同？
+
+### 解答
+
+**是的，它们是相同的值。**
+
+`detail.box` 是 `detail.best_result.box` 的快捷访问方式，两者指向同一个 `Rect` 对象。
+
+```python
+detail = context.run_recognition("某节点", img)
+assert detail.box == detail.best_result.box  # True
+```
+
+`best_result` 是所有识别结果中评分最高的一个，而 `box` 直接返回这个最佳结果的区域。在绝大多数场景下，只需使用 `detail.box` 即可。
+
+---
+
+## 14. ColorMatch 取色识别 API
+
+### 问题
+
+如何在 MaaFramework Python 绑定中使用取色（ColorMatch）识别？如何指定颜色范围？
+
+### 解答
+
+MaaFramework 提供了 `JRecognitionType.ColorMatch` 和 `JColorMatch` 参数类，用于在指定区域内检测颜色是否在给定范围内。
+
+### JColorMatch 参数
+
+```python
+from maa.pipeline import JRecognitionType, JColorMatch
+
+@dataclass
+class JColorMatch:
+    lower: List[List[int]]  # 颜色下界，每个内层列表为 [R, G, B]（method=4 时）
+    upper: List[List[int]]  # 颜色上界，格式同 lower
+    roi: JTarget = (0, 0, 0, 0)      # 检测区域 (x, y, w, h)
+    roi_offset: JRect = (0, 0, 0, 0) # ROI 偏移
+    order_by: str = "Horizontal"      # 结果排序方式
+    method: int = 4                   # 颜色空间：4 = RGB（默认）
+    count: int = 1                    # 最少匹配像素数
+    index: int = 0                    # 使用第几个结果
+    connected: bool = False           # 是否使用连通分量分析
+```
+
+### 使用示例
+
+```python
+img = context.tasker.controller.post_screencap().wait().get()
+
+# 精确颜色匹配（单色）
+detail = context.run_recognition_direct(
+    JRecognitionType.ColorMatch,
+    JColorMatch(
+        lower=[[37, 183, 86]],      # [R, G, B]
+        upper=[[37, 183, 86]],
+        roi=[510, 365, 36, 36],
+        method=4,
+    ),
+    img,
+)
+
+# 颜色范围匹配
+detail = context.run_recognition_direct(
+    JRecognitionType.ColorMatch,
+    JColorMatch(
+        lower=[[4, 170, 224]],      # [R, G, B] 下界
+        upper=[[5, 204, 237]],      # [R, G, B] 上界
+        roi=[100, 200, 50, 50],
+        method=4,
+        count=1,                    # 至少1个像素匹配
+    ),
+    img,
+)
+
+if detail and detail.hit:
+    # 匹配成功，detail.best_result.count 为匹配像素数
+    pass
+```
+
+### 返回结果
+
+ColorMatch 的结果类型为 `ColorMatchResult`（= `BoxAndCountResult`）：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `box` | `Rect` | 匹配区域的边界框 |
+| `count` | `int` | 匹配的像素数量 |
+
+### Pipeline JSON 等价写法
+
+```json
+{
+    "recognition": "ColorMatch",
+    "lower": [[4, 170, 224]],
+    "upper": [[5, 204, 237]],
+    "roi": [100, 200, 50, 50],
+    "method": 4
+}
+```
+
+> 💡 `method=4` 表示 RGB 颜色空间，是项目中最常用的方式。`lower`/`upper` 中的颜色值为 `[R, G, B]` 顺序。
+
+---
+
+## 15. Rect 偏移量计算规则
+
+### 问题
+
+当需要基于一个已识别的 `Rect`（box）计算偏移区域时，偏移量 `[dx, dy, dw, dh]` 如何与 box 的 `[x, y, w, h]` 运算？
+
+### 解答
+
+偏移量的四项与 box 的四项**分别相加**：
+
+```
+结果 Rect = (box.x + dx, box.y + dy, box.w + dw, box.h + dh)
+```
+
+即：
+- `x' = box.x + dx` — 左上角 x 坐标偏移
+- `y' = box.y + dy` — 左上角 y 坐标偏移
+- `w' = box.w + dw` — 宽度偏移
+- `h' = box.h + dh` — 高度偏移
+
+### 示例
+
+已知 50% 标签的 box 和偏移量 `[51, 42, 57, 72]`：
+
+```python
+box = discount_detail.box  # 例如 Rect(x=100, y=400, w=80, h=30)
+
+# 物品图标区域：偏移 [51, 42, 57, 72]
+item_roi = [box.x + 51, box.y + 42, box.w + 57, box.h + 72]
+# = [151, 442, 137, 102]
+
+# 购买按钮区域：偏移 [57, 212, 53, -16]
+purchase_rect = Rect(
+    box.x + 57,
+    box.y + 212,
+    box.w + 53,
+    box.h - 16,  # 注意：-16 表示高度缩小
+)
+# = Rect(157, 612, 133, 14)
+```
+
+### 注意事项
+
+- 当 `dh` 为负数时（如 `-16`），高度会缩小，需确保 `box.h + dh > 0`
+- 偏移量是相对于 box 的**绝对偏移**，不是比例偏移
+- 在 `run_recognition_direct` 的 `roi` 参数中直接传入计算后的 `[x, y, w, h]` 列表即可
