@@ -230,10 +230,9 @@ class MysteryMerchantPurchase(CustomAction):
         # Step 1: 读取启用的选项
         enabled_options = self._get_enabled_options(context)
         if not enabled_options:
-            logger.info("神秘商人无启用选项，跳过购买")
-            _save_merchant_date("神秘商人")
-            return CustomAction.RunResult(success=False)
-        logger.info(f"神秘商人启用选项: {[name for name, _ in enabled_options]}")
+            logger.info("神秘商人无启用选项，仅购买免费物品")
+        else:
+            logger.debug(f"神秘商人启用选项: {[name for name, _ in enabled_options]}")
 
         # Step 2: 购买循环
         max_iterations = 100
@@ -311,8 +310,8 @@ class MysteryMerchantPurchase(CustomAction):
             return False
 
         box = discount_detail.box
-        # 物品搜索区域: 50%匹配位置的偏移 [51, 42, 57, 72]
-        item_roi = [box.x + 51, box.y + 42, 57, 72]
+        # 物品搜索区域: 50%匹配位置的偏移 [51, 42, 57, 72] 与box四项分别相加
+        item_roi = [box.x + 51, box.y + 42, box.w + 57, box.h + 72]
 
         # 逐个检查启用的选项（排除因徽章不足被禁用的）
         for opt_name, template_path in enabled_options:
