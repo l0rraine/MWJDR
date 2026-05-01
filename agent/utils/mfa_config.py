@@ -110,7 +110,7 @@ def has_battle_tasks() -> Optional[bool]:
         # 只有 default_check 为 true 时才表示该任务被启用
         default_check = task.get("default_check", False)
         if default_check is True:
-            logger.info(f"发现已启用的战斗任务: {task.get('name', entry)}")
+            logger.debug(f"发现已启用的战斗任务: {task.get('name', entry)}")
             return True
 
     return False
