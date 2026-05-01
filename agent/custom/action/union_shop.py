@@ -88,11 +88,10 @@ class UnionShopPurchase(CustomAction):
         else:
             logger.debug(f"联盟商店启用选项: {self._enabled_names}")
 
-        for i, roi in enumerate(SCAN_ROIS):
-            if i > 0:
-                context.run_task("联盟商店_滚动")
+        for roi in SCAN_ROIS:
             self._buy_tz(context, roi)
             self._buy_discount(context, roi)
+            context.run_task("联盟商店_滚动")
 
         logger.info("联盟商店购买完成，记录日期")
         save_merchant_date("联盟商店")
@@ -116,9 +115,7 @@ class UnionShopPurchase(CustomAction):
             return
 
         for match in detail.filtered_results:
-            box = match.box
-            box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
-            coin_roi = add_offset(box_rect, COIN_FROM_ITEM)
+            coin_roi = add_offset(match.box, COIN_FROM_ITEM)
             coin_detail = context.run_recognition(
                 "联盟商店_联盟币", _screencap(context),
                 pipeline_override={"联盟商店_联盟币": {"roi": coin_roi}},
@@ -150,11 +147,8 @@ class UnionShopPurchase(CustomAction):
         logger.debug(f"联盟商店识别到 {len(matches)} 个75%折扣标签")
 
         for match in matches:
-            box = match.box
-            discount_box = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
-
-            item_roi = add_offset(discount_box, ITEM_FROM_DISCOUNT)
-            coin_roi = add_offset(discount_box, COIN_FROM_DISCOUNT)
+            item_roi = add_offset(match.box, ITEM_FROM_DISCOUNT)
+            coin_roi = add_offset(match.box, COIN_FROM_DISCOUNT)
 
             # 识别物品：在反算的物品区域内逐个匹配折扣模板
             identify_img = _screencap(context)

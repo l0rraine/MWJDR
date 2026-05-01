@@ -12,8 +12,10 @@ from utils.data_store import load_data, save_data, get_timestamp, set_timestamp
 SHOPPING_CATEGORY = "shopping"
 
 
-def add_offset(box: list, offset: list) -> list:
-    """box 与 offset 逐项相加"""
+def add_offset(box, offset: list) -> list:
+    """box 与 offset 逐项相加，兼容 Rect 和 list"""
+    if not isinstance(box, list):
+        box = [box.x, box.y, box.w, box.h]
     return [a + b for a, b in zip(box, offset)]
 
 
