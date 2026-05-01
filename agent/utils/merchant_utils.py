@@ -25,6 +25,6 @@ def save_merchant_date(merchant_name: str):
     timestamp_ms = int(time.time() * 1000)
     set_timestamp(data, SHOPPING_CATEGORY, account_id, merchant_name, timestamp_ms)
     if save_data(data):
-        logger.info(f"{merchant_name}购买日期已记录")
+        logger.debug(f"{merchant_name}购买日期已记录")
     else:
         logger.warning(f"{merchant_name}购买日期记录失败")

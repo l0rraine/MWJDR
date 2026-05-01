@@ -1,5 +1,5 @@
 """
-神秘商人 Custom Action
+神秘商店 Custom Action
 
 包含：每日检查、购买（含免费购买、50%折扣购买、免费刷新、钻石刷新）
 
@@ -27,7 +27,7 @@ from utils.click_util import click_rect
 from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
-# 神秘商人购买选项映射: (选项名, 模板图片路径)
+# 神秘商店购买选项映射: (选项名, 模板图片路径)
 MYSTERY_OPTIONS = [
     ("当季专武", "神秘商店/专武.png"),
     ("宠物自选箱", "神秘商店/宠物自选箱.png"),
@@ -37,9 +37,9 @@ MYSTERY_OPTIONS = [
 ]
 
 
-@AgentServer.custom_action("神秘商人_每日检查")
+@AgentServer.custom_action("神秘商店_每日检查")
 class MysteryMerchantDailyCheck(CustomAction):
-    """检查神秘商人今天是否已购买，已购买则跳过"""
+    """检查神秘商店今天是否已购买，已购买则跳过"""
 
     def run(
         self,
@@ -48,20 +48,21 @@ class MysteryMerchantDailyCheck(CustomAction):
     ) -> CustomAction.RunResult:
         account_id = RecordID.current_account_id()
         data = load_data()
-        timestamp = get_timestamp(data, SHOPPING_CATEGORY, account_id, "神秘商人")
+        timestamp = get_timestamp(data, SHOPPING_CATEGORY, account_id, "神秘商店")
 
         if timelib.is_today(timestamp):
-            logger.info(f"神秘商人今日已购买，跳过 (timestamp={timestamp})")
+            logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
+            context.override_pipeline({"神秘商店_开关": {"enabled": False}})
             return CustomAction.RunResult(success=False)
 
-        logger.info("神秘商人今日未购买，开始购买")
+        logger.info("神秘商店今日未购买，开始购买")
         return CustomAction.RunResult(success=True)
 
 
-@AgentServer.custom_action("神秘商人_购买")
+@AgentServer.custom_action("神秘商店_购买")
 class MysteryMerchantPurchase(CustomAction):
     """
-    神秘商人购买逻辑
+    神秘商店购买逻辑
 
     流程：
     1. 截取专武模板图片
@@ -118,40 +119,40 @@ class MysteryMerchantPurchase(CustomAction):
         # Step 1: 读取启用的选项
         enabled_options = self._get_enabled_options(context)
         if not enabled_options:
-            logger.info("神秘商人无启用选项，仅购买免费物品")
+            logger.info("神秘商店无启用选项，仅购买免费物品")
         else:
-            logger.debug(f"神秘商人启用选项: {[name for name, _ in enabled_options]}")
+            logger.debug(f"神秘商店启用选项: {[name for name, _ in enabled_options]}")
 
         # Step 2: 购买循环
         while True:
             # 2a: 搜索屏幕1
+            self._swipe_down(context)
+            self._search_slots(context, self.SCREEN1_SLOTS, enabled_options)
+
+            # 2b: Swipe上滑，搜索屏幕2
+            self._swipe_up(context)
             img = context.tasker.controller.post_screencap().wait().get()
-            bought = self._search_slots(context, img, self.SCREEN1_SLOTS, enabled_options)
+            self._search_slots(context, self.SCREEN2_SLOTS, enabled_options)
 
-            if not bought:
-                # 2b: Swipe上滑，搜索屏幕2
-                self._swipe_up(context)
-                img = context.tasker.controller.post_screencap().wait().get()
-                bought = self._search_slots(context, img, self.SCREEN2_SLOTS, enabled_options)
+            # 2c: 无可购买物品，尝试刷新
+            if self._try_free_refresh(context, img):
+                continue
+            if self._try_diamond_refresh(context, img, diamond_limit):
+                continue
+            break
 
-            if not bought:
-                # 2c: 无可购买物品，尝试刷新
-                img = context.tasker.controller.post_screencap().wait().get()
-                if self._try_free_refresh(context, img):
-                    continue
-                if self._try_diamond_refresh(context, img, diamond_limit):
-                    continue
-                # 无法刷新，结束购买
-                break
-
-            # 购买成功，重新截图从屏幕1搜索（循环继续）
 
         # Step 3: 记录日期
-        save_merchant_date("神秘商人")
+
+        logger.info("神秘商店购买完成，记录日期")
+        self._end(context)
+
+    def _end(self, context: Context):
+        # 每次 Custom Action 结束时重置钻石使用计数
+        save_merchant_date("神秘商店")
         MysteryMerchantPurchase._disabled_50_options.clear()
         MysteryMerchantPurchase._diamond_used = 0
-        logger.info("神秘商人购买完成，记录日期")
-        return CustomAction.RunResult(success=False)
+        context.override_pipeline({"神秘商店_开关": {"enabled": False}})
 
     def _capture_weapon_template(self, context: Context):
         """截取界面中专武区域 [85, 490, 89, 52] 作为模板图片"""
@@ -165,7 +166,7 @@ class MysteryMerchantPurchase(CustomAction):
         """读取启用的购买选项"""
         enabled = []
         for name, template in MYSTERY_OPTIONS:
-            node_name = f"神秘商人_参数_{name}"
+            node_name = f"神秘商店_参数_{name}"
             node_data = context.get_node_data(node_name)
             if node_data and node_data.get("enabled", True):
                 enabled.append((name, template))
@@ -185,9 +186,7 @@ class MysteryMerchantPurchase(CustomAction):
             False: 无可购买物品
         """
         for slot_roi in slots:
-            if self._try_buy_slot(context, img, slot_roi, enabled_options):
-                return True
-        return False
+            self._try_buy_slot(context, slot_roi, enabled_options)
 
     def _try_buy_slot(
         self,
@@ -206,6 +205,7 @@ class MysteryMerchantPurchase(CustomAction):
             False: 无可购买物品
         """
         # 检查免费物品
+        img = context.tasker.controller.post_screencap().wait().get()
         free_detail = context.run_recognition_direct(
             JRecognitionType.OCR,
             JOCR(expected=["免费"], roi=slot_roi),
@@ -252,7 +252,6 @@ class MysteryMerchantPurchase(CustomAction):
         for opt_name, template_path in enabled_options:
             if opt_name in self._disabled_50_options:
                 continue
-
             item_detail = context.run_recognition_direct(
                 JRecognitionType.TemplateMatch,
                 JTemplateMatch(template=[template_path], roi=item_roi),
@@ -321,6 +320,17 @@ class MysteryMerchantPurchase(CustomAction):
         ).wait()
         time.sleep(0.5)
 
+    def _swipe_down(self, context: Context):
+        """向下Swipe，从begin区域随机点到end区域随机点"""
+        er = self.SWIPE_BEGIN
+        br = self.SWIPE_END
+        x1 = random.randint(br[0], br[0] + br[2])
+        y1 = random.randint(br[1], br[1] + br[3])
+        x2 = random.randint(er[0], er[0] + er[2])
+        y2 = random.randint(er[1], er[1] + er[3])
+        context.tasker.controller.post_swipe(x1, y1, x2, y2, self.SWIPE_DURATION).wait()
+        time.sleep(0.5)
+
     def _try_free_refresh(self, context: Context, img) -> bool:
         """尝试免费刷新"""
         refresh_detail = context.run_recognition_direct(
@@ -330,7 +340,7 @@ class MysteryMerchantPurchase(CustomAction):
         )
         if refresh_detail and refresh_detail.hit:
             click_rect(context, refresh_detail.box)
-            logger.info("神秘商人免费刷新")
+            logger.info("神秘商店免费刷新")
             time.sleep(1.5)
             return True
         return False
@@ -365,7 +375,7 @@ class MysteryMerchantPurchase(CustomAction):
                 time.sleep(1.0)
 
             self._diamond_used += 1
-            logger.info(f"神秘商人钻石刷新第{self._diamond_used}次，共{diamond_limit}次")
+            logger.info(f"神秘商店钻石刷新第{self._diamond_used}次，共{diamond_limit}次")
             return True
 
         return False
