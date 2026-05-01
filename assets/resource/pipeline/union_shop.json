@@ -1,5 +1,9 @@
 {
     "联盟商店入口": {
-        "next": []
+        "action": "Custom",
+        "custom_action": "联盟商店_入口处理",
+        "next": [
+            "商店购买_入口"
+        ]
     }
 }
