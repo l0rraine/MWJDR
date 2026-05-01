@@ -53,8 +53,8 @@ class MerchantDiamondRefresh(CustomAction):
        - 钻石刷新次数 = 0：保存日期，结束
        - 钻石刷新次数 > 0：执行钻石刷新，计数，到达上限后保存日期，结束
 
-    完成时返回 success=True（空 next → JumpBack 回到商店购买_入口），
-    通过 Resource.override_pipeline 禁用游荡商人_开关防止重入。
+    找到刷新时，使用 context.run_task("游荡商人_开始购买") 继续购买循环。
+    无更多刷新时，禁用开关并 return True（空 next → JumpBack 回到商店购买_入口）。
     """
 
     # 类变量：记录当前已使用钻石刷新次数
@@ -77,22 +77,20 @@ class MerchantDiamondRefresh(CustomAction):
         )
 
         if free_detail and free_detail.hit:
-            # 有免费刷新，点击并回到购买流程
             logger.info("发现免费刷新，点击刷新")
             click_rect(context, free_detail.box)
             time.sleep(1.5)
+            context.run_task("游荡商人_开始购买")
             return CustomAction.RunResult(success=True)
 
         # 第二步：没有免费刷新了
         if diamond_limit == 0:
-            # 不使用钻石刷新，保存日期，结束
             logger.info("免费刷新已用完，不使用钻石刷新，记录日期")
             self._end(context)
             return CustomAction.RunResult(success=True)
 
         # 第三步：执行钻石刷新
         if self._diamond_used < diamond_limit:
-            # 尝试找到钻石刷新按钮
             img = context.tasker.controller.post_screencap().wait().get()
             diamond_detail = context.run_recognition_direct(
                 JRecognitionType.TemplateMatch,
@@ -101,11 +99,10 @@ class MerchantDiamondRefresh(CustomAction):
             )
 
             if diamond_detail and diamond_detail.hit:
-                # 点击钻石刷新
                 click_rect(context, diamond_detail.box)
                 time.sleep(1.0)
 
-                # 处理确认对话框（可能存在也可能不存在）
+                # 处理确认对话框
                 img = context.tasker.controller.post_screencap().wait().get()
                 confirm_detail = context.run_recognition_direct(
                     JRecognitionType.OCR,
@@ -114,19 +111,16 @@ class MerchantDiamondRefresh(CustomAction):
                 )
                 logger.debug(f"钻石刷新确认对话框识别结果：{confirm_detail.best_result.text if confirm_detail and confirm_detail.hit else '未识别到提示'}")
                 if confirm_detail and confirm_detail.hit:
-                    click_rect(context, Rect(465, 768, 100, 44))  # 点击对话框中的确认按钮
+                    click_rect(context, Rect(465, 768, 100, 44))
                     time.sleep(1.0)
 
                 MerchantDiamondRefresh._diamond_used += 1
-                logger.info(
-                    f"钻石刷新第{MerchantDiamondRefresh._diamond_used}次"
-                )
+                logger.info(f"钻石刷新第{MerchantDiamondRefresh._diamond_used}次")
+                context.run_task("游荡商人_开始购买")
                 return CustomAction.RunResult(success=True)
 
         # 第四步：钻石刷新次数已达上限
-        logger.info(
-            f"钻石刷新次数已达上限（{diamond_limit}次），记录日期"
-        )
+        logger.info(f"钻石刷新次数已达上限（{diamond_limit}次），记录日期")
         self._end(context)
         return CustomAction.RunResult(success=True)
 
