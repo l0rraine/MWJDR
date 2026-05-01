@@ -56,7 +56,7 @@ class MysteryMerchantDailyCheck(CustomAction):
         if timelib.is_today(timestamp):
             logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
             context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
-            return CustomAction.RunResult(success=True)
+            return CustomAction.RunResult(success=False)
 
         logger.info("神秘商店今日未购买，开始购买")
         return CustomAction.RunResult(success=True)
