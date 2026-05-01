@@ -29,9 +29,12 @@ class SetMonsterCount(CustomAction):
             return CustomAction.RunResult(success=False)
         remaining = int(text)
         CombatRepetitionCount.reset()
-        
+
         if remaining <= 0:
             logger.info(f"已达到出征次数上限：10 次，停止出征")
+            context.run_task("后退")
+            time.sleep(0.5)
+            click_rect(context, [628, 727, 15, 18])
             return CustomAction.RunResult(success=False)
 
         CombatRepetitionCount.init(remaining)
@@ -47,6 +50,9 @@ class SetMonsterCount(CustomAction):
         )
         context.run_task("后退")
         time.sleep(0.5)
+
+        if CombatRepetitionCount.isReachLimit():
+            click_rect([628, 727, 15, 18])
 
         return CustomAction.RunResult(success=True)
 
