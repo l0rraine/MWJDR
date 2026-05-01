@@ -98,7 +98,7 @@ class MysteryMerchantPurchase(CustomAction):
     # Swipe 参数
     SWIPE_BEGIN = [211, 1089, 11, 12]
     SWIPE_END = [207, 953, 9, 8]
-    SWIPE_DURATION = 500  # 毫秒
+    SWIPE_DURATION = 50  # 毫秒
 
     # 免费刷新按钮区域
     FREE_REFRESH_ROI = [531, 297, 127, 35]
@@ -175,7 +175,6 @@ class MysteryMerchantPurchase(CustomAction):
     def _search_slots(
         self,
         context: Context,
-        img,
         slots: list[list[int]],
         enabled_options: list[tuple[str, str]],
     ) -> bool:
@@ -191,7 +190,6 @@ class MysteryMerchantPurchase(CustomAction):
     def _try_buy_slot(
         self,
         context: Context,
-        img,
         slot_roi: list[int],
         enabled_options: list[tuple[str, str]],
     ) -> bool:
@@ -318,7 +316,7 @@ class MysteryMerchantPurchase(CustomAction):
         context.tasker.controller.post_swipe(
             x1, y1, x2, y2, self.SWIPE_DURATION
         ).wait()
-        time.sleep(0.5)
+        time.sleep(1)
 
     def _swipe_down(self, context: Context):
         """向下Swipe，从begin区域随机点到end区域随机点"""
@@ -329,7 +327,7 @@ class MysteryMerchantPurchase(CustomAction):
         x2 = random.randint(er[0], er[0] + er[2])
         y2 = random.randint(er[1], er[1] + er[3])
         context.tasker.controller.post_swipe(x1, y1, x2, y2, self.SWIPE_DURATION).wait()
-        time.sleep(0.5)
+        time.sleep(1)
 
     def _try_free_refresh(self, context: Context, img) -> bool:
         """尝试免费刷新"""
