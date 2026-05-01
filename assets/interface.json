@@ -905,7 +905,14 @@
                         "联盟商店_开关": {
                             "enabled": true
                         }
-                    }
+                    },
+                    "option": [
+                        "联盟商店-统帅经验",
+                        "联盟商店-研究加速",
+                        "联盟商店-训练加速",
+                        "联盟商店-建筑加速",
+                        "联盟商店-治疗加速"
+                    ]
                 },
                 {
                     "name": "No",
@@ -914,6 +921,96 @@
                             "enabled": false
                         }
                     }
+                }
+            ]
+        },
+        "联盟商店-统帅经验": {
+            "type": "switch",
+            "label": "统帅经验",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_参数_统帅经验": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "联盟商店-研究加速": {
+            "type": "switch",
+            "label": "研究加速",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_参数_研究加速": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "联盟商店-训练加速": {
+            "type": "switch",
+            "label": "训练加速",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_参数_训练加速": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "联盟商店-建筑加速": {
+            "type": "switch",
+            "label": "建筑加速",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_参数_建筑加速": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                }
+            ]
+        },
+        "联盟商店-治疗加速": {
+            "type": "switch",
+            "label": "治疗加速",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_参数_治疗加速": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
                 }
             ]
         }

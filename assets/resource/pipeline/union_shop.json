@@ -1,9 +1,72 @@
 {
     "联盟商店入口": {
+        "next": [
+            "联盟商店_每日检查"
+        ]
+    },
+    "联盟商店_每日检查": {
         "action": "Custom",
-        "custom_action": "联盟商店_入口处理",
+        "custom_action": "联盟商店_每日检查",
+        "next": [
+            "联盟商店_点击联盟",
+            "[JumpBack]点击商店",
+            "[JumpBack]后退"
+        ]
+    },
+    "联盟商店_点击联盟": {
+        "recognition": "OCR",
+        "expected": [
+            "联盟"
+        ],
+        "roi": [
+            12,
+            1150,
+            91,
+            82
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "联盟商店_点击商店按钮"
+        ]
+    },
+    "联盟商店_点击商店按钮": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "联盟商店.png"
+        ],
+        "roi": [
+            12,
+            868,
+            137,
+            129
+        ],
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "联盟商店_开始购买"
+        ]
+    },
+    "联盟商店_开始购买": {
+        "action": "Custom",
+        "custom_action": "联盟商店_购买",
         "next": [
             "商店购买_入口"
         ]
+    },
+    "联盟商店_参数_统帅经验": {
+        "enabled": true
+    },
+    "联盟商店_参数_研究加速": {
+        "enabled": true
+    },
+    "联盟商店_参数_训练加速": {
+        "enabled": true
+    },
+    "联盟商店_参数_建筑加速": {
+        "enabled": true
+    },
+    "联盟商店_参数_治疗加速": {
+        "enabled": true
     }
 }

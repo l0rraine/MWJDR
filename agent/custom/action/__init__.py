@@ -32,5 +32,6 @@ __all__ = [
     "MerchantRecordDate",
     "MysteryMerchantDailyCheck",
     "MysteryMerchantPurchase",
-    "UnionShopEntry",
+    "UnionShopDailyCheck",
+    "UnionShopPurchase",
 ]
