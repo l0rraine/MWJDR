@@ -14,18 +14,30 @@
         ]
     },
     "联盟商店_点击联盟": {
-        "recognition": "OCR",
-        "expected": [
-            "联盟"
-        ],
-        "roi": [
-            12,
-            1150,
-            91,
-            82
-        ],
-        "action": "Click",
-        "post_delay": 1000,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "联盟",
+                "roi": [
+                    449,
+                    1159,
+                    170,
+                    121
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    517,
+                    1207,
+                    42,
+                    46
+                ]
+            }
+        },
+        "post_delay": 1500,
         "next": [
             "联盟商店_点击商店按钮"
         ]
