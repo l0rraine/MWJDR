@@ -23,6 +23,7 @@
 15. [on_error 与 JumpBack 的交互及 error_handling 标志](#15-on_error-与-jumpback-的交互及-error_handling-标志)
 16. [context.override_next() 动态修改 next 列表](#16-contextoverride_next-动态修改-next-列表)
 17. [商店购买子任务间跳转与空壳节点死循环](#17-商店购买子任务间跳转与空壳节点死循环)
+18. [Pipeline JSON 选项列表与 Python 解耦模式](#18-pipeline-json-选项列表与-python-解耦模式)
 
 ---
 
@@ -1150,3 +1151,92 @@ self._end(context)
 context.override_next("游荡商人_刷新控制", ["商店购买_入口"])
 return CustomAction.RunResult(success=True)
 ```
+
+---
+
+## 18. Pipeline JSON 选项列表与 Python 解耦模式
+
+### 问题
+
+当 Custom Action 需要根据用户启用的选项执行不同逻辑时，如何在 Python 代码中获取选项列表，而不在 Python 中硬编码选项名？
+
+### 解答
+
+参照联盟总动员的模式，在 Pipeline JSON 中定义一个"选项汇总节点"，其 `next` 列表即为所有选项参数节点。Custom Action 通过 `context.get_node_data()` 读取该节点的 `next` 列表获取选项，实现 Python 与选项列表的解耦。
+
+### 模式
+
+#### 1. Pipeline JSON 中定义选项汇总节点
+
+```json
+"联盟商店_选项": {
+    "next": [
+        "联盟商店_参数_统帅经验",
+        "联盟商店_参数_研究加速",
+        "联盟商店_参数_训练加速",
+        "联盟商店_参数_建筑加速",
+        "联盟商店_参数_治疗加速"
+    ],
+    "action": "DoNothing"
+},
+"联盟商店_参数_统帅经验": {
+    "enabled": true
+},
+"联盟商店_参数_研究加速": {
+    "enabled": true
+}
+```
+
+要点：
+- 汇总节点名约定为 `{模块}_选项`，`action` 设为 `DoNothing`
+- 每个选项参数节点名约定为 `{模块}_参数_{物品名}`
+- 参数节点的 `enabled` 字段由 MFAAvalonia 界面控制
+
+#### 2. Python 代码中动态读取
+
+```python
+_PARAM_PREFIX = "联盟商店_参数_"
+
+# 从 JSON 读取选项列表
+all_params = context.get_node_data("联盟商店_选项")["next"]
+enabled_names = []
+for param_name in all_params:
+    node_data = context.get_node_data(param_name)
+    if node_data and node_data.get("enabled", True):
+        # "联盟商店_参数_统帅经验" → "统帅经验"
+        name = param_name.removeprefix(_PARAM_PREFIX)
+        enabled_names.append(name)
+```
+
+#### 3. 物品名 = 选项名 = 图片名
+
+统一命名规则：选项名即物品名即图片文件名（不含目录和扩展名），模板路径由 `f"{SHOP_DIR}/{name}.png"` 动态生成，无需额外的映射字典。
+
+```python
+SHOP_DIR = "联盟商店"
+
+# 用物品名动态生成模板路径
+detail = context.run_recognition_direct(
+    JRecognitionType.TemplateMatch,
+    JTemplateMatch(template=[f"{SHOP_DIR}/{name}.png"], roi=roi),
+    img,
+)
+```
+
+### 优势
+
+| 对比项 | 硬编码方式 | JSON 解耦方式 |
+|---|---|---|
+| 选项列表位置 | Python 常量列表 | Pipeline JSON `next` |
+| 新增选项 | 改 Python + JSON | 仅改 JSON |
+| 删除选项 | 改 Python + JSON | 仅改 JSON |
+| 参数节点命名 | 需要额外映射 | `removeprefix` 直接提取 |
+| 图片路径 | 需要映射字典 | `f"{SHOP_DIR}/{name}.png"` |
+
+### 命名约定
+
+- 汇总节点：`{模块}_选项`
+- 参数节点：`{模块}_参数_{物品名}`
+- 前缀常量：`_PARAM_PREFIX = "{模块}_参数_"`
+- 物品名提取：`param_name.removeprefix(_PARAM_PREFIX)`
+- 图片路径：`f"{SHOP_DIR}/{物品名}.png"`
