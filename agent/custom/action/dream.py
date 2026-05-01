@@ -10,7 +10,6 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 from maa.pipeline import JRecognitionType, JOCR
-from maa.define import Rect
 from utils import logger
 from utils.click_util import click_rect
 from PIL import Image
@@ -572,7 +571,7 @@ class Memories(CustomAction):
                     continue
 
                 logger.debug(f"物品:{t}")
-                click_rect(context, Rect(*item_dict[t]))
+                click_rect(context, item_dict[t])
                 done_dict[t]=item_dict.pop(t)
                 time.sleep(0.5)     
 
@@ -702,14 +701,13 @@ class Memories(CustomAction):
                     continue
 
                 logger.debug(f"物品:{t}")
-                click_rect(context, Rect(*item_dict[t]))
+                click_rect(context, item_dict[t])
                 done_dict[t]=item_dict.pop(t)
                 time.sleep(0.5)     
 
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
-        return CustomAction.RunResult(success=True)
         return CustomAction.RunResult(success=True)
 
     def screen_shot(

@@ -9,7 +9,7 @@ import time
 
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
-from maa.context import Context, Rect
+from maa.context import Context
 from maa.pipeline import JRecognitionType, JOCR, JTemplateMatch
 
 from utils import logger
@@ -113,7 +113,7 @@ class MerchantDiamondRefresh(CustomAction):
                 )
                 logger.debug(f"钻石刷新确认对话框识别结果：{confirm_detail.best_result.text if confirm_detail and confirm_detail.hit else '未识别到提示'}")
                 if confirm_detail and confirm_detail.hit:
-                    click_rect(context, Rect(465, 768, 100, 44))
+                    click_rect(context, [465, 768, 100, 44])
                     time.sleep(1.0)
 
                 MerchantDiamondRefresh._diamond_used += 1

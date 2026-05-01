@@ -21,7 +21,7 @@ import time
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.define import Rect
+
 from maa.pipeline import JRecognitionType, JColorMatch, JOCR, JTemplateMatch
 
 from utils import logger
@@ -265,13 +265,7 @@ class MysteryMerchantPurchase(CustomAction):
                 continue
 
             # 找到匹配物品，点击购买区域（offset [57, 212, 53, -16]）
-            purchase_rect = Rect(
-                box.x + 57,
-                box.y + 212,
-                max(1, box.w + 53),
-                max(1, box.h - 16),
-            )
-            click_rect(context, purchase_rect)
+            click_rect(context, [box.x + 57, box.y + 212, max(1, box.w + 53), max(1, box.h - 16)])
             logger.info(f"50%折扣发现{opt_name}，点击购买")
             time.sleep(1.0)
 
@@ -291,7 +285,7 @@ class MysteryMerchantPurchase(CustomAction):
         )
         if confirm_detail and confirm_detail.hit:
             # 点击确定购买按钮
-            click_rect(context, Rect(284, 814, 137, 32))
+            click_rect(context, [284, 814, 137, 32])
             time.sleep(1.0)
 
             # 检查是否徽章不足（出现"获取更多"提示）
@@ -303,7 +297,7 @@ class MysteryMerchantPurchase(CustomAction):
             )
             if badge_detail and badge_detail.hit:
                 # 徽章不足，关闭提示，禁用该选项的50%购买
-                click_rect(context, Rect(196, 23, 63, 34))
+                click_rect(context, [196, 23, 63, 34])
                 self._disabled_50_options.add(opt_name)
                 logger.warning(f"徽章不足，终止{opt_name}的50%购买")
             else:
