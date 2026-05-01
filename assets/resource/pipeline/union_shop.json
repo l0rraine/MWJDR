@@ -43,6 +43,7 @@
         ]
     },
     "联盟商店_点击商店按钮": {
+        "pre_delay": 1000,
         "recognition": "TemplateMatch",
         "template": [
             "联盟商店.png"

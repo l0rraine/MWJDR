@@ -48,10 +48,10 @@ SCROLL_SCAN_ROI = [9, 903, 697, 296]
 # 75%折扣标签相对选项box的offset: [x, y, w, h] 各项与box对应项相加
 DISCOUNT_OFFSET = [-69, -94, -13, 21]
 # 联盟币取色区域相对选项box的offset: [x, y, w, h] 各项与box对应项相加
-COIN_OFFSET = [-42, 136, -92, -41]
+COIN_OFFSET = [-37, 104, -85, -53]
 # 联盟币取色范围 upper/lower
-COIN_UPPER = [[230, 252, 255]]
-COIN_LOWER = [[219, 248, 254]]
+COIN_UPPER = [[5, 174, 225]]
+COIN_LOWER = [[5, 161, 221]]
 
 # 滚动参数
 SCROLL_BEGIN = [351, 987, 27, 15]
