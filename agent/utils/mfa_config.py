@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Optional
 
 from .logger import logger
+from maa.context import Context
 
 # 战斗任务的 entry 名称（对应 interface.json 中 task[].entry）
 BATTLE_TASK_ENTRIES = {
@@ -115,7 +116,7 @@ def has_battle_tasks() -> Optional[bool]:
     return False
 
 
-def disable_battle_tasks(current_entry: str = "") -> bool:
+def disable_battle_tasks(context: Context, current_entry: str = "") -> bool:
     """
     体力耗尽时，自动禁用当前任务之后已启用的战斗任务
 
@@ -123,6 +124,7 @@ def disable_battle_tasks(current_entry: str = "") -> bool:
     当前任务之前的战斗任务不会被禁用（因为它们已经执行过了）。
 
     Args:
+        context: MAA Context 实例
         current_entry: 当前正在执行的任务入口名称，用于确定只禁用后续任务
 
     Returns:
@@ -178,18 +180,12 @@ def disable_battle_tasks(current_entry: str = "") -> bool:
         if entry not in BATTLE_TASK_ENTRIES:
             continue
         if task.get("default_check", False) is True:
-            task["default_check"] = False
+            context.tasker.resource.override_pipeline({f"{entry}": {"enabled": False}})
+            logger.info(f"已自动禁用战斗任务: {entry}")
             disabled_names.append(task.get("name", entry))
 
     if not disabled_names:
         logger.debug("没有需要禁用的战斗任务")
-        return False
-
-    try:
-        with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(config, f, ensure_ascii=False, indent=4)
-    except Exception as e:
-        logger.warning(f"写入实例配置失败，无法禁用战斗任务: {e}")
         return False
 
     logger.info(f"体力耗尽，已自动禁用后续战斗任务: {', '.join(disabled_names)}")
