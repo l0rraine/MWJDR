@@ -62,6 +62,21 @@ SCROLL_END = [338, 529, 34, 23]
 SCROLL_DURATION = 200  # 毫秒
 
 
+def _add_offset(box_rect: list, offset: list) -> list:
+    """将 box 与 offset 逐项相加，w/h 至少为 1"""
+    result = [a + b for a, b in zip(box_rect, offset)]
+    result[2] = max(1, result[2])
+    result[3] = max(1, result[3])
+    return result
+
+
+def _box_to_list(box) -> list[int]:
+    """将 Rect 对象或 list 统一转为 [x, y, w, h]"""
+    if isinstance(box, list):
+        return box
+    return [box.x, box.y, box.w, box.h]
+
+
 @AgentServer.custom_action("联盟商店_每日检查")
 class UnionShopDailyCheck(CustomAction):
     """检查联盟商店今天是否已购买，已购买则跳过"""
@@ -164,12 +179,15 @@ class UnionShopPurchase(CustomAction):
         使用 run_recognition_direct 获取所有匹配结果(filtered_results)，
         逐个检查75%折扣并购买。同一选项可能有多个实例（如2个治疗加速），
         每个都需独立检查。每次检查75%折扣前刷新截图，确保画面最新。
+
+        注：MaaFramework 多模板匹配时结果不含模板索引，
+        无法区分哪个结果对应哪个模板，因此仍需逐选项识别。
         """
         for opt_name, template_path in enabled_options:
             if opt_name in self._disabled_options:
                 continue
 
-            # 一次性获取所有匹配结果
+            # 一次性获取该选项的所有匹配结果
             detail = context.run_recognition_direct(
                 JRecognitionType.TemplateMatch,
                 JTemplateMatch(template=[template_path], roi=roi, threshold=0.9),
@@ -189,13 +207,12 @@ class UnionShopPurchase(CustomAction):
                 # 每次都刷新截图
                 img = context.tasker.controller.post_screencap().wait().get()
 
-                # 将 match.box (Rect) 转为 [x, y, w, h] 列表
-                box = match.box
-                box_rect = [box.x, box.y, box.w, box.h]
+                # box 可能是 Rect 对象或 list，统一转为 list
+                box_rect = _box_to_list(match.box)
 
                 logger.debug(
                     f"联盟商店检查: {opt_name}, "
-                    f"box=({box.x},{box.y},{box.w},{box.h}), "
+                    f"box=({box_rect[0]},{box_rect[1]},{box_rect[2]},{box_rect[3]}), "
                     f"score={match.score:.3f}"
                 )
 
@@ -230,16 +247,7 @@ class UnionShopPurchase(CustomAction):
             return self._check_coin(context, img, box_rect)
 
         # 非统帅经验：检查75%折扣标签
-        discount_roi = [
-            box_rect[0] + DISCOUNT_OFFSET[0],
-            box_rect[1] + DISCOUNT_OFFSET[1],
-            box_rect[2] + DISCOUNT_OFFSET[2],
-            box_rect[3] + DISCOUNT_OFFSET[3],
-        ]
-        # 确保 w 和 h 至少为 1
-        discount_roi[2] = max(1, discount_roi[2])
-        discount_roi[3] = max(1, discount_roi[3])
-
+        discount_roi = _add_offset(box_rect, DISCOUNT_OFFSET)
         discount_detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
             JTemplateMatch(template=["联盟商店/75%.png"], roi=discount_roi, threshold=0.9),
@@ -254,8 +262,7 @@ class UnionShopPurchase(CustomAction):
 
     def _check_coin(self, context: Context, img, box_rect: list[int]) -> bool:
         """检查选项box附近是否存在联盟币（取色匹配）"""
-        coin_roi = self._calc_coin_roi(box_rect)
-
+        coin_roi = _add_offset(box_rect, COIN_OFFSET)
         coin_detail = context.run_recognition_direct(
             JRecognitionType.ColorMatch,
             JColorMatch(upper=COIN_UPPER, lower=COIN_LOWER, roi=coin_roi, count=1),
@@ -267,18 +274,6 @@ class UnionShopPurchase(CustomAction):
 
         return True
 
-    def _calc_coin_roi(self, box_rect: list[int]) -> list[int]:
-        """根据选项box和COIN_OFFSET计算联盟币取色区域"""
-        coin_roi = [
-            box_rect[0] + COIN_OFFSET[0],
-            box_rect[1] + COIN_OFFSET[1],
-            box_rect[2] + COIN_OFFSET[2],
-            box_rect[3] + COIN_OFFSET[3],
-        ]
-        coin_roi[2] = max(1, coin_roi[2])
-        coin_roi[3] = max(1, coin_roi[3])
-        return coin_roi
-
     def _click_coin_and_buy(
         self,
         context: Context,
@@ -287,7 +282,7 @@ class UnionShopPurchase(CustomAction):
         box_rect: list[int],
     ):
         """点击联盟币位置触发购买，并处理购买确认对话框"""
-        coin_roi = self._calc_coin_roi(box_rect)
+        coin_roi = _add_offset(box_rect, COIN_OFFSET)
 
         # 取色匹配联盟币并点击该区域
         coin_detail = context.run_recognition_direct(
