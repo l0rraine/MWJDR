@@ -74,7 +74,7 @@ class MerchantDiamondRefresh(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         free_detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
-            JTemplateMatch(template=["流浪商人/免费刷新.png"], roi=[480, 180, 220, 140]),
+            JTemplateMatch(template=["流浪商人/免费刷新.png"], roi=[511, 213, 171, 96]),
             img,
         )
 
