@@ -47,6 +47,16 @@
             }
         },
         "next": [
+            "查看队列_记录角色ID",
+            "点击部队"
+        ]
+    },
+    "查看队列_记录角色ID": {
+        "pre_delay": 1000,
+        "action": "Custom",
+        "enabled": false,
+        "custom_action": "识别角色ID",
+        "next": [
             "点击部队"
         ]
     },
