@@ -67,6 +67,87 @@
             "商店购买_入口"
         ]
     },
+    "联盟商店_75%折扣": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "联盟商店/75%.png"
+        ],
+        "threshold": [
+            0.9
+        ],
+        "action": "DoNothing"
+    },
+    "联盟商店_联盟币": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "lower": [[5, 161, 221]],
+                "upper": [[5, 174, 225]],
+                "count": 1
+            }
+        },
+        "action": "DoNothing"
+    },
+    "联盟商店_确定购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确定购买",
+                "roi": [283, 408, 151, 49]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [595, 695, 35, 21]
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "联盟商店_点击完成"
+        ]
+    },
+    "联盟商店_点击完成": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [264, 810, 205, 42]
+            }
+        },
+        "post_delay": 1000
+    },
+    "联盟商店_获取更多": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "获取更多",
+                "roi": [275, 101, 156, 65]
+            }
+        },
+        "action": "DoNothing"
+    },
+    "联盟商店_关闭提示": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [333, 33, 28, 10]
+            }
+        },
+        "post_delay": 1000
+    },
+    "联盟商店_滚动": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [351, 987, 27, 15],
+                "end": [338, 529, 34, 23]
+            }
+        },
+        "post_delay": 1000
+    },
     "联盟商店_参数_统帅经验": {
         "enabled": true
     },
