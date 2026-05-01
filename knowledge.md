@@ -567,58 +567,6 @@ if detail.hit:
 
 ---
 
-## 10. 行军识别无限等待问题与超时机制
-
-### 问题
-
-巨兽和物品集结在点击出征后，会等待识别"行军中"状态。原来的实现是一个无限循环：
-
-```python
-# ❌ 无限等待，可能永远卡住
-detail = None
-while detail is None or not detail.hit:
-    time.sleep(1)
-    img = context.tasker.controller.post_screencap().wait().get()
-    detail = context.run_recognition("自动集结_行军中", img)
-```
-
-如果行军状态识别不到（界面变化、识别率问题等），程序会无限等待，永远不会继续执行。
-
-### 解决方案
-
-增加 301 秒（5 分 01 秒）超时机制。从点击出征开始计时，超过 301 秒未识别到行军，则认为行军已经开始，继续执行后续逻辑。
-
-```python
-# ✅ 增加超时机制
-march_start_time = time.time()
-time.sleep(80)
-context.run_task("转到城外")
-
-detail = None
-while detail is None or not detail.hit:
-    if time.time() - march_start_time >= 301:
-        logger.info("已超过5分01秒未识别到行军，认为行军已经开始")
-        break
-    time.sleep(1)
-    img = context.tasker.controller.post_screencap().wait().get()
-    detail = context.run_recognition("自动集结_行军中", img)
-
-logger.debug("已识别到行军")
-time.sleep(return_time*2 + 0.5)
-```
-
-### 设计要点
-
-- **超时时间 301 秒**：从点击出征开始计算，包含 80s 初始等待 + 约 221s 识别循环
-- **超时后行为与识别到一致**：无论是否识别到行军，都认为行军已开始，后续等待返回时间的逻辑不变
-- **不区分识别结果**：`march_found` 等中间变量无意义，因为两种情况（识别到 / 超时）的后续行为完全一致
-
-### 适用范围
-
-此超时机制应用于巨兽 (`monster.py`) 和物品集结 (`itemBattle.py`) 两个战斗模块。野兽和灯塔的出征逻辑不同（无行军等待环节），不需要此机制。
-
----
-
 ## 11. context.run_recognition 返回 None 的条件
 
 ### 问题
@@ -1206,32 +1154,3 @@ self._end(context)
 context.override_next("游荡商人_刷新控制", ["商店购买_入口"])
 return CustomAction.RunResult(success=True)
 ```
-
-#### 空壳节点的死循环陷阱
-
-**这是实际踩过的坑！** 联盟商店入口原定义为：
-
-```json
-"联盟商店入口": {
-    "next": []
-}
-```
-
-当游荡商人和神秘商店都完成后，它们的开关被禁用，但联盟商店开关仍然 enabled → 命中 → `联盟商店入口` → `next` 为空 → JumpBack 回到 `商店购买_入口` → 联盟商店开关仍未禁用 → **无限循环**。
-
-**修复**：给空壳节点添加 Custom Action，进入后立即禁用开关并跳回：
-
-```python
-@AgentServer.custom_action("联盟商店_入口处理")
-class UnionShopEntry(CustomAction):
-    def run(self, context, argv):
-        logger.info("联盟商店当前为空壳，跳过")
-        context.override_pipeline({"联盟商店_开关": {"enabled": False}})
-        context.tasker.resource.override_pipeline({"联盟商店_开关": {"enabled": False}})
-        context.override_next("联盟商店入口", ["商店购买_入口"])
-        return CustomAction.RunResult(success=True)
-```
-
-#### 任务自然终止
-
-当所有商店的开关都被禁用后，`商店购买_入口` 的 `next` 列表中没有有效（enabled）节点 → `run_next()` 返回无效结果 → 任务自然终止。不需要额外的终止逻辑。
