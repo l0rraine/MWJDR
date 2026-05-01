@@ -30,9 +30,8 @@ from ..reco.record_id import RecordID
 SHOP_DIR = "联盟商店"
 TZ_ITEM = "统帅经验"
 
-# 识别范围
-SCAN_ROI = [11, 184, 698, 1001]
-SCROLL_SCAN_ROI = [9, 903, 697, 296]
+# 识别范围: [第一轮, 滚动后]
+SCAN_ROIS = [[11, 184, 698, 1001], [9, 903, 697, 296]]
 
 # 从75%折扣box计算物品区域: item = discount + ITEM_FROM_DISCOUNT
 ITEM_FROM_DISCOUNT = [33, 30, 82, 92]
@@ -89,11 +88,11 @@ class UnionShopPurchase(CustomAction):
         else:
             logger.debug(f"联盟商店启用选项: {self._enabled_names}")
 
-        self._buy_tz(context, SCAN_ROI)
-        self._buy_discount(context, SCAN_ROI)
-        context.run_task("联盟商店_滚动")
-        self._buy_tz(context, SCROLL_SCAN_ROI)
-        self._buy_discount(context, SCROLL_SCAN_ROI)
+        for i, roi in enumerate(SCAN_ROIS):
+            if i > 0:
+                context.run_task("联盟商店_滚动")
+            self._buy_tz(context, roi)
+            self._buy_discount(context, roi)
 
         logger.info("联盟商店购买完成，记录日期")
         save_merchant_date("联盟商店")
