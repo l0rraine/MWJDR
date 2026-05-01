@@ -76,10 +76,10 @@ class UnionShopPurchase(CustomAction):
         # 从JSON读取选项列表
         all_params = context.get_node_data("联盟商店_选项")["next"]
         UnionShopPurchase._enabled_names = []
-        for param_name in all_params:
+        for item in all_params:
+            param_name = item["name"] if isinstance(item, dict) else item
             node_data = context.get_node_data(param_name)
             if node_data and node_data.get("enabled", True):
-                # "联盟商店_参数_统帅经验" → "统帅经验"
                 name = param_name.removeprefix(_PARAM_PREFIX)
                 UnionShopPurchase._enabled_names.append(name)
 
