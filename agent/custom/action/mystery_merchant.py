@@ -40,11 +40,6 @@ MYSTERY_OPTIONS = [
 ]
 
 
-def _disable_mystery_switch(context: Context):
-    """通过 Resource 级别禁用神秘商店开关，跨任务持久化"""
-    context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
-
-
 @AgentServer.custom_action("神秘商店_每日检查")
 class MysteryMerchantDailyCheck(CustomAction):
     """检查神秘商店今天是否已购买，已购买则跳过"""
@@ -60,7 +55,7 @@ class MysteryMerchantDailyCheck(CustomAction):
 
         if timelib.is_today(timestamp):
             logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
-            _disable_mystery_switch(context)
+            context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
             return CustomAction.RunResult(success=True)
 
         logger.info("神秘商店今日未购买，开始购买")
@@ -155,11 +150,10 @@ class MysteryMerchantPurchase(CustomAction):
         return CustomAction.RunResult(success=True)
 
     def _end(self, context: Context):
-        # 每次 Custom Action 结束时重置钻石使用计数
         save_merchant_date("神秘商店")
         MysteryMerchantPurchase._disabled_50_options.clear()
         MysteryMerchantPurchase._diamond_used = 0
-        _disable_mystery_switch(context)
+        context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
 
     def _capture_weapon_template(self, context: Context):
         """截取界面中专武区域 [85, 490, 89, 52] 作为模板图片"""

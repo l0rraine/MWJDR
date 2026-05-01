@@ -20,11 +20,6 @@ from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
 
-def _disable_wandering_switch(context: Context):
-    """通过 Resource 级别禁用游荡商人开关，跨任务持久化"""
-    context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
-
-
 @AgentServer.custom_action("游荡商人_每日检查")
 class MerchantDailyCheck(CustomAction):
     """检查游荡商人今天是否已购买，已购买则跳过"""
@@ -40,7 +35,7 @@ class MerchantDailyCheck(CustomAction):
 
         if timelib.is_today(timestamp):
             logger.info(f"游荡商人今日已购买，跳过 (timestamp={timestamp})")
-            _disable_wandering_switch(context)
+            context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
             return CustomAction.RunResult(success=True)
 
         logger.info("游荡商人今日未购买，开始购买")
@@ -136,10 +131,9 @@ class MerchantDiamondRefresh(CustomAction):
         return CustomAction.RunResult(success=True)
 
     def _end(self, context: Context):
-        # 每次 Custom Action 结束时重置钻石使用计数
         save_merchant_date("游荡商人")
         MerchantDiamondRefresh._diamond_used = 0
-        _disable_wandering_switch(context)
+        context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
 
 
 @AgentServer.custom_action("游荡商人_记录日期")
