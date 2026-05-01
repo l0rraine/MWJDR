@@ -7,6 +7,8 @@
 - 进入联盟商店后，在识别范围内扫描所有启用的选项
 - 统帅经验无条件购买，其他选项需75%折扣标签
 - 同一选项可能存在多个实例（如2个治疗加速），每个都需检查75%折扣
+- 使用 run_recognition_direct 获取所有匹配结果(filtered_results)，逐个处理
+- 每次检查75%折扣前刷新截图，确保画面最新
 - 有折扣的选项还需确认使用联盟币购买
 - 点击联盟币位置触发购买（不能点击物品图标，会弹出说明）
 - 联盟币不足时禁用该选项，后续不再购买
@@ -159,82 +161,63 @@ class UnionShopPurchase(CustomAction):
     ):
         """在指定范围内扫描所有启用选项并尝试购买
 
-        同种选项可能有多个实例，每个都需检查。
-        使用黑遮法：跳过的实例在搜索图中涂黑，使后续搜索找到其他实例。
-        购买后重新截图（物品消失），并重新涂黑已跳过的位置。
+        使用 run_recognition_direct 获取所有匹配结果(filtered_results)，
+        逐个检查75%折扣并购买。同一选项可能有多个实例（如2个治疗加速），
+        每个都需独立检查。每次检查75%折扣前刷新截图，确保画面最新。
         """
         for opt_name, template_path in enabled_options:
             if opt_name in self._disabled_options:
                 continue
 
-            search_img = img.copy()
-            # 记录已跳过的位置（中心坐标），用于购买后重新涂黑
-            skipped_positions = []
+            # 一次性获取所有匹配结果
+            detail = context.run_recognition_direct(
+                JRecognitionType.TemplateMatch,
+                JTemplateMatch(template=[template_path], roi=roi, threshold=0.9),
+                img,
+            )
+            if not detail or not detail.hit:
+                continue
 
-            while True:
-                detail = context.run_recognition_direct(
-                    JRecognitionType.TemplateMatch,
-                    JTemplateMatch(template=[template_path], roi=roi, threshold=0.9),
-                    search_img,
+            # 获取所有超过阈值的匹配结果
+            all_matches = detail.filtered_results
+            logger.debug(
+                f"联盟商店识别到 {opt_name}: {len(all_matches)} 个匹配"
+            )
+
+            # 逐个处理每个匹配结果
+            for match in all_matches:
+                # 每次都刷新截图
+                img = context.tasker.controller.post_screencap().wait().get()
+
+                # 将 match.box (Rect) 转为 [x, y, w, h] 列表
+                box = match.box
+                box_rect = [box.x, box.y, box.w, box.h]
+
+                logger.debug(
+                    f"联盟商店检查: {opt_name}, "
+                    f"box=({box.x},{box.y},{box.w},{box.h}), "
+                    f"score={match.score:.3f}"
                 )
-                if not detail or not detail.hit:
-                    break
-
-                box = detail.box
-                box_rect = box if isinstance(box, list) else [box.x, box.y, box.w, box.h]
-
-                logger.debug(f"联盟商店识别到: {opt_name}, score={detail.best_result.score if detail.best_result else 'N/A'}")
 
                 # 判断是否可购买
-                if self._should_buy(context, search_img, opt_name, box):
+                if self._should_buy(context, img, opt_name, box_rect):
                     # 点击联盟币位置触发购买
-                    self._click_coin_and_buy(context, search_img, opt_name, box)
-                    # 购买后重新截图，因为界面可能已变化
+                    self._click_coin_and_buy(context, img, opt_name, box_rect)
+                    # 购买后重新截图（在循环顶部会再次刷新）
                     img = context.tasker.controller.post_screencap().wait().get()
-                    search_img = img.copy()
-                    # 重新涂黑之前跳过的位置
-                    for pos in skipped_positions:
-                        self._blackout_position(search_img, pos)
-                else:
-                    # 不购买此实例，涂黑该区域以便搜索下一个实例
-                    center = (box_rect[0] + box_rect[2] // 2, box_rect[1] + box_rect[3] // 2)
-                    skipped_positions.append(center)
-                    self._blackout_position(search_img, center, box_rect)
+
+                # 如果该选项已被禁用（联盟币不足），跳出当前选项的循环
+                if opt_name in self._disabled_options:
+                    break
 
         return img
-
-    def _blackout_position(self, img, center: tuple[int, int], box_rect=None):
-        """在搜索图中涂黑指定位置，使模板匹配不再命中该区域
-
-        Args:
-            img: 搜索用图片（numpy数组，会被原地修改）
-            center: 中心坐标 (cx, cy)
-            box_rect: 可选的 [x, y, w, h]，若有则按此区域涂黑
-        """
-        if box_rect:
-            x, y, w, h = box_rect
-            margin = 5
-            y1 = max(0, y - margin)
-            y2 = min(img.shape[0], y + h + margin)
-            x1 = max(0, x - margin)
-            x2 = min(img.shape[1], x + w + margin)
-        else:
-            # 没有box_rect时用center周围区域
-            cx, cy = center
-            r = 40  # 半径
-            y1 = max(0, cy - r)
-            y2 = min(img.shape[0], cy + r)
-            x1 = max(0, cx - r)
-            x2 = min(img.shape[1], cx + r)
-
-        img[y1:y2, x1:x2] = 0
 
     def _should_buy(
         self,
         context: Context,
         img,
         opt_name: str,
-        box,
+        box_rect: list[int],
     ) -> bool:
         """判断选项是否应购买
 
@@ -244,10 +227,9 @@ class UnionShopPurchase(CustomAction):
         """
         # 统帅经验无条件购买，但仍需确认有联盟币
         if opt_name == "统帅经验":
-            return self._check_coin(context, img, box)
+            return self._check_coin(context, img, box_rect)
 
         # 非统帅经验：检查75%折扣标签
-        box_rect = box if isinstance(box, list) else [box.x, box.y, box.w, box.h]
         discount_roi = [
             box_rect[0] + DISCOUNT_OFFSET[0],
             box_rect[1] + DISCOUNT_OFFSET[1],
@@ -268,11 +250,11 @@ class UnionShopPurchase(CustomAction):
             return False
 
         # 有折扣，检查联盟币
-        return self._check_coin(context, img, box)
+        return self._check_coin(context, img, box_rect)
 
-    def _check_coin(self, context: Context, img, box) -> bool:
+    def _check_coin(self, context: Context, img, box_rect: list[int]) -> bool:
         """检查选项box附近是否存在联盟币（取色匹配）"""
-        coin_roi = self._calc_coin_roi(box)
+        coin_roi = self._calc_coin_roi(box_rect)
 
         coin_detail = context.run_recognition_direct(
             JRecognitionType.ColorMatch,
@@ -285,9 +267,8 @@ class UnionShopPurchase(CustomAction):
 
         return True
 
-    def _calc_coin_roi(self, box) -> list[int]:
+    def _calc_coin_roi(self, box_rect: list[int]) -> list[int]:
         """根据选项box和COIN_OFFSET计算联盟币取色区域"""
-        box_rect = box if isinstance(box, list) else [box.x, box.y, box.w, box.h]
         coin_roi = [
             box_rect[0] + COIN_OFFSET[0],
             box_rect[1] + COIN_OFFSET[1],
@@ -303,10 +284,10 @@ class UnionShopPurchase(CustomAction):
         context: Context,
         img,
         opt_name: str,
-        box,
+        box_rect: list[int],
     ):
         """点击联盟币位置触发购买，并处理购买确认对话框"""
-        coin_roi = self._calc_coin_roi(box)
+        coin_roi = self._calc_coin_roi(box_rect)
 
         # 取色匹配联盟币并点击该区域
         coin_detail = context.run_recognition_direct(
