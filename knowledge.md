@@ -21,6 +21,7 @@
 13. [detail.box 与 detail.best_result.box 的关系](#13-detailbox-与-detailbest_resultbox-的关系)
 14. [ColorMatch 取色识别 API](#14-colormatch-取色识别-api)
 15. [Rect 偏移量计算规则](#15-rect-偏移量计算规则)
+16. [override_pipeline 三层级作用域与跨任务持久化](#16-override_pipeline-三层级作用域与跨任务持久化)
 
 ---
 
@@ -851,3 +852,140 @@ purchase_rect = Rect(
 - 当 `dh` 为负数时（如 `-16`），高度会缩小，需确保 `box.h + dh > 0`
 - 偏移量是相对于 box 的**绝对偏移**，不是比例偏移
 - 在 `run_recognition_direct` 的 `roi` 参数中直接传入计算后的 `[x, y, w, h]` 列表即可
+
+---
+
+## 16. override_pipeline 三层级作用域与跨任务持久化
+
+### 问题
+
+在 Custom Action 中调用 `context.override_pipeline({"节点": {"enabled": False}})` 禁用节点后，当前任务结束（如 `RunResult(success=False)` 触发任务终止），下一个任务执行时该节点仍然会执行。为什么 override 不持久化？有没有全局的 context 可以让 override 跨任务生效？
+
+### 解答
+
+MaaFramework 的 `override_pipeline` 有**三个层级**，作用域和持久化行为完全不同。项目中常用的 `context.override_pipeline()` 是 Context 级别，作用域仅限当前任务，任务结束后 Context 被销毁，override 随之消失。
+
+#### 三层级对比
+
+| API | 作用域 | 跨任务持久化 | 调用方式 |
+|-----|--------|------------|---------|
+| **`Resource.override_pipeline()`** | **全局**（所有使用该 Resource 的任务） | ✅ **是** | `context.tasker.resource.override_pipeline(...)` |
+| `Tasker.override_pipeline(task_id, ...)` | 单个运行中的任务 | ❌ 否 | `context.tasker.override_pipeline(task_id, ...)` |
+| `Context.override_pipeline(...)` | 当前上下文（任务内） | ❌ 否 | `context.override_pipeline(...)` |
+
+#### 源码原理
+
+**Context 级别（不持久化）**：
+
+每次 `post_task()` 创建新的 `PipelineTask`，同时创建新的 `Context`（`Context::create(task_id_, tasker)`）。Context 内部持有 `pipeline_override_` 映射表，任务结束后 Context 被销毁，override 消失。
+
+```cpp
+// Context.cpp — get_pipeline_data() 查找顺序
+std::optional<PipelineData> Context::get_pipeline_data(const std::string& node_name) const
+{
+    // 1. 先查 Context 级别 override（任务内）
+    auto override_it = pipeline_override_.find(node_name);
+    if (override_it != pipeline_override_.end()) {
+        return override_it->second;
+    }
+    // 2. 再查 Resource 级别（全局，跨任务）
+    auto& raw_pp_map = tasker_->resource()->pipeline_res().get_pipeline_data_map();
+    auto raw_it = raw_pp_map.find(node_name);
+    if (raw_it != raw_pp_map.end()) {
+        return raw_it->second;
+    }
+    ...
+}
+```
+
+**Resource 级别（持久化）**：
+
+`ResourceMgr::override_pipeline()` 调用 `PipelineResMgr::parse_and_override()`，直接修改 Resource 的 `pipeline_data_map_`。由于 Resource 是长生命周期对象，绑定在 Tasker 上，所有后续任务创建的 Context 都会通过上面的查找顺序回查到 Resource 的数据，因此 override 对所有后续任务生效。
+
+```cpp
+// ResourceMgr.cpp
+bool ResourceMgr::override_pipeline(const json::value& pipeline_override)
+{
+    return pipeline_res_.parse_and_override(pipeline_override, existing_keys, default_pipeline_);
+    // 直接修改 pipeline_data_map_，全局持久化
+}
+```
+
+#### Python binding 验证
+
+```python
+from maa.resource import Resource
+from maa.tasker import Tasker
+from maa.context import Context
+
+# Resource 有 override_pipeline 方法 ✅
+Resource.override_pipeline(self, pipeline_override: Dict) -> bool
+
+# Context 到 Resource 的完整链路 ✅
+context.tasker       → Tasker (property)
+context.tasker.resource → Resource (property, returns maa.resource.Resource)
+context.tasker.resource.override_pipeline({"节点": {"enabled": False}}) → bool
+```
+
+#### 使用方法
+
+在 Custom Action 中实现跨任务的节点禁用：
+
+```python
+# ❌ 不持久化：仅当前任务内生效
+context.override_pipeline({"自动集结_巨兽入口": {"enabled": False}})
+
+# ✅ 持久化：全局生效，所有后续任务都会看到
+context.tasker.resource.override_pipeline({"自动集结_巨兽入口": {"enabled": False}})
+```
+
+#### 实际应用：体力耗尽时禁用后续战斗任务
+
+项目中的 `disable_battle_tasks()` 原来通过修改 MFAAvalonia 实例配置文件的 `default_check=False` 来禁用战斗任务，但 **MFA 只读取一次配置文件**，修改后不会重新加载，导致禁用无效。
+
+正确做法是使用 `Resource.override_pipeline()`：
+
+```python
+def disable_battle_tasks_by_override(context: Context, current_entry: str = "") -> bool:
+    """体力耗尽时，通过 Resource.override_pipeline 全局禁用后续战斗任务"""
+    override = {}
+    for entry in BATTLE_TASK_ENTRIES:
+        override[entry] = {"enabled": False}
+
+    resource = context.tasker.resource
+    return resource.override_pipeline(override)
+```
+
+#### 注意事项
+
+- Resource 级别的 override **不可撤销**（没有 `clear_override` 或 `revert_pipeline` 方法）
+- 恢复只能通过再次调用：`resource.override_pipeline({"节点": {"enabled": True}})`
+- 或者重新加载 Resource：`resource.clear()` + 重新 `post_bundle()`
+- GitHub Issue [#1219](https://github.com/MaaXYZ/MaaFramework/issues/1219) 已提出"全局 Context"需求，目前尚未实现
+
+#### 补充：Pipeline flat 格式 target 字段歧义
+
+在 Pipeline JSON 的 flat 格式中，`target` 字段存在歧义——可能被框架解释为识别目标（ROI 约束）而非动作目标（点击位置）。例如：
+
+```json
+"关闭搜索": {
+    "recognition": "TemplateMatch",
+    "template": "搜索.png",
+    "roi": [255, 1138, 217, 142],
+    "action": "Click",
+    "target": [628, 727, 15, 18]
+}
+```
+
+此处 `target` 可能被解释为识别时的 ROI 约束（将搜索区域限制为 [628,727,15,18]），导致搜索区域与 roi 不重叠而匹配失败。应使用 nested 格式明确区分：
+
+```json
+"关闭搜索": {
+    "recognition": "TemplateMatch",
+    "template": "搜索.png",
+    "roi": [255, 1138, 217, 142],
+    "action": "Click",
+    "target": true,
+    "action_target": [628, 727, 15, 18]
+}
+```
