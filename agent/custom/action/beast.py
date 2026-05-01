@@ -31,7 +31,7 @@ class BeastBeginCombat(CustomAction):
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
-                disable_battle_tasks("自动野兽_入口")
+                disable_battle_tasks(context, "自动野兽_入口")
                 return CustomAction.RunResult(success=False)
 
         # img = context.tasker.controller.post_screencap().wait().get()

@@ -27,19 +27,12 @@ class RecoVigor(CustomAction):
             return CustomAction.RunResult(success=False)
         left = int(text)
         remaining = math.floor(left / cost)
-        if left < cost:
-            logger.info(f"剩余体力：{left}，不足出征（需{cost}），停止出征")
-            disable_battle_tasks("集结物品_识别体力入口")
-            return CustomAction.RunResult(success=False)
 
-        # limit = 已出征次数 + 剩余可出征次数
-        # 前序任务结束时会 reset()，所以进入物品战斗时 count=0
-        # 循环中 count 会累积，limit 也随之更新，确保 count>=limit 判断正确
-        CombatRepetitionCount.setLimit(CombatRepetitionCount.count + remaining)
+        CombatRepetitionCount.setLimit(remaining)
         logger.info(f"剩余体力：{left}，可出征{remaining}次")
         return CustomAction.RunResult(success=True)
-    
-    
+
+
 @AgentServer.custom_action("物品集结")
 class ItemCombat(CustomAction):
     def run(
@@ -51,8 +44,7 @@ class ItemCombat(CustomAction):
         _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)                
         return_time = minutes * 60 + seconds
         logger.debug(f"返回时间：{return_time}")
-        
-        
+
         # 开始出征
         context.run_task("点击出征")
         time.sleep(0.5)
@@ -67,16 +59,17 @@ class ItemCombat(CustomAction):
                 return CustomAction.RunResult(success=True)
             else:
                 logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")  
-                disable_battle_tasks("集结物品_识别体力入口")
+                disable_battle_tasks(context, "集结物品_识别体力入口")
+                CombatRepetitionCount.reset()
                 return CustomAction.RunResult(success=False)
-        
+
         CombatRepetitionCount.addCount()
         logger.info(f"已出征 {CombatRepetitionCount.count} 次")
         # 80s后查看集结状态
         march_start_time = time.time()
         time.sleep(80)
         context.run_task("转到城外")
-        
+
         detail = None
         while detail is None or not detail.hit:
             if time.time() - march_start_time >= 301:
@@ -87,10 +80,11 @@ class ItemCombat(CustomAction):
             detail = context.run_recognition("自动集结_行军中",img)
         logger.debug(f"已识别到行军")
         time.sleep(return_time*2 + 0.5)
-        
+
         if CombatRepetitionCount.count >= CombatRepetitionCount.limit:
             logger.info(f"体力耗尽，共使用物品集结 {CombatRepetitionCount.count}次，停止出征")
-            disable_battle_tasks("集结物品_识别体力入口")
+            disable_battle_tasks(context, "集结物品_识别体力入口")
+            CombatRepetitionCount.reset()
             return CustomAction.RunResult(success=False)
-        
+
         return CustomAction.RunResult(success=True)

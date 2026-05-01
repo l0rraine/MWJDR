@@ -24,7 +24,7 @@ def random_click_point(box: Rect) -> tuple[int, int]:
     """
     rx = random.randint(box.x, box.x + box.w)
     ry = random.randint(box.y, box.y + box.h)
-    logger.debug(f"随机点击坐标: ({rx}, {ry}), 区域: ({box.x}, {box.y}, {box.w}, {box.h})")
+    # logger.debug(f"随机点击坐标: ({rx}, {ry}), 区域: ({box.x}, {box.y}, {box.w}, {box.h})")
     return rx, ry
 
 
