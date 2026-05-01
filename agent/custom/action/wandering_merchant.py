@@ -68,11 +68,11 @@ class MerchantDiamondRefresh(CustomAction):
         param = json.loads(argv.custom_action_param)
         diamond_limit = int(param.get("钻石刷新次数", 0))
 
-        # 第一步：尝试免费刷新
+        # 第一步：尝试免费刷新（使用模板匹配，OCR对绿色按钮文字识别不可靠）
         img = context.tasker.controller.post_screencap().wait().get()
         free_detail = context.run_recognition_direct(
-            JRecognitionType.OCR,
-            JOCR(expected=["免费刷新"], roi=[513, 212, 169, 98]),
+            JRecognitionType.TemplateMatch,
+            JTemplateMatch(template=["流浪商人/免费刷新.png"], roi=[480, 180, 220, 140]),
             img,
         )
 
