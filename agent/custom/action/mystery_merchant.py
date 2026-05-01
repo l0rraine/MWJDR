@@ -219,6 +219,7 @@ class MysteryMerchantPurchase(CustomAction):
             click_rect(context, free_detail.box)
             logger.info("发现免费物品，购买")
             time.sleep(1.0)
+            self._handle_purchase_confirm(context, "免费物品")
             return True
 
         # 检查50%折扣物品
