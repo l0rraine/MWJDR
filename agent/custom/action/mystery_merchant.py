@@ -10,7 +10,8 @@
 - 无法购买且无法刷新时结束
 
 完成时返回 success=True（next → 商店购买_入口），
-通过 context + Resource.override_pipeline 禁用神秘商店_开关防止重入。
+通过 context.override_next + context + Resource.override_pipeline 禁用神秘商店_开关防止重入。
+每日检查已购买时使用 override_next 跳转至商店购买_入口，避免使用 success=False。
 """
 
 import json
@@ -57,7 +58,8 @@ class MysteryMerchantDailyCheck(CustomAction):
             logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
             context.override_pipeline({"神秘商店_开关": {"enabled": False}})
             context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
-            return CustomAction.RunResult(success=False)
+            context.override_next("神秘商店_每日检查", ["商店购买_入口"])
+            return CustomAction.RunResult(success=True)
 
         logger.info("神秘商店今日未购买，开始购买")
         return CustomAction.RunResult(success=True)
