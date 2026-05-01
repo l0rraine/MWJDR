@@ -9,6 +9,9 @@
 - 买完一轮后尝试刷新：免费刷新 → 钻石刷新
 - 徽章不足时禁用该物品50%购买
 - 无法购买且无法刷新时结束
+
+选项列表从 pipeline JSON 的"神秘商店_选项"节点 next 读取，
+物品名=选项名=图片名，模板路径为 {SHOP_DIR}/{name}.png。
 """
 
 import json
@@ -26,8 +29,10 @@ from utils.click_util import click_rect
 from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
-ITEM_NAMES = ["当季专武", "宠物自选箱", "高级野性标记", "行军加速", "橙碎"]
 SHOP_DIR = "神秘商店"
+
+# 参数节点前缀
+_PARAM_PREFIX = "神秘商店_参数_"
 
 # 槽位 ROI
 SCREEN1_SLOTS = [
@@ -82,17 +87,19 @@ class MysteryMerchantPurchase(CustomAction):
         param = json.loads(argv.custom_action_param)
         diamond_limit = int(param.get("钻石刷新次数", 0))
 
-        # 截取专武模板
+        # 截取专武模板（当季专武图片从界面截取）
         img = _screencap(context)
         weapon_img = img[490:542, 85:174]
         context.override_image(f"{SHOP_DIR}/当季专武.png", weapon_img)
         logger.debug("已截取专武模板图片")
 
-        # 初始化启用的选项
+        # 从JSON读取选项列表
+        all_params = context.get_node_data("神秘商店_选项")["next"]
         MysteryMerchantPurchase._enabled_names = []
-        for name in ITEM_NAMES:
-            node_data = context.get_node_data(f"神秘商店_参数_{name}")
+        for param_name in all_params:
+            node_data = context.get_node_data(param_name)
             if node_data and node_data.get("enabled", True):
+                name = param_name.removeprefix(_PARAM_PREFIX)
                 MysteryMerchantPurchase._enabled_names.append(name)
 
         if not self._enabled_names:

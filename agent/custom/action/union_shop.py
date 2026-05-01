@@ -8,6 +8,9 @@
 - 折扣物品：先匹配75%折扣标签，反算物品位置后识别种类，检查联盟币后购买
 - 联盟币不足时禁用该物品，后续不再购买
 - 一轮扫描后向上滚动一次，再扫描一轮
+
+选项列表从 pipeline JSON 的"联盟商店_选项"节点 next 读取，
+物品名=选项名=图片名，模板路径为 {SHOP_DIR}/{name}.png。
 """
 
 import time
@@ -24,11 +27,8 @@ from utils.click_util import click_rect
 from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
-TZ_ITEM = "统帅经验"
-DISCOUNT_NAMES = ["研究加速", "训练加速", "建筑加速", "治疗加速"]
-ALL_ITEM_NAMES = [TZ_ITEM] + DISCOUNT_NAMES
-
 SHOP_DIR = "联盟商店"
+TZ_ITEM = "统帅经验"
 
 # 识别范围
 SCAN_ROI = [11, 184, 698, 1001]
@@ -40,6 +40,9 @@ ITEM_FROM_DISCOUNT = [33, 30, 82, 92]
 COIN_FROM_DISCOUNT = [22, 162, -47, -32]
 # 从物品box计算联盟币区域: coin = item + COIN_FROM_ITEM
 COIN_FROM_ITEM = [COIN_FROM_DISCOUNT[i] - ITEM_FROM_DISCOUNT[i] for i in range(4)]
+
+# 参数节点前缀
+_PARAM_PREFIX = "联盟商店_参数_"
 
 
 def _screencap(context: Context):
@@ -71,11 +74,14 @@ class UnionShopPurchase(CustomAction):
     _enabled_names: list = []
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        # 初始化启用的选项
+        # 从JSON读取选项列表
+        all_params = context.get_node_data("联盟商店_选项")["next"]
         UnionShopPurchase._enabled_names = []
-        for name in ALL_ITEM_NAMES:
-            node_data = context.get_node_data(f"联盟商店_参数_{name}")
+        for param_name in all_params:
+            node_data = context.get_node_data(param_name)
             if node_data and node_data.get("enabled", True):
+                # "联盟商店_参数_统帅经验" → "统帅经验"
+                name = param_name.removeprefix(_PARAM_PREFIX)
                 UnionShopPurchase._enabled_names.append(name)
 
         if not self._enabled_names:
@@ -129,7 +135,7 @@ class UnionShopPurchase(CustomAction):
 
     def _buy_discount(self, context: Context, roi: list):
         """折扣物品：先找75%，再识别物品，检查联盟币后购买"""
-        discount_enabled = [n for n in DISCOUNT_NAMES if n in self._enabled_names]
+        discount_enabled = [n for n in self._enabled_names if n != TZ_ITEM]
         if not discount_enabled:
             return
 
