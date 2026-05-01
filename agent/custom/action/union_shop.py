@@ -82,22 +82,26 @@ class UnionShopDailyCheck(CustomAction):
 class UnionShopPurchase(CustomAction):
 
     _disabled_labels: set = set()
+    _enabled_names: list = []
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        enabled_names = []
+        # 初始化启用的选项
+        UnionShopPurchase._enabled_names = []
         for name in ALL_ITEM_NAMES:
             node_data = context.get_node_data(f"联盟商店_参数_{name}")
             if node_data and node_data.get("enabled", True):
-                enabled_names.append(name)
+                UnionShopPurchase._enabled_names.append(name)
 
-        if not enabled_names:
+        if not self._enabled_names:
             logger.info("联盟商店无启用选项，跳过")
         else:
-            logger.debug(f"联盟商店启用选项: {enabled_names}")
+            logger.debug(f"联盟商店启用选项: {self._enabled_names}")
 
-        self._scan_and_buy(context, SCAN_ROI, enabled_names)
+        self._buy_tz(context, SCAN_ROI)
+        self._buy_discount(context, SCAN_ROI)
         context.run_task("联盟商店_滚动")
-        self._scan_and_buy(context, SCROLL_SCAN_ROI, enabled_names)
+        self._buy_tz(context, SCROLL_SCAN_ROI)
+        self._buy_discount(context, SCROLL_SCAN_ROI)
 
         logger.info("联盟商店购买完成，记录日期")
         save_merchant_date("联盟商店")
@@ -107,40 +111,45 @@ class UnionShopPurchase(CustomAction):
 
         return CustomAction.RunResult(success=True)
 
-    def _scan_and_buy(self, context: Context, roi: list, enabled_names: list):
-        # 统帅经验：直接匹配购买
-        if TZ_NAME in enabled_names and TZ_NAME not in self._disabled_labels:
-            detail = context.run_recognition_direct(
-                JRecognitionType.TemplateMatch,
-                JTemplateMatch(template=[TZ_TEMPLATE], roi=roi, threshold=[0.9]),
-                _screencap(context),
-            )
-            if detail and detail.hit:
-                for match in detail.filtered_results:
-                    box = match.box
-                    box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
-                    coin_roi = _add_offset(box_rect, COIN_FROM_ITEM)
-                    coin_detail = context.run_recognition(
-                        "联盟商店_联盟币", _screencap(context),
-                        pipeline_override={"联盟商店_联盟币": {"roi": coin_roi}},
-                    )
-                    if not coin_detail or not coin_detail.hit:
-                        continue
-                    click_rect(context, coin_roi)
-                    logger.info("点击联盟币购买 统帅经验")
-                    time.sleep(1.0)
-                    self._handle_confirm(context, TZ_NAME)
-                    if TZ_NAME in self._disabled_labels:
-                        break
+    def _buy_tz(self, context: Context, roi: list):
+        """统帅经验：直接匹配模板购买"""
+        if TZ_NAME not in self._enabled_names or TZ_NAME in self._disabled_labels:
+            return
 
-        # 折扣物品：先找75%，再识别物品
-        discount_enabled = [n for n, _ in DISCOUNT_ITEMS if n in enabled_names]
+        detail = context.run_recognition_direct(
+            JRecognitionType.TemplateMatch,
+            JTemplateMatch(template=[TZ_TEMPLATE], roi=roi),
+            _screencap(context),
+        )
+        if not detail or not detail.hit:
+            return
+
+        for match in detail.filtered_results:
+            box = match.box
+            box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
+            coin_roi = _add_offset(box_rect, COIN_FROM_ITEM)
+            coin_detail = context.run_recognition(
+                "联盟商店_联盟币", _screencap(context),
+                pipeline_override={"联盟商店_联盟币": {"roi": coin_roi}},
+            )
+            if not coin_detail or not coin_detail.hit:
+                continue
+            click_rect(context, coin_roi)
+            logger.info("点击联盟币购买 统帅经验")
+            time.sleep(1.0)
+            self._handle_confirm(context, TZ_NAME)
+            if TZ_NAME in self._disabled_labels:
+                break
+
+    def _buy_discount(self, context: Context, roi: list):
+        """折扣物品：先找75%，再识别物品，检查联盟币后购买"""
+        discount_enabled = [n for n, _ in DISCOUNT_ITEMS if n in self._enabled_names]
         if not discount_enabled:
             return
 
         detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
-            JTemplateMatch(template=["联盟商店/75%.png"], roi=roi, threshold=[0.9]),
+            JTemplateMatch(template=["联盟商店/75%.png"], roi=roi),
             _screencap(context),
         )
         if not detail or not detail.hit:
@@ -153,7 +162,6 @@ class UnionShopPurchase(CustomAction):
             box = match.box
             discount_box = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
 
-            # 从75%反算物品区域和联盟币区域
             item_roi = _add_offset(discount_box, ITEM_FROM_DISCOUNT)
             coin_roi = _add_offset(discount_box, COIN_FROM_DISCOUNT)
 
@@ -161,11 +169,11 @@ class UnionShopPurchase(CustomAction):
             identify_img = _screencap(context)
             name = None
             for item_name, template_path in DISCOUNT_ITEMS:
-                if item_name not in enabled_names or item_name in self._disabled_labels:
+                if item_name not in self._enabled_names or item_name in self._disabled_labels:
                     continue
                 d = context.run_recognition_direct(
                     JRecognitionType.TemplateMatch,
-                    JTemplateMatch(template=[template_path], roi=item_roi, threshold=[0.9]),
+                    JTemplateMatch(template=[template_path], roi=item_roi),
                     identify_img,
                 )
                 if d and d.hit:
