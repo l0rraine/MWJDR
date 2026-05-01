@@ -26,16 +26,8 @@ from utils.click_util import click_rect
 from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
-# 折扣物品: (选项名, 模板路径)
-DISCOUNT_ITEMS = [
-    ("当季专武", "神秘商店/专武.png"),
-    ("宠物自选箱", "神秘商店/宠物自选箱.png"),
-    ("高级野性标记", "神秘商店/高级野性标记.png"),
-    ("行军加速", "神秘商店/行军加速.png"),
-    ("橙碎", "神秘商店/橙碎.png"),
-]
-
-ALL_ITEM_NAMES = [n for n, _ in DISCOUNT_ITEMS]
+ITEM_NAMES = ["当季专武", "宠物自选箱", "高级野性标记", "行军加速", "橙碎"]
+SHOP_DIR = "神秘商店"
 
 # 槽位 ROI
 SCREEN1_SLOTS = [
@@ -93,12 +85,12 @@ class MysteryMerchantPurchase(CustomAction):
         # 截取专武模板
         img = _screencap(context)
         weapon_img = img[490:542, 85:174]
-        context.override_image("神秘商店/专武.png", weapon_img)
+        context.override_image(f"{SHOP_DIR}/当季专武.png", weapon_img)
         logger.debug("已截取专武模板图片")
 
         # 初始化启用的选项
         MysteryMerchantPurchase._enabled_names = []
-        for name in ALL_ITEM_NAMES:
+        for name in ITEM_NAMES:
             node_data = context.get_node_data(f"神秘商店_参数_{name}")
             if node_data and node_data.get("enabled", True):
                 MysteryMerchantPurchase._enabled_names.append(name)
@@ -153,7 +145,7 @@ class MysteryMerchantPurchase(CustomAction):
         # 检查50%折扣
         discount_detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
-            JTemplateMatch(template=["神秘商店/50%.png"], roi=slot_roi),
+            JTemplateMatch(template=[f"{SHOP_DIR}/50%.png"], roi=slot_roi),
             _screencap(context),
         )
         if not discount_detail or not discount_detail.hit:
@@ -176,16 +168,16 @@ class MysteryMerchantPurchase(CustomAction):
         item_roi = add_offset(box_rect, ITEM_FROM_50)
         identify_img = _screencap(context)
         name = None
-        for item_name, template_path in DISCOUNT_ITEMS:
-            if item_name not in self._enabled_names or item_name in self._disabled_50:
+        for n in self._enabled_names:
+            if n in self._disabled_50:
                 continue
             d = context.run_recognition_direct(
                 JRecognitionType.TemplateMatch,
-                JTemplateMatch(template=[template_path], roi=item_roi),
+                JTemplateMatch(template=[f"{SHOP_DIR}/{n}.png"], roi=item_roi),
                 identify_img,
             )
             if d and d.hit:
-                name = item_name
+                name = n
                 break
 
         if not name:
