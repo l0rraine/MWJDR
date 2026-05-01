@@ -22,7 +22,7 @@ import time
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.pipeline import JRecognitionType, JOCR, JTemplateMatch
+from maa.pipeline import JRecognitionType, JColorMatch, JOCR, JTemplateMatch
 
 from utils import logger
 from utils import timelib
@@ -47,8 +47,11 @@ SCROLL_SCAN_ROI = [9, 903, 697, 296]
 
 # 75%折扣标签相对选项box的offset: [x, y, w, h] 各项与box对应项相加
 DISCOUNT_OFFSET = [-69, -94, -13, 21]
-# 联盟币标签相对选项box的offset
-COIN_OFFSET = [30, -122, -60, 16]
+# 联盟币取色区域相对选项box的offset: [x, y, w, h] 各项与box对应项相加
+COIN_OFFSET = [-42, 136, -92, -41]
+# 联盟币取色范围 upper/lower
+COIN_UPPER = [[230, 252, 255]]
+COIN_LOWER = [[219, 248, 254]]
 
 # 滚动参数
 SCROLL_BEGIN = [351, 987, 27, 15]
@@ -218,7 +221,22 @@ class UnionShopPurchase(CustomAction):
         return self._check_coin(context, img, box)
 
     def _check_coin(self, context: Context, img, box) -> bool:
-        """检查选项box附近是否存在联盟币标签"""
+        """检查选项box附近是否存在联盟币（取色匹配）"""
+        coin_roi = self._calc_coin_roi(box)
+
+        coin_detail = context.run_recognition_direct(
+            JRecognitionType.ColorMatch,
+            JColorMatch(upper=COIN_UPPER, lower=COIN_LOWER, roi=coin_roi, count=1),
+            img,
+        )
+        if not coin_detail or not coin_detail.hit:
+            logger.debug("联盟币取色不匹配，跳过")
+            return False
+
+        return True
+
+    def _calc_coin_roi(self, box) -> list[int]:
+        """根据选项box和COIN_OFFSET计算联盟币取色区域"""
         box_rect = box if isinstance(box, list) else [box.x, box.y, box.w, box.h]
         coin_roi = [
             box_rect[0] + COIN_OFFSET[0],
@@ -226,20 +244,9 @@ class UnionShopPurchase(CustomAction):
             box_rect[2] + COIN_OFFSET[2],
             box_rect[3] + COIN_OFFSET[3],
         ]
-        # 确保 w 和 h 至少为 1
         coin_roi[2] = max(1, coin_roi[2])
         coin_roi[3] = max(1, coin_roi[3])
-
-        coin_detail = context.run_recognition_direct(
-            JRecognitionType.TemplateMatch,
-            JTemplateMatch(template=["联盟商店/联盟币.png"], roi=coin_roi, threshold=0.9),
-            img,
-        )
-        if not coin_detail or not coin_detail.hit:
-            logger.debug("未找到联盟币标签，跳过")
-            return False
-
-        return True
+        return coin_roi
 
     def _click_coin_and_buy(
         self,
@@ -249,28 +256,19 @@ class UnionShopPurchase(CustomAction):
         box,
     ):
         """点击联盟币位置触发购买，并处理购买确认对话框"""
-        # 计算联盟币位置
-        box_rect = box if isinstance(box, list) else [box.x, box.y, box.w, box.h]
-        coin_roi = [
-            box_rect[0] + COIN_OFFSET[0],
-            box_rect[1] + COIN_OFFSET[1],
-            box_rect[2] + COIN_OFFSET[2],
-            box_rect[3] + COIN_OFFSET[3],
-        ]
-        coin_roi[2] = max(1, coin_roi[2])
-        coin_roi[3] = max(1, coin_roi[3])
+        coin_roi = self._calc_coin_roi(box)
 
-        # 识别联盟币并点击其位置
+        # 取色匹配联盟币并点击该区域
         coin_detail = context.run_recognition_direct(
-            JRecognitionType.TemplateMatch,
-            JTemplateMatch(template=["联盟商店/联盟币.png"], roi=coin_roi, threshold=0.9),
+            JRecognitionType.ColorMatch,
+            JColorMatch(upper=COIN_UPPER, lower=COIN_LOWER, roi=coin_roi, count=1),
             img,
         )
         if not coin_detail or not coin_detail.hit:
-            logger.warning(f"{opt_name} 未找到联盟币位置，跳过购买")
+            logger.warning(f"{opt_name} 联盟币取色不匹配，跳过购买")
             return
 
-        click_rect(context, coin_detail.box)
+        click_rect(context, coin_roi)
         logger.info(f"点击联盟币购买 {opt_name}")
         time.sleep(1.0)
 
