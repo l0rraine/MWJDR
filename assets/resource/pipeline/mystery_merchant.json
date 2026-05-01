@@ -40,6 +40,131 @@
             "商店购买_入口"
         ]
     },
+    "神秘商店_免费": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "免费"
+            }
+        },
+        "action": "DoNothing"
+    },
+    "神秘商店_50%折扣": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "神秘商店/50%.png"
+        ],
+        "action": "DoNothing"
+    },
+    "神秘商店_徽章": {
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "lower": [[4, 170, 224]],
+                "upper": [[5, 204, 237]],
+                "method": 4,
+                "count": 1
+            }
+        },
+        "action": "DoNothing"
+    },
+    "神秘商店_确定购买": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确定购买",
+                "roi": [281, 407, 148, 52]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [284, 814, 137, 32]
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "神秘商店_点击完成"
+        ]
+    },
+    "神秘商店_点击完成": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [284, 814, 137, 32]
+            }
+        },
+        "post_delay": 1000
+    },
+    "神秘商店_获取更多": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "获取更多",
+                "roi": [283, 114, 151, 45]
+            }
+        },
+        "action": "DoNothing"
+    },
+    "神秘商店_关闭提示": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [196, 23, 63, 34]
+            }
+        },
+        "post_delay": 1000
+    },
+    "神秘商店_免费刷新": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "免费刷新",
+                "roi": [531, 297, 127, 35]
+            }
+        },
+        "action": "DoNothing"
+    },
+    "神秘商店_钻石刷新": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/钻石刷新.png"
+        ],
+        "roi": [531, 297, 127, 35],
+        "action": "DoNothing"
+    },
+    "神秘商店_钻石购买": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "流浪商人/钻石购买.png"
+        ],
+        "roi": [194, 701, 334, 184],
+        "action": "DoNothing"
+    },
+    "神秘商店_上滑": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [211, 1089, 11, 12],
+                "end": [207, 953, 9, 8]
+            }
+        },
+        "post_delay": 1000
+    },
+    "神秘商店_下滑": {
+        "recognition": "DirectHit",
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [207, 953, 9, 8],
+                "end": [211, 1089, 11, 12]
+            }
+        },
+        "post_delay": 1000
+    },
     "神秘商店_参数_当季专武": {
         "enabled": true
     },
