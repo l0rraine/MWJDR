@@ -20,6 +20,11 @@ from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
 
+def _disable_wandering_switch(context: Context):
+    """通过 Resource 级别禁用游荡商人开关，跨任务持久化"""
+    context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
+
+
 @AgentServer.custom_action("游荡商人_每日检查")
 class MerchantDailyCheck(CustomAction):
     """检查游荡商人今天是否已购买，已购买则跳过"""
@@ -35,8 +40,8 @@ class MerchantDailyCheck(CustomAction):
 
         if timelib.is_today(timestamp):
             logger.info(f"游荡商人今日已购买，跳过 (timestamp={timestamp})")
-            context.override_pipeline({"游荡商人_开关": {"enabled": False}})
-            return CustomAction.RunResult(success=False)
+            _disable_wandering_switch(context)
+            return CustomAction.RunResult(success=True)
 
         logger.info("游荡商人今日未购买，开始购买")
         return CustomAction.RunResult(success=True)
@@ -52,6 +57,9 @@ class MerchantDiamondRefresh(CustomAction):
     2. 没有免费刷新时，检查钻石刷新次数参数
        - 钻石刷新次数 = 0：保存日期，结束
        - 钻石刷新次数 > 0：执行钻石刷新，计数，到达上限后保存日期，结束
+
+    完成时返回 success=True（空 next → JumpBack 回到商店购买_入口），
+    通过 Resource.override_pipeline 禁用游荡商人_开关防止重入。
     """
 
     # 类变量：记录当前已使用钻石刷新次数
@@ -85,6 +93,7 @@ class MerchantDiamondRefresh(CustomAction):
             # 不使用钻石刷新，保存日期，结束
             logger.info("免费刷新已用完，不使用钻石刷新，记录日期")
             self._end(context)
+            return CustomAction.RunResult(success=True)
 
         # 第三步：执行钻石刷新
         if self._diamond_used < diamond_limit:
@@ -124,12 +133,13 @@ class MerchantDiamondRefresh(CustomAction):
             f"钻石刷新次数已达上限（{diamond_limit}次），记录日期"
         )
         self._end(context)
-        return CustomAction.RunResult(success=False)
+        return CustomAction.RunResult(success=True)
+
     def _end(self, context: Context):
         # 每次 Custom Action 结束时重置钻石使用计数
         save_merchant_date("游荡商人")
         MerchantDiamondRefresh._diamond_used = 0
-        context.override_pipeline({"游荡商人_开关": {"enabled": False}})
+        _disable_wandering_switch(context)
 
 
 @AgentServer.custom_action("游荡商人_记录日期")

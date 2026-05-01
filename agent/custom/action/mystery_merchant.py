@@ -8,6 +8,9 @@
 - 每个槽位独立检查：免费物品 → 50%折扣物品（取色+模板匹配）
 - 购买后重新截图，从屏幕1重新搜索
 - 无法购买且无法刷新时结束
+
+完成时返回 success=True（空 next → JumpBack 回到商店购买_入口），
+通过 Resource.override_pipeline 禁用神秘商店_开关防止重入。
 """
 
 import json
@@ -37,6 +40,11 @@ MYSTERY_OPTIONS = [
 ]
 
 
+def _disable_mystery_switch(context: Context):
+    """通过 Resource 级别禁用神秘商店开关，跨任务持久化"""
+    context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
+
+
 @AgentServer.custom_action("神秘商店_每日检查")
 class MysteryMerchantDailyCheck(CustomAction):
     """检查神秘商店今天是否已购买，已购买则跳过"""
@@ -52,8 +60,8 @@ class MysteryMerchantDailyCheck(CustomAction):
 
         if timelib.is_today(timestamp):
             logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
-            context.override_pipeline({"神秘商店_开关": {"enabled": False}})
-            return CustomAction.RunResult(success=False)
+            _disable_mystery_switch(context)
+            return CustomAction.RunResult(success=True)
 
         logger.info("神秘商店今日未购买，开始购买")
         return CustomAction.RunResult(success=True)
@@ -141,18 +149,17 @@ class MysteryMerchantPurchase(CustomAction):
                 continue
             break
 
-
-        # Step 3: 记录日期
-
+        # Step 3: 记录日期，结束
         logger.info("神秘商店购买完成，记录日期")
         self._end(context)
+        return CustomAction.RunResult(success=True)
 
     def _end(self, context: Context):
         # 每次 Custom Action 结束时重置钻石使用计数
         save_merchant_date("神秘商店")
         MysteryMerchantPurchase._disabled_50_options.clear()
         MysteryMerchantPurchase._diamond_used = 0
-        context.override_pipeline({"神秘商店_开关": {"enabled": False}})
+        _disable_mystery_switch(context)
 
     def _capture_weapon_template(self, context: Context):
         """截取界面中专武区域 [85, 490, 89, 52] 作为模板图片"""
