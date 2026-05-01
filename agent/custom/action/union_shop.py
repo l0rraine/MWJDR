@@ -7,11 +7,12 @@
 - 进入联盟商店后，在识别范围内扫描所有启用的选项
 - 统帅经验无条件购买，其他选项需75%折扣标签
 - 同一选项可能存在多个实例（如2个治疗加速），每个都需检查75%折扣
-- 使用 run_recognition_direct 获取所有匹配结果(filtered_results)，逐个处理
-- 每次检查75%折扣前刷新截图，确保画面最新
+- 使用 filtered_results 获取所有超过阈值的匹配结果，逐个处理
+- 每次处理前刷新截图，确保画面最新
+- 统帅经验和其他加速分两次识别（逻辑不同），去除逐选项循环
 - 有折扣的选项还需确认使用联盟币购买
 - 点击联盟币位置触发购买（不能点击物品图标，会弹出说明）
-- 联盟币不足时禁用该选项，后续不再购买
+- 联盟币不足时禁用该类物品，后续不再购买
 - 一轮循环完毕后向上滚动一次，再识别一轮
 - 无刷新机制，购买完毕即结束
 
@@ -34,9 +35,12 @@ from utils.click_util import click_rect
 from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
-# 联盟商店购买选项映射: (选项名, 模板图片路径)
-UNION_OPTIONS = [
-    ("统帅经验", "联盟商店/统帅经验.png"),
+# 统帅经验模板
+TZ_NAME = "统帅经验"
+TZ_TEMPLATE = "联盟商店/统帅经验.png"
+
+# 需要折扣的选项: (选项名, 模板路径)
+DISCOUNT_ITEMS = [
     ("研究加速", "联盟商店/研究加速.png"),
     ("训练加速", "联盟商店/训练加速.png"),
     ("建筑加速", "联盟商店/建筑加速.png"),
@@ -106,21 +110,15 @@ class UnionShopPurchase(CustomAction):
     """
     联盟商店购买逻辑
 
-    流程：
-    1. 读取启用的选项
-    2. 在识别范围内扫描所有匹配选项（同种选项可能有多个实例）
-    3. 逐个判断并购买：
-       - 统帅经验：无条件购买
-       - 其他选项：需有75%折扣标签 + 联盟币标签
-    4. 点击联盟币位置触发购买
-    5. 处理购买确认对话框
-    6. 联盟币不足时禁用该选项
-    7. 一轮完毕后滚动一次，再识别一轮
-    8. 结束，记录日期
+    统帅经验：无条件购买（仅检查联盟币）
+    折扣加速：需75%折扣标签 + 联盟币
+
+    将模板分两组识别（统帅经验 / 折扣加速），去除逐选项循环。
+    filtered_results 返回所有 NMS 后超过阈值的匹配，同种多个实例均会包含。
     """
 
-    # 类变量：因联盟币不足被禁用的选项
-    _disabled_options: set = set()
+    # 类变量：因联盟币不足被禁用的标签
+    _disabled_labels: set = set()
 
     def run(
         self,
@@ -128,22 +126,27 @@ class UnionShopPurchase(CustomAction):
         argv: CustomAction.RunArg,
     ) -> CustomAction.RunResult:
         # Step 1: 读取启用的选项
-        enabled_options = self._get_enabled_options(context)
-        if not enabled_options:
+        tz_enabled, discount_templates = self._get_enabled_templates(context)
+        if not tz_enabled and not discount_templates:
             logger.info("联盟商店无启用选项，跳过")
         else:
-            logger.debug(f"联盟商店启用选项: {[name for name, _ in enabled_options]}")
+            labels = []
+            if tz_enabled:
+                labels.append(TZ_NAME)
+            if discount_templates:
+                labels.append("折扣加速")
+            logger.debug(f"联盟商店启用选项: {labels}")
 
         # Step 2: 第一轮识别与购买
         img = context.tasker.controller.post_screencap().wait().get()
-        img = self._scan_and_buy(context, img, SCAN_ROI, enabled_options)
+        img = self._scan_and_buy(context, img, SCAN_ROI, tz_enabled, discount_templates)
 
         # Step 3: 滚动一次
         self._scroll_up(context)
 
         # Step 4: 第二轮识别与购买
         img = context.tasker.controller.post_screencap().wait().get()
-        self._scan_and_buy(context, img, SCROLL_SCAN_ROI, enabled_options)
+        self._scan_and_buy(context, img, SCROLL_SCAN_ROI, tz_enabled, discount_templates)
 
         # Step 5: 记录日期，结束
         logger.info("联盟商店购买完成，记录日期")
@@ -152,156 +155,175 @@ class UnionShopPurchase(CustomAction):
 
     def _end(self, context: Context):
         save_merchant_date("联盟商店")
-        UnionShopPurchase._disabled_options.clear()
+        UnionShopPurchase._disabled_labels.clear()
         # 同时使用 context 和 resource override 禁用开关
         context.override_pipeline({"联盟商店_开关": {"enabled": False}})
         context.tasker.resource.override_pipeline({"联盟商店_开关": {"enabled": False}})
 
-    def _get_enabled_options(self, context: Context) -> list[tuple[str, str]]:
-        """读取启用的购买选项"""
-        enabled = []
-        for name, template in UNION_OPTIONS:
-            node_name = f"联盟商店_参数_{name}"
-            node_data = context.get_node_data(node_name)
+    def _get_enabled_templates(
+        self, context: Context
+    ) -> tuple[bool, list[str]]:
+        """读取启用的购买选项，返回 (统帅经验是否启用, 折扣加速模板列表)"""
+        tz_enabled = False
+        discount_templates = []
+
+        # 检查统帅经验
+        node_data = context.get_node_data(f"联盟商店_参数_{TZ_NAME}")
+        if node_data and node_data.get("enabled", True):
+            tz_enabled = True
+
+        # 检查折扣加速
+        for name, template in DISCOUNT_ITEMS:
+            node_data = context.get_node_data(f"联盟商店_参数_{name}")
             if node_data and node_data.get("enabled", True):
-                enabled.append((name, template))
-        return enabled
+                discount_templates.append(template)
+
+        return tz_enabled, discount_templates
 
     def _scan_and_buy(
         self,
         context: Context,
         img,
         roi: list[int],
-        enabled_options: list[tuple[str, str]],
+        tz_enabled: bool,
+        discount_templates: list[str],
     ):
-        """在指定范围内扫描所有启用选项并尝试购买
+        """在指定范围内扫描并尝试购买
 
-        使用 run_recognition_direct 获取所有匹配结果(filtered_results)，
-        逐个检查75%折扣并购买。同一选项可能有多个实例（如2个治疗加速），
-        每个都需独立检查。每次检查75%折扣前刷新截图，确保画面最新。
+        统帅经验和其他加速分两组识别：
+        - 统帅经验：单模板，无条件购买
+        - 折扣加速：多模板合并识别，需75%折扣
 
-        注：MaaFramework 多模板匹配时结果不含模板索引，
-        无法区分哪个结果对应哪个模板，因此仍需逐选项识别。
+        filtered_results 包含所有 NMS 后超过阈值的匹配结果，
+        同种物品的多个实例（如2个治疗加速）都会包含在内。
         """
-        for opt_name, template_path in enabled_options:
-            if opt_name in self._disabled_options:
-                continue
-
-            # 一次性获取该选项的所有匹配结果
-            detail = context.run_recognition_direct(
-                JRecognitionType.TemplateMatch,
-                JTemplateMatch(template=[template_path], roi=roi, threshold=0.9),
-                img,
-            )
-            if not detail or not detail.hit:
-                continue
-
-            # 获取所有超过阈值的匹配结果
-            all_matches = detail.filtered_results
-            logger.debug(
-                f"联盟商店识别到 {opt_name}: {len(all_matches)} 个匹配"
+        # 处理统帅经验（无条件购买）
+        if tz_enabled and TZ_NAME not in self._disabled_labels:
+            img = self._recognize_and_process(
+                context, img, roi, [TZ_TEMPLATE],
+                need_discount=False, label=TZ_NAME,
             )
 
-            # 逐个处理每个匹配结果
-            for match in all_matches:
-                # 每次都刷新截图
-                img = context.tasker.controller.post_screencap().wait().get()
-
-                # box 可能是 Rect 对象或 list，统一转为 list
-                box_rect = _box_to_list(match.box)
-
-                logger.debug(
-                    f"联盟商店检查: {opt_name}, "
-                    f"box=({box_rect[0]},{box_rect[1]},{box_rect[2]},{box_rect[3]}), "
-                    f"score={match.score:.3f}"
-                )
-
-                # 判断是否可购买
-                if self._should_buy(context, img, opt_name, box_rect):
-                    # 点击联盟币位置触发购买
-                    self._click_coin_and_buy(context, img, opt_name, box_rect)
-                    # 购买后重新截图（在循环顶部会再次刷新）
-                    img = context.tasker.controller.post_screencap().wait().get()
-
-                # 如果该选项已被禁用（联盟币不足），跳出当前选项的循环
-                if opt_name in self._disabled_options:
-                    break
+        # 处理折扣加速（需75%折扣）
+        if discount_templates and "折扣加速" not in self._disabled_labels:
+            img = self._recognize_and_process(
+                context, img, roi, discount_templates,
+                need_discount=True, label="折扣加速",
+            )
 
         return img
 
-    def _should_buy(
+    def _recognize_and_process(
         self,
         context: Context,
         img,
-        opt_name: str,
-        box_rect: list[int],
-    ) -> bool:
-        """判断选项是否应购买
+        roi: list[int],
+        templates: list[str],
+        need_discount: bool,
+        label: str,
+    ):
+        """识别模板并逐个处理匹配结果
 
-        统帅经验：无条件购买
-        其他选项：需有75%折扣标签
-        所有可购买选项：需有联盟币标签
+        Args:
+            templates: 模板路径列表
+            need_discount: 是否需要75%折扣
+            label: 日志标签
         """
-        # 统帅经验无条件购买，但仍需确认有联盟币
-        if opt_name == "统帅经验":
-            return self._check_coin(context, img, box_rect)
+        detail = context.run_recognition_direct(
+            JRecognitionType.TemplateMatch,
+            JTemplateMatch(template=templates, roi=roi, threshold=0.9),
+            img,
+        )
+        if not detail or not detail.hit:
+            return img
 
-        # 非统帅经验：检查75%折扣标签
+        matches = detail.filtered_results
+        logger.debug(f"联盟商店识别到 {label}: {len(matches)} 个匹配")
+
+        for match in matches:
+            # 每次都刷新截图
+            img = context.tasker.controller.post_screencap().wait().get()
+
+            box_rect = _box_to_list(match.box)
+
+            logger.debug(
+                f"联盟商店检查: {label}, "
+                f"box=({box_rect[0]},{box_rect[1]},{box_rect[2]},{box_rect[3]}), "
+                f"score={match.score:.3f}"
+            )
+
+            # 检查是否可购买
+            can_buy = True
+            if need_discount:
+                can_buy = self._check_discount(context, img, box_rect)
+
+            if can_buy:
+                can_buy = self._check_coin(context, img, box_rect)
+
+            if can_buy:
+                self._click_coin_and_buy(context, img, label, box_rect)
+                img = context.tasker.controller.post_screencap().wait().get()
+
+            # 联盟币不足时跳出
+            if label in self._disabled_labels:
+                break
+
+        return img
+
+    def _check_discount(self, context: Context, img, box_rect: list[int]) -> bool:
+        """检查选项box附近是否有75%折扣标签"""
         discount_roi = _add_offset(box_rect, DISCOUNT_OFFSET)
-        discount_detail = context.run_recognition_direct(
+        detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
             JTemplateMatch(template=["联盟商店/75%.png"], roi=discount_roi, threshold=0.9),
             img,
         )
-        if not discount_detail or not discount_detail.hit:
-            logger.debug(f"{opt_name} 无75%折扣标签，跳过")
+        if not detail or not detail.hit:
+            logger.debug("无75%折扣标签，跳过")
             return False
-
-        # 有折扣，检查联盟币
-        return self._check_coin(context, img, box_rect)
+        return True
 
     def _check_coin(self, context: Context, img, box_rect: list[int]) -> bool:
         """检查选项box附近是否存在联盟币（取色匹配）"""
         coin_roi = _add_offset(box_rect, COIN_OFFSET)
-        coin_detail = context.run_recognition_direct(
+        detail = context.run_recognition_direct(
             JRecognitionType.ColorMatch,
             JColorMatch(upper=COIN_UPPER, lower=COIN_LOWER, roi=coin_roi, count=1),
             img,
         )
-        if not coin_detail or not coin_detail.hit:
+        if not detail or not detail.hit:
             logger.debug("联盟币取色不匹配，跳过")
             return False
-
         return True
 
     def _click_coin_and_buy(
         self,
         context: Context,
         img,
-        opt_name: str,
+        label: str,
         box_rect: list[int],
     ):
         """点击联盟币位置触发购买，并处理购买确认对话框"""
         coin_roi = _add_offset(box_rect, COIN_OFFSET)
 
         # 取色匹配联盟币并点击该区域
-        coin_detail = context.run_recognition_direct(
+        detail = context.run_recognition_direct(
             JRecognitionType.ColorMatch,
             JColorMatch(upper=COIN_UPPER, lower=COIN_LOWER, roi=coin_roi, count=1),
             img,
         )
-        if not coin_detail or not coin_detail.hit:
-            logger.warning(f"{opt_name} 联盟币取色不匹配，跳过购买")
+        if not detail or not detail.hit:
+            logger.warning(f"{label} 联盟币取色不匹配，跳过购买")
             return
 
         click_rect(context, coin_roi)
-        logger.info(f"点击联盟币购买 {opt_name}")
+        logger.info(f"点击联盟币购买 {label}")
         time.sleep(1.0)
 
         # 处理购买确认对话框
-        self._handle_purchase_confirm(context, opt_name)
+        self._handle_purchase_confirm(context, label)
 
-    def _handle_purchase_confirm(self, context: Context, opt_name: str):
+    def _handle_purchase_confirm(self, context: Context, label: str):
         """处理购买确认对话框，检查联盟币是否充足"""
         img = context.tasker.controller.post_screencap().wait().get()
         confirm_detail = context.run_recognition_direct(
@@ -329,11 +351,11 @@ class UnionShopPurchase(CustomAction):
                 for _ in range(3):
                     click_rect(context, [333, 33, 28, 10])
                     time.sleep(1.0)
-                # 禁用该选项
-                self._disabled_options.add(opt_name)
-                logger.warning(f"联盟币不足，禁用 {opt_name} 的购买")
+                # 禁用该类物品
+                self._disabled_labels.add(label)
+                logger.warning(f"联盟币不足，禁用 {label} 的购买")
             else:
-                logger.info(f"购买 {opt_name} 成功")
+                logger.info(f"购买 {label} 成功")
         else:
             logger.debug("未出现确定购买对话框")
 
