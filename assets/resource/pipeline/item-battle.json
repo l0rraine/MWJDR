@@ -2,8 +2,8 @@
     "集结物品_识别体力入口": {
         "next": [
             "集结物品_开始识别体力",
-            "[JumpBack]关闭礼包",
             "[JumpBack]关闭搜索",
+            "[JumpBack]关闭礼包",
             "[JumpBack]转到城外",
             "[JumpBack]后退"
         ]
@@ -18,7 +18,8 @@
                     783,
                     136,
                     163
-                ]
+                ],
+                "threshold": 0.9
             }
         },
         "action": "Click",
@@ -45,7 +46,7 @@
     },
     "集结物品入口": {
         "next": [
-            "集结物品_点击其他",
+            "集结物品_点击背包",
             "[JumpBack]关闭礼包",
             "[JumpBack]转到城外",
             "[JumpBack]后退"
@@ -64,7 +65,11 @@
                 ]
             }
         },
-        "action": "Click"
+        "action": "Click",
+        "next": [
+            "集结物品_点击其他"
+        ],
+        "post_delay": 1000
     },
     "集结物品_点击其他": {
         "recognition": "OCR",
@@ -87,10 +92,7 @@
             }
         },
         "next": [
-            "集结物品_点击物品_包",
-            "[JumpBack]关闭礼包",
-            "[JumpBack]转到城外",
-            "[JumpBack]集结物品_点击背包"
+            "集结物品_点击物品_包"
         ],
         "post_delay": 500
     },
@@ -165,13 +167,13 @@
                 ],
                 "end": [
                     416,
-                    567,
+                    667,
                     40,
                     42
                 ]
             }
         },
-        "post_delay": 1000
+        "post_delay": 1500
     },
     "集结物品_使用物品": {
         "recognition": {
@@ -267,7 +269,7 @@
         "action": "Custom",
         "custom_action": "物品集结",
         "next": [
-            "集结物品_识别体力入口"
+            "集结物品入口"
         ]
     }
 }

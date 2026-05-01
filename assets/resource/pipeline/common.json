@@ -100,6 +100,7 @@
             }
         }
     },
+    "跳过": {},
     "关闭搜索": {
         "recognition": "TemplateMatch",
         "template": "搜索.png",
