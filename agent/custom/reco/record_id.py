@@ -13,6 +13,28 @@ from utils import logger
 from utils.ocr_util import ocr_until_consistent
 
 
+@AgentServer.custom_action("开始是否识别角色ID")
+class StartRecordIDOrNot(CustomAction):
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> bool:
+        from utils.mfa_config import has_battle_tasks
+
+        battle_status = has_battle_tasks()
+        if battle_status is True:
+            logger.debug("后续有战斗任务，跳过识别角色ID")
+            context.override_pipeline({"识别角色ID_开始": {"enabled": False}})
+            context.tasker.resource.override_pipeline(
+                {"识别角色ID_开始": {"enabled": False}}
+            )
+            context.tasker.resource.override_pipeline(
+                {"查看队列_记录角色ID": {"enabled": True}}
+            )
+
+        return CustomAction.RunResult(success=True)
+
 @AgentServer.custom_action("识别角色ID")
 class RecordID(CustomAction):
     # 类变量：存储当前角色的 ID，供其他 Custom Action 读取
