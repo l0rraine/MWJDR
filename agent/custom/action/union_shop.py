@@ -37,8 +37,8 @@ SCAN_ROIS = [[11, 184, 698, 1001], [9, 903, 697, 296]]
 ITEM_FROM_DISCOUNT = [33, 30, 82, 92]
 # 从75%折扣box计算联盟币区域: coin = discount + COIN_FROM_DISCOUNT
 COIN_FROM_DISCOUNT = [22, 162, -47, -32]
-# 从物品box计算联盟币区域: coin = item + COIN_FROM_ITEM
-COIN_FROM_ITEM = [COIN_FROM_DISCOUNT[i] - ITEM_FROM_DISCOUNT[i] for i in range(4)]
+# 从统帅经验box计算联盟币区域: coin = tz + COIN_FROM_TZ
+COIN_FROM_TZ = [-37, 104, -85, -53]
 
 # 参数节点前缀
 _PARAM_PREFIX = "联盟商店_参数_"
@@ -115,7 +115,7 @@ class UnionShopPurchase(CustomAction):
             return
 
         for match in detail.filtered_results:
-            coin_roi = add_offset(match.box, COIN_FROM_ITEM)
+            coin_roi = add_offset(match.box, COIN_FROM_TZ)
             coin_detail = context.run_recognition(
                 "联盟商店_联盟币", _screencap(context),
                 pipeline_override={"联盟商店_联盟币": {"roi": coin_roi}},
