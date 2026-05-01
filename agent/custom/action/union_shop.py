@@ -41,14 +41,12 @@ ALL_ITEM_NAMES = [TZ_NAME] + [n for n, _ in DISCOUNT_ITEMS]
 SCAN_ROI = [11, 184, 698, 1001]
 SCROLL_SCAN_ROI = [9, 903, 697, 296]
 
-# 相对选项box的offset
-DISCOUNT_OFFSET = [-69, -94, -13, 21]
-COIN_OFFSET = [-37, 104, -85, -53]
-
-# 从75%折扣box反算物品box: item = discount + ITEM_FROM_DISCOUNT
-ITEM_FROM_DISCOUNT = [-o for o in DISCOUNT_OFFSET]
+# 从75%折扣box计算物品区域: item = discount + ITEM_FROM_DISCOUNT
+ITEM_FROM_DISCOUNT = [33, 30, 82, 92]
 # 从75%折扣box计算联盟币区域: coin = discount + COIN_FROM_DISCOUNT
-COIN_FROM_DISCOUNT = [a + b for a, b in zip(ITEM_FROM_DISCOUNT, COIN_OFFSET)]
+COIN_FROM_DISCOUNT = [22, 162, -47, -32]
+# 从物品box计算联盟币区域: coin = item + COIN_FROM_ITEM
+COIN_FROM_ITEM = [COIN_FROM_DISCOUNT[i] - ITEM_FROM_DISCOUNT[i] for i in range(4)]
 
 
 def _add_offset(box_rect: list, offset: list) -> list:
@@ -121,7 +119,7 @@ class UnionShopPurchase(CustomAction):
                 for match in detail.filtered_results:
                     box = match.box
                     box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
-                    coin_roi = _add_offset(box_rect, COIN_OFFSET)
+                    coin_roi = _add_offset(box_rect, COIN_FROM_ITEM)
                     coin_detail = context.run_recognition(
                         "联盟商店_联盟币", _screencap(context),
                         pipeline_override={"联盟商店_联盟币": {"roi": coin_roi}},

@@ -81,8 +81,8 @@
         "recognition": {
             "type": "ColorMatch",
             "param": {
-                "lower": [[5, 161, 221]],
-                "upper": [[5, 174, 225]],
+                "lower": [[5, 169, 223]],
+                "upper": [[5, 187, 230]],
                 "count": 1
             }
         },
