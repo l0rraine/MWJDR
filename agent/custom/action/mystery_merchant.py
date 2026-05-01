@@ -104,7 +104,7 @@ class MysteryMerchantPurchase(CustomAction):
     # Swipe 参数
     SWIPE_BEGIN = [211, 1089, 11, 12]
     SWIPE_END = [207, 953, 9, 8]
-    SWIPE_DURATION = 50  # 毫秒
+    SWIPE_DURATION = 100  # 毫秒
 
     # 免费刷新按钮区域
     FREE_REFRESH_ROI = [531, 297, 127, 35]
