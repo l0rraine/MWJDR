@@ -23,7 +23,7 @@ from utils import logger
 from utils import timelib
 from utils.data_store import load_data, get_timestamp
 from utils.click_util import click_rect
-from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
+from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
 # 折扣物品: (选项名, 模板路径)
@@ -55,13 +55,6 @@ SCREEN2_SLOTS = [
 ITEM_FROM_50 = [51, 42, 57, 72]
 COLOR_FROM_50 = [36, 171, -37, -31]
 BUY_FROM_50 = [57, 212, 53, -16]
-
-
-def _add_offset(box_rect: list, offset: list) -> list:
-    result = [a + b for a, b in zip(box_rect, offset)]
-    result[2] = max(1, result[2])
-    result[3] = max(1, result[3])
-    return result
 
 
 def _screencap(context: Context):
@@ -170,7 +163,7 @@ class MysteryMerchantPurchase(CustomAction):
         box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
 
         # 取色检查徽章
-        color_roi = _add_offset(box_rect, COLOR_FROM_50)
+        color_roi = add_offset(box_rect, COLOR_FROM_50)
         color_detail = context.run_recognition(
             "神秘商店_徽章", _screencap(context),
             pipeline_override={"神秘商店_徽章": {"roi": color_roi}},
@@ -180,7 +173,7 @@ class MysteryMerchantPurchase(CustomAction):
             return
 
         # 识别物品
-        item_roi = _add_offset(box_rect, ITEM_FROM_50)
+        item_roi = add_offset(box_rect, ITEM_FROM_50)
         identify_img = _screencap(context)
         name = None
         for item_name, template_path in DISCOUNT_ITEMS:
@@ -199,7 +192,7 @@ class MysteryMerchantPurchase(CustomAction):
             return
 
         # 点击购买
-        buy_roi = _add_offset(box_rect, BUY_FROM_50)
+        buy_roi = add_offset(box_rect, BUY_FROM_50)
         click_rect(context, buy_roi)
         logger.info(f"50%折扣发现{name}，点击购买")
         time.sleep(1.0)

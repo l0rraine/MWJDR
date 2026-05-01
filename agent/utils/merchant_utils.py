@@ -1,7 +1,7 @@
 """
 商人公共工具函数
 
-供游荡商人和神秘商人共享的工具方法。
+供联盟商店、神秘商人等共享的工具方法。
 """
 
 import time
@@ -10,6 +10,11 @@ from utils import logger
 from utils.data_store import load_data, save_data, get_timestamp, set_timestamp
 
 SHOPPING_CATEGORY = "shopping"
+
+
+def add_offset(box: list, offset: list) -> list:
+    """box 与 offset 逐项相加"""
+    return [a + b for a, b in zip(box, offset)]
 
 
 def save_merchant_date(merchant_name: str):

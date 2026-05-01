@@ -21,7 +21,7 @@ from utils import logger
 from utils import timelib
 from utils.data_store import load_data, get_timestamp
 from utils.click_util import click_rect
-from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
+from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
 from ..reco.record_id import RecordID
 
 TZ_NAME = "统帅经验"
@@ -47,13 +47,6 @@ ITEM_FROM_DISCOUNT = [33, 30, 82, 92]
 COIN_FROM_DISCOUNT = [22, 162, -47, -32]
 # 从物品box计算联盟币区域: coin = item + COIN_FROM_ITEM
 COIN_FROM_ITEM = [COIN_FROM_DISCOUNT[i] - ITEM_FROM_DISCOUNT[i] for i in range(4)]
-
-
-def _add_offset(box_rect: list, offset: list) -> list:
-    result = [a + b for a, b in zip(box_rect, offset)]
-    result[2] = max(1, result[2])
-    result[3] = max(1, result[3])
-    return result
 
 
 def _screencap(context: Context):
@@ -127,7 +120,7 @@ class UnionShopPurchase(CustomAction):
         for match in detail.filtered_results:
             box = match.box
             box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
-            coin_roi = _add_offset(box_rect, COIN_FROM_ITEM)
+            coin_roi = add_offset(box_rect, COIN_FROM_ITEM)
             coin_detail = context.run_recognition(
                 "联盟商店_联盟币", _screencap(context),
                 pipeline_override={"联盟商店_联盟币": {"roi": coin_roi}},
@@ -162,8 +155,8 @@ class UnionShopPurchase(CustomAction):
             box = match.box
             discount_box = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
 
-            item_roi = _add_offset(discount_box, ITEM_FROM_DISCOUNT)
-            coin_roi = _add_offset(discount_box, COIN_FROM_DISCOUNT)
+            item_roi = add_offset(discount_box, ITEM_FROM_DISCOUNT)
+            coin_roi = add_offset(discount_box, COIN_FROM_DISCOUNT)
 
             # 识别物品：在反算的物品区域内逐个匹配折扣模板
             identify_img = _screencap(context)
