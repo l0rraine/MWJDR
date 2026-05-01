@@ -134,21 +134,19 @@ class UnionShopPurchase(CustomAction):
         return CustomAction.RunResult(success=True)
 
     def _scan_and_buy(self, context: Context, roi: list, items: list):
-        for name, template_path, need_discount in items:
-            if name in self._disabled_labels:
+        for item in items:
+            if item[0] in self._disabled_labels:
                 continue
-            self._recognize_and_process(context, roi, template_path, need_discount, name)
-            if name in self._disabled_labels:
-                continue
+            self._recognize_and_process(context, roi, item)
 
     def _recognize_and_process(
         self,
         context: Context,
         roi: list,
-        template_path: str,
-        need_discount: bool,
-        label: str,
+        item: tuple,
     ):
+        name, template_path, need_discount = item
+
         img = _screencap(context)
         detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
@@ -159,7 +157,7 @@ class UnionShopPurchase(CustomAction):
             return
 
         matches = detail.filtered_results
-        logger.debug(f"联盟商店识别到 {label} ({template_path}): {len(matches)} 个匹配")
+        logger.debug(f"联盟商店识别到 {name} ({template_path}): {len(matches)} 个匹配")
 
         for match in matches:
             img = _screencap(context)
@@ -168,7 +166,7 @@ class UnionShopPurchase(CustomAction):
             box_rect = [box.x, box.y, box.w, box.h] if not isinstance(box, list) else box
 
             logger.debug(
-                f"联盟商店检查: {label}, "
+                f"联盟商店检查: {name}, "
                 f"box=({box_rect[0]},{box_rect[1]},{box_rect[2]},{box_rect[3]}), "
                 f"score={match.score:.3f}"
             )
@@ -196,7 +194,7 @@ class UnionShopPurchase(CustomAction):
 
             # 点击联盟币位置触发购买
             click_rect(context, coin_roi)
-            logger.info(f"点击联盟币购买 {label}")
+            logger.info(f"点击联盟币购买 {name}")
             time.sleep(1.0)
 
             # 处理购买确认对话框
@@ -211,12 +209,12 @@ class UnionShopPurchase(CustomAction):
                 if badge_detail and badge_detail.hit:
                     for _ in range(3):
                         context.run_task("联盟商店_关闭提示")
-                    self._disabled_labels.add(label)
-                    logger.warning(f"联盟币不足，禁用 {label} 的购买")
+                    self._disabled_labels.add(name)
+                    logger.warning(f"联盟币不足，禁用 {name} 的购买")
                 else:
-                    logger.info(f"购买 {label} 成功")
+                    logger.info(f"购买 {name} 成功")
             else:
                 logger.debug("未出现确定购买对话框")
 
-            if label in self._disabled_labels:
+            if name in self._disabled_labels:
                 break
