@@ -35,6 +35,7 @@ class MerchantDailyCheck(CustomAction):
 
         if timelib.is_today(timestamp):
             logger.info(f"游荡商人今日已购买，跳过 (timestamp={timestamp})")
+            context.override_pipeline({"游荡商人_开关": {"enabled": False}})
             context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
             return CustomAction.RunResult(success=False)
 
@@ -53,8 +54,8 @@ class MerchantDiamondRefresh(CustomAction):
        - 钻石刷新次数 = 0：保存日期，结束
        - 钻石刷新次数 > 0：执行钻石刷新，计数，到达上限后保存日期，结束
 
-    找到刷新时，使用 context.run_task("游荡商人_开始购买") 继续购买循环。
-    无更多刷新时，禁用开关并 return False（空 on_error → 任务终止）。
+    找到刷新时 return True → pipeline next → 游荡商人_开始购买（继续购买循环）。
+    无更多刷新时 return False → pipeline on_error → 商店购买_入口（回到商店入口）。
     """
 
     # 类变量：记录当前已使用钻石刷新次数
@@ -80,7 +81,6 @@ class MerchantDiamondRefresh(CustomAction):
             logger.info("发现免费刷新，点击刷新")
             click_rect(context, free_detail.box)
             time.sleep(1.5)
-            context.run_task("游荡商人_开始购买")
             return CustomAction.RunResult(success=True)
 
         # 第二步：没有免费刷新了
@@ -116,7 +116,6 @@ class MerchantDiamondRefresh(CustomAction):
 
                 MerchantDiamondRefresh._diamond_used += 1
                 logger.info(f"钻石刷新第{MerchantDiamondRefresh._diamond_used}次")
-                context.run_task("游荡商人_开始购买")
                 return CustomAction.RunResult(success=True)
 
         # 第四步：钻石刷新次数已达上限
@@ -127,6 +126,10 @@ class MerchantDiamondRefresh(CustomAction):
     def _end(self, context: Context):
         save_merchant_date("游荡商人")
         MerchantDiamondRefresh._diamond_used = 0
+        # 同时使用 context 和 resource override 禁用开关
+        # context override: 确保当前流程中立即可见
+        # resource override: 跨任务持久化
+        context.override_pipeline({"游荡商人_开关": {"enabled": False}})
         context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
 
 

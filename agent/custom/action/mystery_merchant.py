@@ -9,8 +9,8 @@
 - 购买后重新截图，从屏幕1重新搜索
 - 无法购买且无法刷新时结束
 
-完成时返回 success=True（空 next → JumpBack 回到商店购买_入口），
-通过 Resource.override_pipeline 禁用神秘商店_开关防止重入。
+完成时返回 success=True（next → 商店购买_入口），
+通过 context + Resource.override_pipeline 禁用神秘商店_开关防止重入。
 """
 
 import json
@@ -55,6 +55,7 @@ class MysteryMerchantDailyCheck(CustomAction):
 
         if timelib.is_today(timestamp):
             logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
+            context.override_pipeline({"神秘商店_开关": {"enabled": False}})
             context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
             return CustomAction.RunResult(success=False)
 
@@ -153,6 +154,8 @@ class MysteryMerchantPurchase(CustomAction):
         save_merchant_date("神秘商店")
         MysteryMerchantPurchase._disabled_50_options.clear()
         MysteryMerchantPurchase._diamond_used = 0
+        # 同时使用 context 和 resource override 禁用开关
+        context.override_pipeline({"神秘商店_开关": {"enabled": False}})
         context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
 
     def _capture_weapon_template(self, context: Context):
