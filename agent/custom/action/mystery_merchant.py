@@ -20,7 +20,7 @@ import time
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.pipeline import JRecognitionType, JTemplateMatch
+from maa.pipeline import JRecognitionType, JTemplateMatch, JOCR
 
 from utils import logger
 from utils import timelib
@@ -197,18 +197,14 @@ class MysteryMerchantPurchase(CustomAction):
 
     def _handle_confirm(self, context: Context, name: str):
         """处理购买确认对话框"""
-        confirm_detail = context.run_recognition("神秘商店_确定购买", _screencap(context))
-        if confirm_detail and confirm_detail.hit:
-            context.run_task("神秘商店_确定购买")
-            badge_detail = context.run_recognition("神秘商店_获取更多", _screencap(context))
-            if badge_detail and badge_detail.hit:
-                context.run_task("神秘商店_关闭提示")
-                self._disabled_50.add(name)
-                logger.warning(f"徽章不足，禁用{name}的50%购买")
-            else:
-                logger.info(f"50%购买{name}成功")
+        context.run_task("神秘商店_确定购买")
+        badge_detail = context.run_recognition("神秘商店_获取更多", _screencap(context))
+        if badge_detail and badge_detail.hit:
+            context.run_task("神秘商店_关闭提示")
+            self._disabled_50.add(name)
+            logger.warning(f"徽章不足，禁用{name}的50%购买")
         else:
-            logger.debug("未出现确定购买对话框")
+            logger.info(f"50%购买{name}成功")
 
     def _try_free_refresh(self, context: Context) -> bool:
         detail = context.run_recognition("神秘商店_免费刷新", _screencap(context))
@@ -229,9 +225,14 @@ class MysteryMerchantPurchase(CustomAction):
             time.sleep(1.0)
 
             # 钻石购买确认
-            confirm_detail = context.run_recognition("神秘商店_钻石购买", _screencap(context))
+            confirm_detail = context.run_recognition_direct(
+                JRecognitionType.OCR,
+                JOCR(expected=["提示"], roi=[308, 416, 96, 60]),
+                _screencap(context),
+            )
+            logger.debug(f"钻石刷新确认对话框识别结果：{confirm_detail.best_result.text if confirm_detail and confirm_detail.hit else '未识别到提示'}")
             if confirm_detail and confirm_detail.hit:
-                click_rect(context, confirm_detail.box)
+                click_rect(context, [465, 768, 100, 44])
                 time.sleep(1.0)
 
             self._diamond_used += 1

@@ -81,7 +81,8 @@
                 "游荡商人",
                 "神秘商店",
                 "联盟商店"
-            ]
+            ],
+            "doc": "商店购买完成后自动标记，[color:tomato]同日不重复购买[/color]。<br>游荡商人：非钻石物品和统帅经验。<br>神秘商店：免费物品、当季专武和50%折扣物品。<br>联盟商店：统帅经验和75%折扣物品。<br>"
         },
         {
             "name": "联盟总动员",
@@ -714,7 +715,6 @@
             "type": "switch",
             "default_case": "Yes",
             "label": "游荡商人",
-            "doc": "自动购买非钻石物品和统帅经验。\n支持免费/钻石刷新。\n购买完成后自动标记，[color:tomato]同日不重复购买[/color]。",
             "cases": [
                 {
                     "name": "Yes",
@@ -761,7 +761,6 @@
             "type": "switch",
             "default_case": "Yes",
             "label": "神秘商店",
-            "doc": "自动购买免费物品和50%折扣物品。\n自动识别当季专属武器，支持免费/钻石刷新。\n购买完成后自动标记，[color:tomato]同日不重复购买[/color]。",
             "cases": [
                 {
                     "name": "Yes",
@@ -903,7 +902,6 @@
             "type": "switch",
             "default_case": "Yes",
             "label": "联盟商店",
-            "doc": "自动购买统帅经验和75%折扣物品。\n购买完成后自动标记，[color:tomato]同日不重复购买[/color]。",
             "cases": [
                 {
                     "name": "Yes",
