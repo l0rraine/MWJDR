@@ -21,7 +21,18 @@
 | 自动游历 | 自动完成游历小游戏（钓鱼、挖掘、烹饪等） | — |
 | 联盟总动员 | 扫描联盟任务并刷新高价值奖励 | 槽位开关、各任务类型筛选 |
 | 梦境寻忆 | 自动完成梦境寻忆找物玩法 | 闯关模式 / 协梦同行 |
+| 商店购买 | 自动购买游荡商人、神秘商店、联盟商店物品 | 各商店物品开关、钻石刷新次数 |
 | 结束 | 任务结束后清理环境 | 是否打开自动加入集结 |
+
+### 商店购买详情
+
+商店购买为统一入口，按顺序执行：游荡商人 → 神秘商店 → 联盟商店。
+
+| 商店 | 说明 | 可配置项 |
+|------|------|----------|
+| 游荡商人 | 自动购买物品，支持免费/钻石刷新 | 物品开关、钻石刷新次数 |
+| 神秘商店 | 识别当季专武，自动购买免费物品和50%折扣物品，支持刷新 | 物品开关（当季专武/宠物自选箱/高级野性标记等）、钻石刷新次数 |
+| 联盟商店 | 统帅经验直接购买，折扣物品需识别75%标签后购买 | 物品开关（统帅经验/研究加速/训练加速/建筑加速/治疗加速） |
 
 ### 智能特性
 
@@ -30,6 +41,9 @@
 - **体力耗尽自动禁用**：当战斗因体力/罐头耗尽而结束时，自动禁用所有已启用的战斗任务，避免反复空跑
 - **角色切换**：支持按王国编号和序号自动切换到指定角色
 - **多实例支持**：通过 MFAAvalonia 环境变量识别当前实例，多开时互不干扰
+- **每日去重**：商店购买自动记录日期，同日不重复购买
+- **联盟币不足自动禁用**：购买时联盟币不足则自动禁用该物品，避免后续重复尝试
+- **JSON 驱动选项**：商店物品列表从 pipeline JSON 读取，增减物品无需修改 Python 代码
 
 ## 项目结构
 
@@ -38,7 +52,7 @@ MWJDR/
 ├── assets/                          # MaaFramework 资源目录
 │   ├── interface.json               # 界面配置（任务列表、选项、pipeline_override）
 │   └── resource/
-│       ├── pipeline/                # Pipeline 定义（16 个 JSON）
+│       ├── pipeline/                # Pipeline 定义（20 个 JSON）
 │       │   ├── startup.json         #   启动游戏、角色切换、队列管理
 │       │   ├── monster.json         #   集结巨兽
 │       │   ├── beast.json           #   自动野兽
@@ -48,6 +62,10 @@ MWJDR/
 │       │   ├── unite.json           #   联盟总动员
 │       │   ├── travel.json          #   自动游历
 │       │   ├── mine.json            #   挖矿
+│       │   ├── shopping.json        #   商店购买（统一入口）
+│       │   ├── union_shop.json      #   联盟商店
+│       │   ├── mystery_merchant.json#   神秘商店
+│       │   ├── wandering_merchant.json# 游荡商人
 │       │   ├── combat.json          #   战斗辅助（OCR 时间、出征状态、体力识别）
 │       │   ├── common.json          #   通用节点（关闭礼包、后退、导航城外）
 │       │   ├── autojoin.json        #   自动加入集结开关
@@ -70,11 +88,18 @@ MWJDR/
 │   │   ├── unite.py                 #   联盟总动员扫描
 │   │   ├── travel.py                #   游历宝藏挖掘
 │   │   ├── mine.py                  #   挖矿队伍派遣/召回
+│   │   ├── union_shop.py            #   联盟商店购买（统帅直购+75%折扣反算）
+│   │   ├── mystery_merchant.py      #   神秘商店购买（当季专武+50%折扣+刷新）
+│   │   ├── wandering_merchant.py    #   游荡商人购买（免费/钻石刷新）
 │   │   └── common.py                #   角色切换、队列管理、节点控制
 │   └── utils/                       # 工具模块
 │       ├── logger.py                #   日志
 │       ├── timelib.py               #   OCR 时间解析
 │       ├── chainfo.py               #   联盟总动员状态管理
+│       ├── data_store.py            #   持久化数据存储（购买日期等）
+│       ├── click_util.py            #   点击工具（区域随机点击）
+│       ├── ocr_util.py              #   OCR 工具
+│       ├── merchant_utils.py        #   商人公共工具（add_offset、save_merchant_date）
 │       └── mfa_config.py            #   MFAAvalonia 实例配置读取、战斗任务检测与禁用
 │
 ├── configure.py                     # 资源配置脚本
@@ -122,6 +147,17 @@ MFAAvalonia (GUI)
 1. **静态 `pipeline_override`**：`interface.json` 中选项的 cases 定义，任务启动前由 MFAAvalonia 合并
 2. **运行时 `override_pipeline()`**：Custom Action 在执行过程中动态修改节点属性
 3. **默认 `enabled: false`**：Pipeline JSON 中某些节点默认禁用，由选项或代码激活
+
+### JSON 驱动选项（商店模式）
+
+商店物品列表不硬编码在 Python 中，而是通过 pipeline JSON 节点的 `next` 列表驱动：
+
+1. 在 pipeline JSON 中创建选项汇总节点（如 `联盟商店_选项`），其 `next` 列出所有参数节点（如 `联盟商店_参数_统帅经验`）
+2. Python 端通过 `context.get_node_data("联盟商店_选项")["next"]` 读取列表
+3. 检查每个参数节点的 `enabled` 状态，提取物品名（`removeprefix` 去掉前缀）
+4. 增减物品只需修改 JSON 和添加模板图片，无需改动 Python 代码
+
+命名约定：**物品名 = 选项名 = 图片名**，模板路径为 `{商店目录}/{物品名}.png`。
 
 ### 自定义动作注册
 
@@ -208,6 +244,14 @@ disable_battle_tasks()  # 将所有战斗任务的 default_check 设为 false
 1. 在 `assets/resource/pipeline/` 对应的 JSON 文件中添加节点定义
 2. 在 `assets/interface.json` 中注册任务入口和可配置选项
 3. 如需复杂逻辑，在 `agent/custom/action/` 中实现 Custom Action
+
+### 添加新的商店物品
+
+1. 在 `assets/resource/image/{商店目录}/` 下添加物品模板图片，文件名即为物品名
+2. 在 `assets/resource/pipeline/{商店}.json` 中添加 `参数_物品名` 节点
+3. 将新节点名加入选项汇总节点（如 `联盟商店_选项`）的 `next` 列表
+4. 在 `assets/interface.json` 中添加对应的选项开关
+5. 无需修改 Python 代码
 
 ### 添加新的 Custom Action
 

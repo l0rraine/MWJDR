@@ -25,6 +25,10 @@
     },
     "task": [
         {
+            "name": "自动游历",
+            "entry": "自动游历_入口"
+        },
+        {
             "name": "启动游戏",
             "entry": "启动游戏",
             "option": [
@@ -48,17 +52,6 @@
             ]
         },
         {
-            "name": "结束",
-            "entry": "结束_入口",
-            "option": [
-                "打开自动集结"
-            ]
-        },
-        {
-            "name": "自动游历",
-            "entry": "自动游历_入口"
-        },
-        {
             "name": "使用物品集结",
             "entry": "集结物品_识别体力入口",
             "option": [
@@ -73,6 +66,23 @@
             "option": [
                 "野兽队伍设置"
             ]
+        },
+        {
+            "name": "结束",
+            "entry": "结束_入口",
+            "option": [
+                "打开自动集结"
+            ]
+        },
+        {
+            "name": "商店购买",
+            "entry": "商店购买_入口",
+            "option": [
+                "游荡商人",
+                "神秘商店",
+                "联盟商店"
+            ],
+            "doc": "商店购买完成后自动标记，[color:tomato]同日不重复购买[/color]。<br>游荡商人：非钻石物品和统帅经验。<br>神秘商店：免费物品、当季专武和50%折扣物品。<br>联盟商店：统帅经验和75%折扣物品。<br>"
         },
         {
             "name": "联盟总动员",
@@ -95,15 +105,6 @@
             "entry": "梦境寻忆_入口",
             "option": [
                 "梦境寻忆模式选择"
-            ]
-        },
-        {
-            "name": "商店购买",
-            "entry": "商店购买_入口",
-            "option": [
-                "游荡商人",
-                "神秘商店",
-                "联盟商店"
             ]
         }
     ],
@@ -712,6 +713,7 @@
         },
         "游荡商人": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "游荡商人",
             "cases": [
                 {
@@ -757,6 +759,7 @@
         },
         "神秘商店": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "神秘商店",
             "cases": [
                 {
@@ -897,6 +900,7 @@
         },
         "联盟商店": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "联盟商店",
             "cases": [
                 {
@@ -944,8 +948,13 @@
         },
         "联盟商店-研究加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "研究加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -953,17 +962,18 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "联盟商店-训练加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "训练加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -971,17 +981,18 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "联盟商店-建筑加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "建筑加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -989,17 +1000,18 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "联盟商店-治疗加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "治疗加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -1007,10 +1019,6 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         }
