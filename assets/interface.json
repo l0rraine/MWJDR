@@ -25,6 +25,10 @@
     },
     "task": [
         {
+            "name": "自动游历",
+            "entry": "自动游历_入口"
+        },
+        {
             "name": "启动游戏",
             "entry": "启动游戏",
             "option": [
@@ -48,17 +52,6 @@
             ]
         },
         {
-            "name": "结束",
-            "entry": "结束_入口",
-            "option": [
-                "打开自动集结"
-            ]
-        },
-        {
-            "name": "自动游历",
-            "entry": "自动游历_入口"
-        },
-        {
             "name": "使用物品集结",
             "entry": "集结物品_识别体力入口",
             "option": [
@@ -72,6 +65,22 @@
             "entry": "自动野兽_入口",
             "option": [
                 "野兽队伍设置"
+            ]
+        },
+        {
+            "name": "结束",
+            "entry": "结束_入口",
+            "option": [
+                "打开自动集结"
+            ]
+        },
+        {
+            "name": "商店购买",
+            "entry": "商店购买_入口",
+            "option": [
+                "游荡商人",
+                "神秘商店",
+                "联盟商店"
             ]
         },
         {
@@ -95,15 +104,6 @@
             "entry": "梦境寻忆_入口",
             "option": [
                 "梦境寻忆模式选择"
-            ]
-        },
-        {
-            "name": "商店购买",
-            "entry": "商店购买_入口",
-            "option": [
-                "游荡商人",
-                "神秘商店",
-                "联盟商店"
             ]
         }
     ],
@@ -712,7 +712,9 @@
         },
         "游荡商人": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "游荡商人",
+            "doc": "自动购买非钻石物品和统帅经验。\n支持免费/钻石刷新。\n购买完成后自动标记，[color:tomato]同日不重复购买[/color]。",
             "cases": [
                 {
                     "name": "Yes",
@@ -757,7 +759,9 @@
         },
         "神秘商店": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "神秘商店",
+            "doc": "自动购买免费物品和50%折扣物品。\n自动识别当季专属武器，支持免费/钻石刷新。\n购买完成后自动标记，[color:tomato]同日不重复购买[/color]。",
             "cases": [
                 {
                     "name": "Yes",
@@ -897,7 +901,9 @@
         },
         "联盟商店": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "联盟商店",
+            "doc": "自动购买统帅经验和75%折扣物品。\n购买完成后自动标记，[color:tomato]同日不重复购买[/color]。",
             "cases": [
                 {
                     "name": "Yes",
@@ -944,8 +950,13 @@
         },
         "联盟商店-研究加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "研究加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -953,17 +964,18 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "联盟商店-训练加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "训练加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -971,17 +983,18 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "联盟商店-建筑加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "建筑加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -989,17 +1002,18 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "联盟商店-治疗加速": {
             "type": "switch",
+            "default_case": "Yes",
             "label": "治疗加速",
             "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
                 {
                     "name": "No",
                     "pipeline_override": {
@@ -1007,10 +1021,6 @@
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         }
