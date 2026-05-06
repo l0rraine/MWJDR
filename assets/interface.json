@@ -482,10 +482,8 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "自动集结_准备出征": {
-                            "custom_action_param": {
-                                "使用19点罐头": 1
-                            }
+                        "自动集结_使用19点罐头": {
+                            "enabled": true
                         }
                     }
                 },

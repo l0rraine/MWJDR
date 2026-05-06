@@ -70,7 +70,7 @@ class BeginCombat(CustomAction):
         repeat_limit = int(param.get("出征次数"))
         can_limit = int(param.get("罐头数量"))
         advanced_mode = int(param.get("高级模式",0))
-        use_19_can = int(param.get("使用19点罐头",0))
+        use_19_can = int(context.get_node_data("自动集结_使用19点罐头").get("enabled",False))
 
         # debug
         # repeat_limit=7
@@ -114,14 +114,14 @@ class BeginCombat(CustomAction):
                         else:
                             logger.debug("19点罐头选项未启用，不领取免费体力")
 
-                if not can_use_free:
-                    logger.info("免费罐头未启用，不领取免费体力，停止出征")
-                    self._end(context)
-                    return CustomAction.RunResult(success=False)
-                else:
-                    logger.debug("领取免费体力")
-                    context.run_task("免费体力")                
-                    context.run_task("点击出征")
+                    if not can_use_free:
+                        logger.info("免费罐头未启用，不领取免费体力，停止出征")
+                        self._end(context)
+                        return CustomAction.RunResult(success=False)
+                    else:
+                        logger.debug("领取免费体力")
+                        context.run_task("免费体力")                
+                        context.run_task("点击出征")
             elif can_limit != 0:        
                 logger.debug("无免费体力，尝试使用罐头")
                 # 判断罐头次数是否达到上限
@@ -147,7 +147,7 @@ class BeginCombat(CustomAction):
                     }
                 })
                 CombatRepetitionCount.addCount(c)
-                logger.info(f"使用罐头 {c} 次，当前总次数为 {CombatRepetitionCount.count} 次")
+                logger.info(f"使用罐头 {c} 次，当前次数限制为 {CombatRepetitionCount.count} 次")
                 context.run_task("点击出征")
             elif repeat_limit > 0 and advanced_mode == 1 and not CombatRepetitionCount.isReachLimit():
                 text = ocr_until_consistent_by_task(context, "识别罐头数量", expected_pattern=r'^\d+$')
@@ -169,7 +169,7 @@ class BeginCombat(CustomAction):
                 logger.info(f"使用罐头 {c} 次")
                 context.run_task("点击出征")
             else:
-                logger.debug("无免费体力，结束")
+                logger.debug("无体力，结束")
                 self._end(context)
                 return CustomAction.RunResult(success=False)
 
@@ -179,7 +179,7 @@ class BeginCombat(CustomAction):
             click_rect(context, detail.box)
             return CustomAction.RunResult(success=True)
 
-        if CombatRepetitionCount.limit > 0:
+        if repeat_limit!= 0:
             CombatRepetitionCount.addCount()
             logger.info(f"已出征 {CombatRepetitionCount.count} 次")
 
@@ -196,11 +196,11 @@ class BeginCombat(CustomAction):
             time.sleep(1)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("自动集结_行军中",img)
-        logger.debug(f"已识别到行军")
+        logger.info(f"开始行军，等待 {return_time*2} 秒")
         time.sleep(return_time*2 + 0.5)
 
         # 判断作战次数是否达到上限
-        if CombatRepetitionCount.isReachLimit():
+        if repeat_limit!= 0 and CombatRepetitionCount.isReachLimit():
             if advanced_mode == 1:
                 logger.info(f"已达到出征次数上限：{CombatRepetitionCount.limit}次，停止出征")
                 CombatRepetitionCount.reset()
