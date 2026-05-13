@@ -23,11 +23,8 @@ from maa.context import Context
 from maa.pipeline import JRecognitionType, JTemplateMatch, JOCR
 
 from utils import logger
-from utils import timelib
-from utils.data_store import load_data, get_timestamp
 from utils.click_util import click_rect
-from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
-from ..reco.record_id import RecordID
+from utils.merchant_utils import add_offset, save_task_date, disable_switch, daily_check
 
 SHOP_DIR = "神秘商店"
 
@@ -61,18 +58,8 @@ def _screencap(context: Context):
 @AgentServer.custom_action("神秘商店_每日检查")
 class MysteryMerchantDailyCheck(CustomAction):
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        account_id = RecordID.current_account_id()
-        data = load_data()
-        timestamp = get_timestamp(data, SHOPPING_CATEGORY, account_id, "神秘商店")
-
-        if timelib.is_today(timestamp):
-            logger.info(f"神秘商店今日已购买，跳过 (timestamp={timestamp})")
-            context.override_pipeline({"神秘商店_开关": {"enabled": False}})
-            context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
-            context.override_next("神秘商店_每日检查", ["商店购买_入口"])
-            return CustomAction.RunResult(success=True)
-
-        logger.info("神秘商店今日未购买，开始购买")
+        daily_check(context, "神秘商店", "神秘商店_开关",
+                    "神秘商店_每日检查", "商店购买_入口")
         return CustomAction.RunResult(success=True)
 
 
@@ -125,11 +112,10 @@ class MysteryMerchantPurchase(CustomAction):
 
         # 结束
         logger.info("神秘商店购买完成，记录日期")
-        save_merchant_date("神秘商店")
+        save_task_date("神秘商店")
         MysteryMerchantPurchase._disabled_50.clear()
         MysteryMerchantPurchase._diamond_used = 0
-        context.override_pipeline({"神秘商店_开关": {"enabled": False}})
-        context.tasker.resource.override_pipeline({"神秘商店_开关": {"enabled": False}})
+        disable_switch(context, "神秘商店_开关")
 
         return CustomAction.RunResult(success=True)
 

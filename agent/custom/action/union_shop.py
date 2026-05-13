@@ -21,11 +21,8 @@ from maa.context import Context
 from maa.pipeline import JRecognitionType, JTemplateMatch
 
 from utils import logger
-from utils import timelib
-from utils.data_store import load_data, get_timestamp
 from utils.click_util import click_rect
-from utils.merchant_utils import add_offset, save_merchant_date, SHOPPING_CATEGORY
-from ..reco.record_id import RecordID
+from utils.merchant_utils import add_offset, save_task_date, disable_switch, daily_check
 
 SHOP_DIR = "联盟商店"
 TZ_ITEM = "统帅经验"
@@ -51,18 +48,8 @@ def _screencap(context: Context):
 @AgentServer.custom_action("联盟商店_每日检查")
 class UnionShopDailyCheck(CustomAction):
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        account_id = RecordID.current_account_id()
-        data = load_data()
-        timestamp = get_timestamp(data, SHOPPING_CATEGORY, account_id, "联盟商店")
-
-        if timelib.is_today(timestamp):
-            logger.info(f"联盟商店今日已购买，跳过 (timestamp={timestamp})")
-            context.override_pipeline({"联盟商店_开关": {"enabled": False}})
-            context.tasker.resource.override_pipeline({"联盟商店_开关": {"enabled": False}})
-            context.override_next("联盟商店_每日检查", ["商店购买_入口"])
-            return CustomAction.RunResult(success=True)
-
-        logger.info("联盟商店今日未购买，开始购买")
+        daily_check(context, "联盟商店", "联盟商店_开关",
+                    "联盟商店_每日检查", "商店购买_入口")
         return CustomAction.RunResult(success=True)
 
 
@@ -94,10 +81,9 @@ class UnionShopPurchase(CustomAction):
             context.run_task("联盟商店_滚动")
 
         logger.info("联盟商店购买完成，记录日期")
-        save_merchant_date("联盟商店")
+        save_task_date("联盟商店")
         UnionShopPurchase._disabled_labels.clear()
-        context.override_pipeline({"联盟商店_开关": {"enabled": False}})
-        context.tasker.resource.override_pipeline({"联盟商店_开关": {"enabled": False}})
+        disable_switch(context, "联盟商店_开关")
 
         return CustomAction.RunResult(success=True)
 

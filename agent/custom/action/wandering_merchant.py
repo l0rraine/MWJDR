@@ -13,34 +13,17 @@ from maa.context import Context
 from maa.pipeline import JRecognitionType, JOCR, JTemplateMatch
 
 from utils import logger
-from utils import timelib
-from utils.data_store import load_data, get_timestamp
 from utils.click_util import click_rect
-from utils.merchant_utils import save_merchant_date, SHOPPING_CATEGORY
-from ..reco.record_id import RecordID
+from utils.merchant_utils import add_offset, save_task_date, disable_switch, daily_check
 
 
 @AgentServer.custom_action("游荡商人_每日检查")
 class MerchantDailyCheck(CustomAction):
     """检查游荡商人今天是否已购买，已购买则跳过"""
 
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> CustomAction.RunResult:
-        account_id = RecordID.current_account_id()
-        data = load_data()
-        timestamp = get_timestamp(data, SHOPPING_CATEGORY, account_id, "游荡商人")
-
-        if timelib.is_today(timestamp):
-            logger.info(f"游荡商人今日已购买，跳过 (timestamp={timestamp})")
-            context.override_pipeline({"游荡商人_开关": {"enabled": False}})
-            context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
-            context.override_next("游荡商人_每日检查", ["商店购买_入口"])
-            return CustomAction.RunResult(success=True)
-
-        logger.info("游荡商人今日未购买，开始购买")
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        done = daily_check(context, "游荡商人", "游荡商人_开关",
+                           "游荡商人_每日检查", "商店购买_入口")
         return CustomAction.RunResult(success=True)
 
 
@@ -62,15 +45,11 @@ class MerchantDiamondRefresh(CustomAction):
     # 类变量：记录当前已使用钻石刷新次数
     _diamond_used: int = 0
 
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> CustomAction.RunResult:
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         param = json.loads(argv.custom_action_param)
         diamond_limit = int(param.get("钻石刷新次数", 0))
 
-        # 第一步：尝试免费刷新（使用模板匹配，OCR对绿色按钮文字识别不可靠）
+        # 第一步：尝试免费刷新
         img = context.tasker.controller.post_screencap().wait().get()
         free_detail = context.run_recognition_direct(
             JRecognitionType.TemplateMatch,
@@ -127,23 +106,15 @@ class MerchantDiamondRefresh(CustomAction):
         return CustomAction.RunResult(success=True)
 
     def _end(self, context: Context):
-        save_merchant_date("游荡商人")
+        save_task_date("游荡商人")
         MerchantDiamondRefresh._diamond_used = 0
-        # 同时使用 context 和 resource override 禁用开关
-        # context override: 确保当前流程中立即可见
-        # resource override: 跨任务持久化
-        context.override_pipeline({"游荡商人_开关": {"enabled": False}})
-        context.tasker.resource.override_pipeline({"游荡商人_开关": {"enabled": False}})
+        disable_switch(context, "游荡商人_开关")
 
 
 @AgentServer.custom_action("游荡商人_记录日期")
 class MerchantRecordDate(CustomAction):
     """记录游荡商人购买日期"""
 
-    def run(
-        self,
-        context: Context,
-        argv: CustomAction.RunArg,
-    ) -> CustomAction.RunResult:
-        save_merchant_date("游荡商人")
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        save_task_date("游荡商人")
         return CustomAction.RunResult(success=True)
