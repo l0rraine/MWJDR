@@ -1,0 +1,179 @@
+{
+    "海岛_入口": {
+        "next": [
+            "海岛_快捷",
+            "海岛_已在界面",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]在城外",
+            "[JumpBack]后退"
+        ]
+    },
+    "海岛_已在界面": {
+        "recognition": "OCR",
+        "expected": "我的海岛",
+        "roi": [
+            61,
+            0,
+            189,
+            104
+        ],
+        "next": [
+            "海岛_协助打理_开始"
+        ]
+    },
+    "海岛_快捷": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "快捷.png",
+                "roi": [
+                    0,
+                    477,
+                    131,
+                    150
+                ]
+            }
+        },
+        "action": "Click",
+        "target": [
+            1,
+            600,
+            4,
+            4
+        ],
+        "next": [
+            "海岛_点击海岛",
+            "[JumpBack]海岛_快捷_向下滚动"
+        ]
+    },
+    "海岛_快捷_向下滚动": {
+        "action": {
+            "type": "Swipe",
+            "param": {
+                "begin": [
+                    171,
+                    705,
+                    46,
+                    26
+                ],
+                "end": [
+                    192,
+                    484,
+                    42,
+                    32
+                ]
+            }
+        },
+        "post_delay": 1500
+    },
+    "海岛_点击海岛": {
+        "pre_delay": 500,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "海岛.png",
+                "roi": [
+                    9,
+                    297,
+                    432,
+                    578
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "海岛_协助打理_开始"
+        ],
+        "post_delay": 2000
+    },
+    "海岛_协助打理_开始": {
+        "action": "Click",
+        "target": [
+            652,
+            85,
+            39,
+            41
+        ],
+        "post_delay": 1500,
+        "next": [
+            "海岛_协助打理_识别",
+            "[JumpBack]海岛_快捷_向下滚动"
+        ]
+    },
+    "海岛_协助打理_识别": {
+        "recognition": "TemplateMatch",
+        "template": "海岛-可打理.png",
+        "roi": [
+            544,
+            239,
+            158,
+            881
+        ],
+        "action": "Click",
+        "next": [
+            "海岛_协助打理_点击打理"
+        ]
+    },
+    "海岛_协助打理_点击打理": {
+        "pre_delay": 2000,
+        "recognition": "TemplateMatch",
+        "template": [
+            "海岛-打理.png"
+        ],
+        "roi": [
+            302,
+            293,
+            119,
+            119
+        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "海岛_协助打理_完成",
+            "海岛_协助打理_点赞",
+            "海岛_协助打理_开始"
+        ]
+    },
+    "海岛_协助打理_点赞": {
+        "recognition": "ColorMatch",
+        "roi": [
+            661,
+            737,
+            13,
+            14
+        ],
+        "upper": [
+            255,
+            255,
+            255
+        ],
+        "lower": [
+            255,
+            255,
+            255
+        ],
+        "action": "Click",
+        "next": [
+            "海岛_协助打理_开始"
+        ]
+    },
+    "海岛_协助打理_完成": {
+        "recognition": "ColorMatch",
+        "roi": [
+            630,
+            1138,
+            28,
+            26
+        ],
+        "upper": [
+            159,
+            163,
+            169
+        ],
+        "lower": [
+            56,
+            69,
+            85
+        ]
+    }
+}
