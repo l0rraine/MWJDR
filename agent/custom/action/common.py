@@ -9,6 +9,7 @@ import time
 from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
 from utils.merchant_utils import save_task_date, disable_switch, daily_check
+from utils import timelib
 @AgentServer.custom_action("根据需要切换角色")
 class SwitchCharacter(CustomAction):
     def run(
@@ -304,4 +305,43 @@ class RecordDate(CustomAction):
         if switch_name:
             disable_switch(context, switch_name)
         logger.info(f"{task_name}完成，记录日期")
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("下午检查")
+class AfternoonCheck(CustomAction):
+    """通用时段检查 action
+
+    检查当前时间是否已过指定小时，未到则跳过后续节点。
+    通过 custom_action_param 传参，支持禁用检查（直接放行）。
+
+    参数格式:
+    {
+        "hour": 16,              // 目标小时（0-23），默认16（下午4点）
+        "enabled": true,         // 是否启用时段检查，false 时直接放行
+        "skip_node": "节点名称"   // 未到时间时需要禁用的后续节点名
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        param = json.loads(argv.custom_action_param)
+        hour = param.get("hour", 16)
+        enabled = param.get("enabled", True)
+        skip_node = param.get("skip_node")
+
+        if not enabled:
+            logger.info("时段检查已禁用，直接放行")
+            return CustomAction.RunResult(success=True)
+
+        if timelib.is_after_hour(hour):
+            logger.info(f"当前已过{hour}点，执行后续流程")
+            return CustomAction.RunResult(success=True)
+
+        logger.info(f"当前未到{hour}点，跳过后续流程")
+        if skip_node:
+            context.override_pipeline({skip_node: {"enabled": False}})
         return CustomAction.RunResult(success=True)

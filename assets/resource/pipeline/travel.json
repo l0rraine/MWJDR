@@ -137,6 +137,18 @@
             }
         },
         "next": [
+            "自动游历_下午检查"
+        ]
+    },
+    "自动游历_下午检查": {
+        "action": "Custom",
+        "custom_action": "下午检查",
+        "custom_action_param": {
+            "hour": 16,
+            "enabled": true,
+            "skip_node": "自动游历_点击自动"
+        },
+        "next": [
             "自动游历_点击自动"
         ]
     },

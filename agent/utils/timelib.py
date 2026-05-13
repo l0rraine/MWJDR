@@ -80,6 +80,22 @@ def is_today(timestamp_ms, timezone="Asia/Shanghai"):
     return ts_date == today
 
 
+def is_after_hour(hour, timezone="Asia/Shanghai"):
+    """
+    判断当前时间是否已过指定小时
+
+    参数:
+        hour: 目标小时（0-23），如 16 表示下午4点
+        timezone: 时区字符串，默认为"Asia/Shanghai"（北京时间）
+
+    返回:
+        bool: 当前时间是否已过指定小时
+    """
+    tz = pytz.timezone(timezone)
+    now = datetime.now(tz)
+    return now.hour >= hour
+
+
 def is_current_period(timestamp_ms, timezone="Asia/Shanghai"):
     """
     判断毫秒级时间戳是否在当前周和当前月

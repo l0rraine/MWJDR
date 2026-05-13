@@ -32,4 +32,5 @@ __all__ = [
     "UnionShopPurchase",
     "DailyCheck",
     "RecordDate",
+    "AfternoonCheck",
 ]
