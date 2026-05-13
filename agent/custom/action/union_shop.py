@@ -1,7 +1,7 @@
 """
 联盟商店 Custom Action
 
-包含：每日检查、购买
+包含：购买
 
 购买逻辑：
 - 统帅经验：直接匹配模板购买（仅检查联盟币）
@@ -22,7 +22,7 @@ from maa.pipeline import JRecognitionType, JTemplateMatch
 
 from utils import logger
 from utils.click_util import click_rect
-from utils.merchant_utils import add_offset, save_task_date, disable_switch, daily_check
+from utils.merchant_utils import add_offset, save_task_date, disable_switch
 
 SHOP_DIR = "联盟商店"
 TZ_ITEM = "统帅经验"
@@ -43,14 +43,6 @@ _PARAM_PREFIX = "联盟商店_参数_"
 
 def _screencap(context: Context):
     return context.tasker.controller.post_screencap().wait().get()
-
-
-@AgentServer.custom_action("联盟商店_每日检查")
-class UnionShopDailyCheck(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        daily_check(context, "联盟商店", "联盟商店_开关",
-                    "联盟商店_每日检查", "商店购买_入口")
-        return CustomAction.RunResult(success=True)
 
 
 @AgentServer.custom_action("联盟商店_购买")

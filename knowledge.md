@@ -24,6 +24,7 @@
 16. [context.override_next() 动态修改 next 列表](#16-contextoverride_next-动态修改-next-列表)
 17. [商店购买子任务间跳转与空壳节点死循环](#17-商店购买子任务间跳转与空壳节点死循环)
 18. [Pipeline JSON 选项列表与 Python 解耦模式](#18-pipeline-json-选项列表与-python-解耦模式)
+19. [通用每日检查与记录日期 action](#19-通用每日检查与记录日期-action)
 
 ---
 
@@ -1134,7 +1135,7 @@ return CustomAction.RunResult(success=True)
 ```python
 def _end(self, context: Context):
     # 1. 业务逻辑
-    save_merchant_date("游荡商人")
+    save_task_date("游荡商人")
 
     # 2. 双重禁用开关
     #    context override: 当前任务内立即生效
@@ -1242,3 +1243,175 @@ detail = context.run_recognition_direct(
 - 前缀常量：`_PARAM_PREFIX = "{模块}_参数_"`
 - 物品名提取：`param_name.removeprefix(_PARAM_PREFIX)`
 - 图片路径：`f"{SHOP_DIR}/{物品名}.png"`
+
+---
+
+## 19. 通用每日检查与记录日期 action
+
+### 问题
+
+每新增一个每日任务（如游荡商人、神秘商店、联盟商店、海岛打理），都需要在 Python 中新建 `每日检查` 和 `记录日期` 两个 Custom Action 类，代码高度重复。能否做成通用 action，通过参数区分不同任务？
+
+### 解答
+
+可以。利用 MaaFramework 的 `custom_action_param` 传参机制，将 `每日检查` 和 `记录日期` 各自实现为一个通用 action，Pipeline JSON 通过参数指定任务名、开关名等信息，无需为每个任务单独编写 Python 类。
+
+### 重构前：每个任务两个 action 类
+
+```python
+# island.py — 海岛打理专用
+@AgentServer.custom_action("海岛_每日检查")
+class IslandDailyCheck(CustomAction):
+    def run(self, context, argv):
+        daily_check(context, "海岛打理", "海岛_开关")
+        return CustomAction.RunResult(success=True)
+
+@AgentServer.custom_action("海岛_记录日期")
+class IslandRecordDate(CustomAction):
+    def run(self, context, argv):
+        save_task_date("海岛打理")
+        disable_switch(context, "海岛_开关")
+        return CustomAction.RunResult(success=True)
+
+# wandering_merchant.py — 游荡商人专用
+@AgentServer.custom_action("游荡商人_每日检查")
+class MerchantDailyCheck(CustomAction):
+    def run(self, context, argv):
+        daily_check(context, "游荡商人", "游荡商人_开关",
+                    "游荡商人_每日检查", "商店购买_入口")
+        return CustomAction.RunResult(success=True)
+
+# 神秘商店、联盟商店同理...
+```
+
+每新增一个每日任务，就要多写两个几乎一样的类。
+
+### 重构后：两个通用 action
+
+在 `common.py` 中定义两个通用 action，通过 `custom_action_param` 接收参数：
+
+```python
+# common.py
+
+@AgentServer.custom_action("每日检查")
+class DailyCheck(CustomAction):
+    """通用每日检查 action
+
+    参数格式:
+    {
+        "task_name": "任务名称，如 游荡商人、海岛打理",
+        "switch_name": "pipeline 开关节点名，如 游荡商人_开关",
+        "current_node": "当前节点名（可选，用于 override_next）",
+        "skip_next": "跳转目标节点名（可选，用于 override_next）"
+    }
+    """
+    def run(self, context, argv):
+        param = json.loads(argv.custom_action_param)
+        daily_check(
+            context,
+            param["task_name"],
+            param["switch_name"],
+            param.get("current_node"),
+            param.get("skip_next"),
+        )
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("记录日期")
+class RecordDate(CustomAction):
+    """通用记录日期 action
+
+    参数格式:
+    {
+        "task_name": "任务名称，如 游荡商人、海岛打理",
+        "switch_name": "开关节点名（可选，提供则同时禁用开关）"
+    }
+    """
+    def run(self, context, argv):
+        param = json.loads(argv.custom_action_param)
+        save_task_date(param["task_name"])
+        if param.get("switch_name"):
+            disable_switch(context, param["switch_name"])
+        logger.info(f"{param['task_name']}完成，记录日期")
+        return CustomAction.RunResult(success=True)
+```
+
+### Pipeline JSON 配置
+
+重构后，只需在 JSON 中配置参数，零 Python 代码：
+
+```json
+// 海岛打理
+"海岛_每日检查": {
+    "action": "Custom",
+    "custom_action": "每日检查",
+    "custom_action_param": {
+        "task_name": "海岛打理",
+        "switch_name": "海岛_开关"
+    },
+    "next": ["海岛_开关"]
+},
+"海岛_记录日期": {
+    "action": "Custom",
+    "custom_action": "记录日期",
+    "custom_action_param": {
+        "task_name": "海岛打理",
+        "switch_name": "海岛_开关"
+    }
+}
+
+// 游荡商人（带 override_next 跳转）
+"游荡商人_每日检查": {
+    "action": "Custom",
+    "custom_action": "每日检查",
+    "custom_action_param": {
+        "task_name": "游荡商人",
+        "switch_name": "游荡商人_开关",
+        "current_node": "游荡商人_每日检查",
+        "skip_next": "商店购买_入口"
+    },
+    "next": ["游荡商人_已在界面", "[JumpBack]点击商店", "[JumpBack]后退"]
+}
+```
+
+### 参数说明
+
+#### `每日检查` 参数
+
+| 参数 | 必填 | 说明 |
+|---|---|---|
+| `task_name` | 是 | 任务名称，用于读取/记录时间戳 |
+| `switch_name` | 是 | Pipeline 开关节点名，今日已完成时禁用 |
+| `current_node` | 否 | 当前节点名，用于 `override_next` 跳转 |
+| `skip_next` | 否 | 跳转目标节点名，与 `current_node` 配合使用 |
+
+#### `记录日期` 参数
+
+| 参数 | 必填 | 说明 |
+|---|---|---|
+| `task_name` | 是 | 任务名称，用于记录时间戳 |
+| `switch_name` | 否 | 开关节点名，提供时同时禁用开关 |
+
+### 底层工具函数
+
+两个通用 action 内部调用 `merchant_utils.py` 中的工具函数：
+
+| 函数 | 说明 |
+|---|---|
+| `daily_check(context, task_name, switch_name, current_node?, skip_next?)` | 检查今日是否已完成，已完成则禁用开关+跳转 |
+| `save_task_date(task_name)` | 保存任务完成时间戳 |
+| `disable_switch(context, switch_name)` | 双重禁用 pipeline 开关（Context + Resource） |
+
+### 重构效果
+
+| 对比项 | 重构前 | 重构后 |
+|---|---|---|
+| 新增每日任务 | 新建 2 个 Python action 类 + 配置 JSON | 仅配置 JSON，零 Python |
+| 代码量 | 每任务约 15 行 Python | 0 行 Python |
+| `island.py` | 存在（仅 2 个 wrapper 类） | 已删除 |
+| 各商店的 `_每日检查` / `_记录日期` action | 存在于各模块中 | 已移除 |
+| 参数灵活性 | 硬编码 | JSON 配置，支持可选参数 |
+
+### 核心原则
+
+> **当多个 Custom Action 的逻辑完全相同、仅参数不同时，应将其提取为通用 action，通过 `custom_action_param` 传参**。这避免了代码重复，也使得新增同类任务只需修改 JSON 配置。此模式与 §18 的"JSON 选项解耦"一脉相承——将变化的部分（参数）从 Python 代码移到 JSON 配置中。

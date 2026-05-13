@@ -6,7 +6,13 @@
     },
     "联盟商店_每日检查": {
         "action": "Custom",
-        "custom_action": "联盟商店_每日检查",
+        "custom_action": "每日检查",
+        "custom_action_param": {
+            "task_name": "联盟商店",
+            "switch_name": "联盟商店_开关",
+            "current_node": "联盟商店_每日检查",
+            "skip_next": "商店购买_入口"
+        },
         "next": [
             "联盟商店_点击联盟",
             "[JumpBack]点击商店",

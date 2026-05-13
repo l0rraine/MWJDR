@@ -99,7 +99,7 @@ MWJDR/
 │       ├── data_store.py            #   持久化数据存储（购买日期等）
 │       ├── click_util.py            #   点击工具（区域随机点击）
 │       ├── ocr_util.py              #   OCR 工具
-│       ├── merchant_utils.py        #   商人公共工具（add_offset、save_merchant_date）
+│       ├── merchant_utils.py        #   任务公共工具（add_offset、save_task_date、daily_check、disable_switch）
 │       └── mfa_config.py            #   MFAAvalonia 实例配置读取、战斗任务检测与禁用
 │
 ├── configure.py                     # 资源配置脚本

@@ -8,6 +8,7 @@ import random
 import time
 from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
+from utils.merchant_utils import save_task_date, disable_switch, daily_check
 @AgentServer.custom_action("根据需要切换角色")
 class SwitchCharacter(CustomAction):
     def run(
@@ -242,4 +243,65 @@ class NodeOverride(CustomAction):
         logger.debug(f"NodeOverride: {ppover}")
         context.override_pipeline(ppover)
 
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("每日检查")
+class DailyCheck(CustomAction):
+    """通用每日检查 action
+
+    检查今日是否已完成指定任务，已完成则禁用开关并跳过。
+    通过 custom_action_param 传参，无需为每个任务新建 action 类。
+
+    参数格式:
+    {
+        "task_name": "任务名称，如 游荡商人、海岛打理",
+        "switch_name": "pipeline 开关节点名，如 游荡商人_开关",
+        "current_node": "当前节点名（可选，用于 override_next）",
+        "skip_next": "跳转目标节点名（可选，用于 override_next）"
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        param = json.loads(argv.custom_action_param)
+        task_name = param["task_name"]
+        switch_name = param["switch_name"]
+        current_node = param.get("current_node")
+        skip_next = param.get("skip_next")
+
+        daily_check(context, task_name, switch_name, current_node, skip_next)
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("记录日期")
+class RecordDate(CustomAction):
+    """通用记录日期 action
+
+    记录任务完成日期，可选禁用 pipeline 开关。
+    通过 custom_action_param 传参，无需为每个任务新建 action 类。
+
+    参数格式:
+    {
+        "task_name": "任务名称，如 游荡商人、海岛打理",
+        "switch_name": "开关节点名（可选，提供则同时禁用开关）"
+    }
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        param = json.loads(argv.custom_action_param)
+        task_name = param["task_name"]
+        switch_name = param.get("switch_name")
+
+        save_task_date(task_name)
+        if switch_name:
+            disable_switch(context, switch_name)
+        logger.info(f"{task_name}完成，记录日期")
         return CustomAction.RunResult(success=True)

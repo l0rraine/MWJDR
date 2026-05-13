@@ -1,7 +1,7 @@
 """
 神秘商店 Custom Action
 
-包含：每日检查、购买
+包含：购买
 
 购买逻辑：
 - 每个槽位：先检查免费，再检查50%折扣（找50%→取色→识别物品→购买）
@@ -24,7 +24,7 @@ from maa.pipeline import JRecognitionType, JTemplateMatch, JOCR
 
 from utils import logger
 from utils.click_util import click_rect
-from utils.merchant_utils import add_offset, save_task_date, disable_switch, daily_check
+from utils.merchant_utils import add_offset, save_task_date, disable_switch
 
 SHOP_DIR = "神秘商店"
 
@@ -53,14 +53,6 @@ BUY_FROM_50 = [57, 212, 53, -16]
 
 def _screencap(context: Context):
     return context.tasker.controller.post_screencap().wait().get()
-
-
-@AgentServer.custom_action("神秘商店_每日检查")
-class MysteryMerchantDailyCheck(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        daily_check(context, "神秘商店", "神秘商店_开关",
-                    "神秘商店_每日检查", "商店购买_入口")
-        return CustomAction.RunResult(success=True)
 
 
 @AgentServer.custom_action("神秘商店_购买")

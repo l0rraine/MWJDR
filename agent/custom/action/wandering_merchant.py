@@ -1,7 +1,7 @@
 """
 游荡商人 Custom Action
 
-包含：每日检查、钻石刷新、记录日期
+包含：钻石刷新
 """
 
 import json
@@ -14,17 +14,7 @@ from maa.pipeline import JRecognitionType, JOCR, JTemplateMatch
 
 from utils import logger
 from utils.click_util import click_rect
-from utils.merchant_utils import add_offset, save_task_date, disable_switch, daily_check
-
-
-@AgentServer.custom_action("游荡商人_每日检查")
-class MerchantDailyCheck(CustomAction):
-    """检查游荡商人今天是否已购买，已购买则跳过"""
-
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        done = daily_check(context, "游荡商人", "游荡商人_开关",
-                           "游荡商人_每日检查", "商店购买_入口")
-        return CustomAction.RunResult(success=True)
+from utils.merchant_utils import add_offset, save_task_date, disable_switch
 
 
 @AgentServer.custom_action("游荡商人_钻石刷新")
@@ -109,12 +99,3 @@ class MerchantDiamondRefresh(CustomAction):
         save_task_date("游荡商人")
         MerchantDiamondRefresh._diamond_used = 0
         disable_switch(context, "游荡商人_开关")
-
-
-@AgentServer.custom_action("游荡商人_记录日期")
-class MerchantRecordDate(CustomAction):
-    """记录游荡商人购买日期"""
-
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        save_task_date("游荡商人")
-        return CustomAction.RunResult(success=True)

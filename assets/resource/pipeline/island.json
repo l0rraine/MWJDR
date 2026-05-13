@@ -7,7 +7,11 @@
     },
     "海岛_每日检查": {
         "action": "Custom",
-        "custom_action": "海岛_每日检查",
+        "custom_action": "每日检查",
+        "custom_action_param": {
+            "task_name": "海岛打理",
+            "switch_name": "海岛_开关"
+        },
         "next": [
             "海岛_开关"
         ]
@@ -195,6 +199,10 @@
     },
     "海岛_记录日期": {
         "action": "Custom",
-        "custom_action": "海岛_记录日期"
+        "custom_action": "记录日期",
+        "custom_action_param": {
+            "task_name": "海岛打理",
+            "switch_name": "海岛_开关"
+        }
     }
 }
