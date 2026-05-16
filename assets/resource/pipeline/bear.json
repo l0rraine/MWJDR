@@ -105,20 +105,19 @@
         ]
     },
     "熊_开始战斗": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "next": [
-            "熊_识别队伍",
-            "[JumpBack]熊_向下滚动"
-        ]
+        "action": "Custom",
+        "custom_action": "熊_开始战斗"
     },
     "熊_识别队伍": {
-        "pre_delay": 0,
-        "post_delay": 200
+        "recognition": "OCR",
+        "roi": [
+            227,
+            170,
+            359,
+            956
+        ]
     },
     "熊_向下滚动": {
-        "pre_delay": 0,
-        "post_delay": 0,
         "action": "Swipe",
         "begin": [
             433,
@@ -134,19 +133,34 @@
         ],
         "duration": 100
     },
-    "熊_在队伍界面": {
-        "recognition": "TemplateMatch",
-        "template": "在队伍界面.png",
-        "roi": [
-            558,
-            471,
-            84,
-            81
+    "熊_点击验证": {
+        "recognition": "ColorMatch",
+        "lower": [
+            1,
+            86,
+            4
         ],
-        "action": "Click",
-        "next": [
-            "熊_队伍选择"
-        ]
+        "upper": [
+            255,
+            255,
+            255
+        ],
+        "roi": [
+            588,
+            499,
+            23,
+            26
+        ],
+        "method": 4
     },
-    "熊_队伍选择": {}
+    "熊_返回集结列表": {
+        "recognition": "TemplateMatch",
+        "template": "熊.png",
+        "roi": [
+            27,
+            184,
+            216,
+            924
+        ]
+    }
 }

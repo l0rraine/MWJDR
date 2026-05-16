@@ -6,6 +6,7 @@ from .monster import *
 from .itemBattle import *
 from .light import *
 from .beast import *
+from .bear import *
 from .travel import *
 from .dream import *
 from .wandering_merchant import *
@@ -17,6 +18,7 @@ __all__ = [
     "BeginCombat",
     "LightBeginCombat",
     "BeastBeginCombat",
+    "BearCombat",
     "RecallTeam",
     "UniteScan",
     "MakeSureQueueAvailable",
