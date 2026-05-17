@@ -114,6 +114,13 @@
             "option": [
                 "梦境寻忆模式选择"
             ]
+        },
+        {
+            "name": "打熊",
+            "entry": "熊_入口",
+            "option": [
+                "打熊配置"
+            ]
         }
     ],
     "option": {
@@ -1051,6 +1058,42 @@
                     }
                 }
             ]
+        },
+        "打熊配置": {
+            "type": "input",
+            "label": "打熊配置",
+            "inputs": [
+                {
+                    "name": "开始时间",
+                    "label": "开始时间",
+                    "pipeline_type": "string",
+                    "default": "20:00",
+                    "description": "开始打熊的时间，格式 HH:MM"
+                },
+                {
+                    "name": "队伍名",
+                    "label": "想加入的队伍名",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "description": "多个以英文逗号隔开"
+                },
+                {
+                    "name": "循环顺序",
+                    "label": "自己的队伍循环顺序",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "description": "如 0,0,2,2,2，0为默认队伍无需选择"
+                }
+            ],
+            "pipeline_override": {
+                "熊_开始战斗": {
+                    "custom_action_param": {
+                        "开始时间": "{开始时间}",
+                        "队伍名": "{队伍名}",
+                        "循环顺序": "{循环顺序}"
+                    }
+                }
+            }
         }
     }
 }
