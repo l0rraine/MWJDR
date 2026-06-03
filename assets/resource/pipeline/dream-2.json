@@ -1,5 +1,17 @@
 {
   "梦境寻忆_2_闯关": {
+    "focus": "第二阶段闯关",
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/铃铛.png"
+    ],
+    "threshold": 0.8,
+    "roi": [
+      499,
+      0,
+      106,
+      106
+    ],
     "next": [
       "梦境寻忆_2_小院关",
       "梦境寻忆_2_飞机关",

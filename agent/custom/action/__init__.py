@@ -29,6 +29,7 @@ __all__ = [
     "SwitchCharacter",
     "DoDig",
     "Memories",
+    "DreamEffective",
     "MerchantDiamondRefresh",
     "MysteryMerchantPurchase",
     "UnionShopPurchase",

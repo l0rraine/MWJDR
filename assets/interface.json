@@ -735,7 +735,7 @@
                 }
             ],
             "pipeline_override": {
-                "梦境寻忆_入口": {
+                "梦境寻忆_当前阶段": {
                     "custom_action_param": {
                         "episode": "{当前阶段}"
                     }

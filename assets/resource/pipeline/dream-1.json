@@ -1,5 +1,6 @@
 {
   "梦境寻忆_1_闯关": {
+    "focus": "第一阶段闯关",
     "recognition": "TemplateMatch",
     "template": [
       "梦境寻忆/铃铛.png"

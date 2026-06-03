@@ -1,6 +1,12 @@
 {
   "梦境寻忆_入口": {
-    "custom_action": "梦境寻忆-判断生效",
+    "next": [
+      "梦境寻忆_当前阶段"
+    ]
+  },
+  "梦境寻忆_当前阶段": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆_判断生效",
     "custom_action_param": {
       "episode": 1
     },

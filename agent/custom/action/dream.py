@@ -17,7 +17,7 @@ from utils.merchant_utils import disable_switch
 import importlib
 
 EPISODE = "1"
-@AgentServer.custom_action("梦境寻忆-判断生效")
+@AgentServer.custom_action("梦境寻忆_判断生效")
 class DreamEffective(CustomAction):
     def run(
         self,
@@ -27,29 +27,30 @@ class DreamEffective(CustomAction):
         global EPISODE
         json_data = json.loads(argv.custom_action_param)
         EPISODE = json_data.get("episode")
-        all = context.get_node_data("梦境寻忆_开始闯关")["next"]
-        if EPISODE == "0":
-            max_str = max(
-                all, key=lambda x: int(re.search(r"_(\d+)_", x).group(1))
-            )
-            for item in all:
-                if f"梦境寻忆_{max_str}_" not in item:
-                    disable_switch(context,item)
+        is_stage = context.get_node_data("梦境寻忆_闯关").get("enabled",False)
 
-            all = context.get_node_data("梦境寻忆_组队")["next"]
-            for item in all:
-                if f"梦境寻忆_{max_str}_" not in item:
-                    disable_switch(context, item)
+        if is_stage:
+            all = context.get_node_data("梦境寻忆_开始闯关")["next"]
+            name_list = [item["name"] for item in all]
         else:
-            for item in all:
+            all = context.get_node_data("梦境寻忆_组队")["next"]
+            name_list = [item["name"] for item in all]
+
+        if EPISODE == "0":
+            max_str = max(name_list, key=lambda d: int(d.split("_")[1]))
+            EPISODE = int(max_str.split("_")[1])
+            logger.debug(f"当前最新阶段: {EPISODE}")
+            for item in name_list:
+                logger.debug(item)
+                if max_str != item:
+                    disable_switch(context,item)
+        else:
+            logger.debug(f"当前选择阶段: {EPISODE}")
+            for item in name_list:
                 if f"梦境寻忆_{EPISODE}_" not in item:
                     disable_switch(context,item)
 
-            all = context.get_node_data("梦境寻忆_组队")["next"]
-            for item in all:
-                if f"梦境寻忆_{EPISODE}_" not in item:
-                    disable_switch(context, item)
-        return CustomAction.RunResult(success=False)
+        return CustomAction.RunResult(success=True)
 
 @AgentServer.custom_action("梦境寻忆")
 class Memories(CustomAction):
@@ -60,7 +61,6 @@ class Memories(CustomAction):
     ) -> bool:
         json_data = json.loads(argv.custom_action_param)
         mode = json_data.get('mode')
-
         level = json_data.get('level')
         logger.debug(f'当前模式:{mode},当前关卡:{level}')
         #  闯关模式
@@ -75,7 +75,7 @@ class Memories(CustomAction):
         context: Context,
         level):
         global EPISODE
-        module_name = f"action.dream_stages.dream_{EPISODE}"
+        module_name = f".dream_stages.dream_{EPISODE}"
         item_dict={}
         try:
             # 动态导入模块
