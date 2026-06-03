@@ -86,7 +86,7 @@ class BeginCombat(CustomAction):
         _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)                
         return_time = minutes * 60 + seconds
 
-        logger.debug(f"返回时间：{return_time}")
+        logger.debug(f"单次行军耗时：{return_time}")
         # 开始出征
         context.run_task("点击出征")
 
@@ -98,30 +98,29 @@ class BeginCombat(CustomAction):
             logger.debug(f"体力不足，尝试领取免费体力：{detail.best_result.text}")
             detail = context.run_recognition("是否有免费体力",img)
             if detail is not None and detail.hit:
-                # 普通模式下，根据免费罐头选项判断是否领取
-                if advanced_mode == 0:
-                    current_hour = time.localtime().tm_hour
-                    can_use_free = False
-                    if current_hour < 19:
-                        # 0点~19点，无条件使用免费罐头
+                current_hour = time.localtime().tm_hour
+                can_use_free = False
+                if current_hour < 19:
+                    # 0点~19点，无条件使用免费罐头
+                    can_use_free = True
+                    logger.debug("0点~19点，无条件领取免费体力")
+                else:
+                    # 19点~0点，根据19点罐头选项决定
+                    if use_19_can == 1:
                         can_use_free = True
-                        logger.debug("0点~19点，无条件领取免费体力")
+                        logger.debug("19点罐头选项已启用，领取免费体力")
                     else:
-                        # 19点~0点，根据19点罐头选项决定
-                        if use_19_can == 1:
-                            can_use_free = True
-                            logger.debug("19点罐头选项已启用，领取免费体力")
-                        else:
-                            logger.debug("19点罐头选项未启用，不领取免费体力")
+                        logger.debug("19点罐头选项未启用，不领取免费体力")
 
-                    if not can_use_free:
-                        logger.info("免费罐头未启用，不领取免费体力，停止出征")
-                        self._end(context)
-                        return CustomAction.RunResult(success=False)
-                    else:
-                        logger.debug("领取免费体力")
-                        context.run_task("免费体力")                
-                        context.run_task("点击出征")
+                if not can_use_free:
+                    logger.info("免费罐头未启用，不领取免费体力，停止出征")
+                    self._end(context)
+                    return CustomAction.RunResult(success=False)
+                else:
+                    logger.debug("领取免费体力")
+                    context.run_task("免费体力")                
+                    context.run_task("点击出征")
+                
             elif can_limit != 0:        
                 logger.debug("无免费体力，尝试使用罐头")
                 # 判断罐头次数是否达到上限

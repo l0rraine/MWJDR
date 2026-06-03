@@ -65,7 +65,7 @@ class MysteryMerchantPurchase(CustomAction):
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         param = json.loads(argv.custom_action_param)
         diamond_limit = int(param.get("钻石刷新次数", 0))
-
+        context.run_task("神秘商店_上滑")
         # 截取专武模板（当季专武图片从界面截取）
         img = _screencap(context)
         weapon_img = img[490:542, 85:174]

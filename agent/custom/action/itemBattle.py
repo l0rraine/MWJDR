@@ -28,7 +28,7 @@ class RecoVigor(CustomAction):
         left = int(text)
         remaining = math.floor(left / cost)
 
-        CombatRepetitionCount.setLimit(remaining)
+        CombatRepetitionCount.init(remaining)
         logger.info(f"剩余体力：{left}，可出征{remaining}次")
         return CustomAction.RunResult(success=True)
 
