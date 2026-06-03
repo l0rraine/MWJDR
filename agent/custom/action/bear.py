@@ -76,7 +76,7 @@ def next_stage_seconds():
 class BearComputeExpected(CustomAction):
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME
+        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS
 
         param = json.loads(argv.custom_action_param)
         start_time_str = param.get("开始时间", "21:00")
@@ -116,6 +116,7 @@ class BearComputeExpected(CustomAction):
             expected = [
                 rf".*{name}.*" for name in first_team_names+second_team_names
             ]
+
         # logger.debug(
         #     f"当前阶段: {current_stage}，TEAMS_1: {TEAMS_1}, 当前队伍: {current_team}，识别期望: {expected}"
         # )
@@ -131,7 +132,7 @@ class BearComputeExpected(CustomAction):
                     {
                         "sub_name": "join",
                         "recognition": "TemplateMatch",
-                        "template": "直接加入队伍.png",
+                        "template": "熊/直接加入队伍.png",
                         "roi": "team_name",
                         "roi_offset": [310, 87, 0, 58],
                         "threshold": 0.9,
@@ -151,7 +152,6 @@ class BearCombat(CustomAction):
         global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS
         logger.debug(f"当前循环顺序: {TEAM_ORDER},共可派出队伍 {TOTAL_TEAMS} 支")
         if not self._select_team_and_deploy(context, TEAM_ORDER[0]):
-            logger.warning("出征失败")
             return CustomAction.RunResult(success=True)
 
         # [1,2,3,4] → [2,3,4,1]
@@ -168,6 +168,14 @@ class BearCombat(CustomAction):
 
         返回 True 表示成功出征并返回集结列表。
         """
+        global SEND_TEAMS, TOTAL_TEAMS
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("熊_队列不足", img)
+        if detail is not None and detail.hit:
+            context.run_action("熊_后退")
+            logger.debug(f"队列不足，无法出征")
+            return False
+
         start = time.time()
         if team_id > 0:
             roi = TEAM_ROI[team_id]
@@ -182,22 +190,32 @@ class BearCombat(CustomAction):
         context.run_action("熊_点击出征")
         logger.debug(f"出征耗时: {(time.time() - start) * 1000:.0f}ms")
 
-        # 验证返回集结列表
-        time.sleep(0.2)
+        time.sleep(0.1)
         img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("熊_士兵超出上限", img)
+        if detail is not None and detail.hit:
+            logger.debug(f"{team_id} 士兵超出上限,出征失败")
+            context.run_action("熊_后退")
+            context.run_action("熊_后退")
+            return False
+        # 验证返回集结列表
+        time.sleep(0.15)
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition("熊_超出容量", img)
+        if detail is not None and detail.hit:
+            logger.debug(f"{team_id} 熊_超出容量,出征失败")
+            return False
+
         detail = context.run_recognition("熊_在集结列表", img)
         if detail is not None and detail.hit:
             logger.info(f"{team_id} 已出征")
             return True
 
-        logger.info(f"{team_id} 出征失败")
+        logger.debug(f"{team_id} 出征失败")
         detail = None
         while detail is None or not detail.hit:
-            context.run_action_direct(
-                JActionType.Click,
-                JClick(target=[30, 34, 32, 8]),
-            )
-            time.sleep(0.2)
+
+            time.sleep(0.4)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("熊_在集结列表", img)
 

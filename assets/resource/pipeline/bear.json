@@ -163,12 +163,6 @@
         ],
         "box_index": 1,
         "action": "Click",
-        "target_offset": [
-            10,
-            10,
-            -20,
-            -20
-        ],
         "next": [
             "熊_在队伍选择页面",
             "熊_在集结详情页面"
@@ -190,6 +184,7 @@
         ]
     },
     "熊_在集结详情页面": {
+        "focus": "熊_在集结详情页面，取消",
         "pre_delay": 0,
         "post_delay": 200,
         "recognition": "TemplateMatch",
@@ -202,13 +197,13 @@
         ],
         "action": "Click",
         "target": [
-            586,
-            503,
-            24,
-            17
+            30,
+            34,
+            32,
+            8
         ],
         "next": [
-            "熊_开始加入集结"
+            "熊_开始战斗"
         ]
     },
     "熊_开始加入集结": {
@@ -236,7 +231,7 @@
             21,
             11
         ],
-        "duration": 100
+        "duration": 150
     },
     "熊_加入集结失败": {
         "recognition": "TemplateMatch",
@@ -281,6 +276,59 @@
             1185,
             91,
             51
+        ]
+    },
+    "熊_超出容量": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": "OCR",
+        "expected": [
+            ".*超出集结容量.*"
+        ],
+        "roi": [
+            162,
+            392,
+            360,
+            200
+        ]
+    },
+    "熊_士兵超出上限": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": "OCR",
+        "expected": [
+            "确认"
+        ],
+        "roi": [
+            287,
+            424,
+            136,
+            60
+        ]
+    },
+    "熊_队列不足": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": "OCR",
+        "expected": [
+            "行军队列"
+        ],
+        "roi": [
+            265,
+            311,
+            180,
+            59
+        ]
+    },
+    "熊_后退": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "Click",
+        "target": [
+            30,
+            34,
+            32,
+            8
         ]
     }
 }
