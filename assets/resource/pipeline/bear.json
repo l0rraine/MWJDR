@@ -1,5 +1,14 @@
 {
     "熊_入口": {
+        "next": [
+            "熊_已在入口",
+            "[JumpBack]熊_点击加入集结",
+            "[JumpBack]熊_点击联盟",
+            "[JumpBack]关闭礼包",
+            "[JumpBack]后退"
+        ]
+    },
+    "熊_已在入口": {
         "recognition": "OCR",
         "expected": "联盟战争",
         "roi": [
@@ -9,18 +18,8 @@
             57
         ],
         "next": [
-            "熊_开始战斗",
-            "[JumpBack]熊_进入集结列表"
+            "熊_开始战斗"
         ]
-    },
-    "熊_进入集结列表": {
-        "next": [
-            "熊_点击加入集结",
-            "熊_点击联盟",
-            "[JumpBack]关闭礼包",
-            "[JumpBack]后退"
-        ],
-        "focus": "正在打开自动集结"
     },
     "熊_点击加入集结": {
         "recognition": {
@@ -105,19 +104,125 @@
         ]
     },
     "熊_开始战斗": {
+        "pre_delay": 0,
+        "post_delay": 200,
+        "next": [
+            "熊_识别队伍",
+            "[JumpBack]熊_计算队伍"
+        ]
+    },
+    "熊_计算队伍": {
+        "pre_delay": 0,
+        "post_delay": 100,
         "action": "Custom",
-        "custom_action": "熊_开始战斗"
+        "custom_action": "熊_计算队伍",
+        "custom_action_param": {
+            "开始时间": "21:00",
+            "第一梯队": "",
+            "第二梯队": "",
+            "等待时间": "2",
+            "循环顺序": ""
+        },
+        "next": [
+            "熊_向下滚动"
+        ]
     },
     "熊_识别队伍": {
-        "recognition": "OCR",
+        "pre_delay": 0,
+        "post_delay": 200,
+        "recognition": "And",
+        "rate_limit": 50,
+        "all_of": [
+            {
+                "sub_name": "team_name",
+                "recognition": "OCR",
+                "expected": [
+                    "edit in code"
+                ],
+                "roi": [
+                    273,
+                    170,
+                    252,
+                    956
+                ]
+            },
+            {
+                "sub_name": "join",
+                "recognition": "TemplateMatch",
+                "template": "熊/直接加入队伍.png",
+                "roi": "team_name",
+                "roi_offset": [
+                    310,
+                    87,
+                    0,
+                    58
+                ],
+                "threshold": 0.9,
+                "method": 10001
+            }
+        ],
+        "box_index": 1,
+        "action": "Click",
+        "target_offset": [
+            10,
+            10,
+            -20,
+            -20
+        ],
+        "next": [
+            "熊_在队伍选择页面",
+            "熊_在集结详情页面"
+        ]
+    },
+    "熊_在队伍选择页面": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": "TemplateMatch",
+        "template": "熊/在队伍界面.png",
         "roi": [
-            227,
-            170,
-            359,
-            956
+            55,
+            0,
+            154,
+            99
+        ],
+        "next": [
+            "熊_开始加入集结"
+        ]
+    },
+    "熊_在集结详情页面": {
+        "pre_delay": 0,
+        "post_delay": 200,
+        "recognition": "TemplateMatch",
+        "template": "熊/集结详情.png",
+        "roi": [
+            62,
+            0,
+            200,
+            108
+        ],
+        "action": "Click",
+        "target": [
+            586,
+            503,
+            24,
+            17
+        ],
+        "next": [
+            "熊_开始加入集结"
+        ]
+    },
+    "熊_开始加入集结": {
+        "pre_delay": 100,
+        "post_delay": 0,
+        "action": "Custom",
+        "custom_action": "熊_加入集结",
+        "next": [
+            "熊_开始战斗"
         ]
     },
     "熊_向下滚动": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "action": "Swipe",
         "begin": [
             433,
@@ -133,34 +238,49 @@
         ],
         "duration": 100
     },
-    "熊_点击验证": {
-        "recognition": "ColorMatch",
-        "lower": [
-            1,
-            86,
-            4
-        ],
-        "upper": [
-            255,
-            255,
-            255
-        ],
-        "roi": [
-            588,
-            499,
-            23,
-            26
-        ],
-        "method": 4
-    },
-    "熊_返回集结列表": {
+    "熊_加入集结失败": {
         "recognition": "TemplateMatch",
-        "template": "熊.png",
+        "template": "熊/取消.png",
         "roi": [
+            591,
+            399,
+            90,
+            95
+        ],
+        "action": "Click",
+        "target": [
+            214,
+            31,
             27,
-            184,
-            216,
-            924
+            17
+        ]
+    },
+    "熊_在集结列表": {
+        "recognition": "TemplateMatch",
+        "template": "熊/在集结列表.png",
+        "roi": [
+            611,
+            0,
+            109,
+            120
+        ],
+        "threshold": 0.8
+    },
+    "熊_选择队伍": {
+        "pre_delay": 200,
+        "post_delay": 0,
+        "action": "Click",
+        "target": true
+    },
+    "熊_点击出征": {
+        "pre_delay": 300,
+        "post_delay": 0,
+        "action": "Click",
+        "target": [
+            510,
+            1185,
+            91,
+            51
         ]
     }
 }

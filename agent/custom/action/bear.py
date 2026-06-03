@@ -6,6 +6,8 @@ import json
 import time
 
 from utils import logger
+from datetime import datetime, timedelta
+import math
 
 # 队伍 ROI，与 combat.py 中 ChangeTeam 一致
 # 索引 0 为默认队伍，无需点击
@@ -21,210 +23,182 @@ TEAM_ROI = [
     [565, 113, 30, 29],
 ]
 
-# 点击加入按钮的偏移量：从识别到的队伍名 box 到加入按钮
-# 示例：box 左上角 (291, 672) → 点击 (639, 790)，偏移 = (348, 118)
-JOIN_OFFSET_X = 348
-JOIN_OFFSET_Y = 118
-
+START_TIME = ""
+TEAMS_1 = []
+TEAMS_2 = []
+DOWN_TEAMS = []
+TEAM_ORDER = []
+SEND_TEAMS = 0
+TOTAL_TEAMS = 0
 # 每个阶段时长：5分14秒
-PHASE_DURATION = 5 * 60 + 14
 
 
-def compute_phases(team_order):
-    """计算每个阶段的队伍分配。
+def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 3):
+    # 1. 获取今天的 日期 + 开始时间
+    today = datetime.now().date()
+    start = datetime.combine(today, datetime.strptime(start_time, "%H:%M").time())
 
-    对于 N 支队伍，共 N 个阶段：
-    - 阶段 1~N-1：每阶段派 N-1 支队伍（旋转列表，取前 N-1 个）
-    - 阶段 N：派全部 N 支队伍
+    # 2. 获取当前系统时间
+    now = datetime.now()
 
-    旋转规则：每次将最后一个元素移到最前面。
-    """
-    n = len(team_order)
-    phases = []
-    current = list(team_order)
+    # 3. 计算时间差（秒）
+    total_seconds = (now - start).total_seconds()
 
-    for _ in range(n - 1):
-        phases.append(current[:n - 1])
-        current = [current[-1]] + current[:-1]
+    # 4. 阶段时长：5分14秒
+    stage_seconds = 5 * 60 + 14  # 314 秒
 
-    phases.append(current)
-    return phases
+    current_team = 1
+    # 5. 计算当前阶段（从 1 开始）
+    if total_seconds < 0:
+        return 1, current_team  # 还没开始
+
+    current_stage = math.ceil(total_seconds / stage_seconds)
+    if total_seconds > (current_stage-1)*stage_seconds+60*wait_time:
+        current_team = 2
+    
+    return current_stage, current_team
+
+def next_stage_seconds():
+    global START_TIME
+    today = datetime.now().date()
+    start = datetime.combine(today, datetime.strptime(START_TIME, "%H:%M").time())
+    now = datetime.now()
+    total_seconds = (now - start).total_seconds()
+    stage_seconds = 5 * 60 + 14  # 314 秒
+    next_stage = math.ceil(total_seconds / stage_seconds)
+    next_stage_time = start + timedelta(seconds=next_stage * stage_seconds)
+    seconds = (next_stage_time - now).total_seconds() - 2  # 提前 2 秒醒来准备
+    logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
+    return seconds
 
 
-@AgentServer.custom_action("熊_开始战斗")
-class BearCombat(CustomAction):
+@AgentServer.custom_action("熊_计算队伍")
+class BearComputeExpected(CustomAction):
+
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME
+
         param = json.loads(argv.custom_action_param)
-        start_time_str = param.get("开始时间", "20:00")
-        team_names_str = param.get("队伍名", "")
+        start_time_str = param.get("开始时间", "21:00")
+        first_team_names_str = param.get("第一梯队", "")
+        second_team_names_str = param.get("第二梯队", "")
+        wait_time = int(param.get("等待时间", 3))
+
+        START_TIME = start_time_str
+        TEAMS_1 = first_team_names_str
+        TEAMS_2 = second_team_names_str
+
         team_order_str = param.get("循环顺序", "0")
 
-        team_names = [name.strip() for name in team_names_str.split(",") if name.strip()]
-        team_order = [int(x.strip()) for x in team_order_str.split(",") if x.strip()]
+        if not TEAM_ORDER:
+            TEAM_ORDER = [
+                int(x.strip()) for x in team_order_str.split(",") if x.strip()
+            ]
 
-        if not team_names:
-            logger.warning("未配置目标队伍名，无法执行打熊")
-            return CustomAction.RunResult(success=False)
-        if not team_order:
-            logger.warning("未配置循环顺序，无法执行打熊")
-            return CustomAction.RunResult(success=False)
-
-        # 构建部分匹配的 expected 列表
-        expected = [f".*{name}.*" for name in team_names]
-
-        # 计算阶段分配
-        phases = compute_phases(team_order)
-
-        logger.info(
-            f"打熊配置: 开始时间={start_time_str}, 目标队伍={team_names}, "
-            f"循环顺序={team_order}, 共{len(phases)}个阶段"
+        current_stage, current_team = get_current_stage_and_team(
+            start_time_str, wait_time
         )
-        for i, phase in enumerate(phases):
-            logger.info(f"  阶段{i + 1}: {phase}")
+        if current_stage == 5:
+            TOTAL_TEAMS = len(TEAM_ORDER)
+        else:
+            TOTAL_TEAMS = len(TEAM_ORDER) - 1
 
-        # 等待开始时间
-        self._wait_for_start(start_time_str)
+        first_team_names = [
+            name.strip() for name in TEAMS_1.split(",") if name.strip()
+        ]
+        second_team_names = [
+            name.strip() for name in TEAMS_2.split(",") if name.strip()
+        ]
 
-        # 执行各阶段
-        phase_start_time = time.time()
+        if current_team == 1:
+            expected = [rf".*{name}.*" for name in first_team_names]
+        else:
+            expected = [
+                rf".*{name}.*" for name in first_team_names+second_team_names
+            ]
+        # logger.debug(
+        #     f"当前阶段: {current_stage}，TEAMS_1: {TEAMS_1}, 当前队伍: {current_team}，识别期望: {expected}"
+        # )
+        pipeline = {
+            "熊_识别队伍": {
+                "all_of": [
+                    {
+                        "sub_name": "team_name",
+                        "recognition": "OCR",
+                        "roi": [273, 170, 252, 956],
+                        "expected": expected,
+                    },
+                    {
+                        "sub_name": "join",
+                        "recognition": "TemplateMatch",
+                        "template": "直接加入队伍.png",
+                        "roi": "team_name",
+                        "roi_offset": [310, 87, 0, 58],
+                        "threshold": 0.9,
+                        "method": 10001,
+                    },
+                ],
+                "box_index": 1,
+            }
+        }
+        context.override_pipeline(pipeline)
+        context.tasker.resource.override_pipeline(pipeline)
+        return CustomAction.RunResult(success=True)
 
-        for phase_idx, phase_teams in enumerate(phases):
-            is_last_phase = phase_idx == len(phases) - 1
+@AgentServer.custom_action("熊_加入集结")
+class BearCombat(CustomAction):
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS
+        logger.debug(f"当前循环顺序: {TEAM_ORDER},共可派出队伍 {TOTAL_TEAMS} 支")
+        if not self._select_team_and_deploy(context, TEAM_ORDER[0]):
+            logger.warning("出征失败")
+            return CustomAction.RunResult(success=True)
 
-            for team_id in phase_teams:
-                # 查找并加入目标队伍
-                if not self._find_and_join(context, expected):
-                    logger.warning("未能成功加入队伍，跳过本次")
-                    continue
+        # [1,2,3,4] → [2,3,4,1]
+        TEAM_ORDER = TEAM_ORDER[1:] + TEAM_ORDER[:1]
+        SEND_TEAMS = SEND_TEAMS+1
+        if SEND_TEAMS == TOTAL_TEAMS:            
+            time.sleep(next_stage_seconds())
+            SEND_TEAMS = 0
 
-                # 选择队伍并出征
-                if not self._select_team_and_deploy(context, team_id):
-                    logger.warning("出征失败，跳过本次")
-                    continue
-
-            # 非最后阶段，等待下一阶段
-            if not is_last_phase:
-                elapsed = time.time() - phase_start_time
-                wait_time = PHASE_DURATION - elapsed
-                if wait_time > 0:
-                    logger.info(
-                        f"阶段{phase_idx + 1}完成，等待 {wait_time:.0f} 秒进入下一阶段"
-                    )
-                    time.sleep(wait_time)
-                phase_start_time = time.time()
-
-        logger.info("打熊全部阶段完成")
-        return CustomAction.RunResult(success=False)
-
-    def _wait_for_start(self, start_time_str: str):
-        """等待到指定开始时间。"""
-        try:
-            hour, minute = map(int, start_time_str.split(":"))
-        except ValueError:
-            logger.warning(f"无效的开始时间格式: {start_time_str}")
-            return
-
-        now = time.localtime()
-        target = time.struct_time((
-            now.tm_year, now.tm_mon, now.tm_mday,
-            hour, minute, 0,
-            now.tm_wday, now.tm_yday, now.tm_isdst,
-        ))
-        target_ts = time.mktime(target)
-        now_ts = time.mktime(now)
-
-        if target_ts <= now_ts:
-            target_ts += 24 * 3600
-
-        wait_seconds = target_ts - now_ts
-        logger.info(f"距离开始时间 {start_time_str} 还有 {wait_seconds:.0f} 秒")
-        time.sleep(wait_seconds)
-        logger.info(f"开始时间 {start_time_str} 到达，开始打熊")
-
-    def _find_and_join(self, context: Context, expected: list) -> bool:
-        """在集结列表中查找目标队伍并点击加入。
-
-        返回 True 表示成功进入队伍选择界面。
-        """
-        while True:
-            img = context.tasker.controller.post_screencap().wait().get()
-
-            detail = context.run_recognition("熊_识别队伍", img, {
-                "熊_识别队伍": {"expected": expected}
-            })
-
-            if detail is not None and detail.hit:
-                box = detail.box
-                logger.debug(
-                    f"找到目标队伍: {detail.best_result.text} "
-                    f"at ({box.x}, {box.y})"
-                )
-
-                # 使用偏移量点击加入按钮
-                click_x = box.x + JOIN_OFFSET_X
-                click_y = box.y + JOIN_OFFSET_Y
-                context.tasker.controller.post_click(click_x, click_y).wait()
-
-                # 验证点击是否成功
-                time.sleep(0.1)
-                img = context.tasker.controller.post_screencap().wait().get()
-                verify = context.run_recognition("熊_点击验证", img)
-
-                if verify is not None and verify.hit:
-                    # 偏移点击未命中，直接点击识别位置
-                    logger.debug("偏移点击未命中，直接点击识别位置")
-                    context.tasker.controller.post_click(
-                        box.x + box.w // 2, box.y + box.h // 2
-                    ).wait()
-                    time.sleep(0.1)
-
-                return True
-
-            # 未找到，向下滚动
-            context.run_task("熊_向下滚动")
+        return CustomAction.RunResult(success=True)
 
     def _select_team_and_deploy(self, context: Context, team_id: int) -> bool:
         """选择队伍（非默认队伍时点击 ROI）并点击出征。
 
         返回 True 表示成功出征并返回集结列表。
         """
+        start = time.time()
         if team_id > 0:
-            if team_id < len(TEAM_ROI):
-                roi = TEAM_ROI[team_id]
-                context.run_action_direct(
-                    JActionType.Click,
-                    JClick(target=roi),
-                )
-                logger.debug(f"选择队伍 {team_id}")
-            else:
-                logger.warning(f"队伍索引 {team_id} 超出范围，使用默认队伍")
-
+            roi = TEAM_ROI[team_id]
+            context.run_action("熊_选择队伍",pipeline_override={
+                "熊_选择队伍": {
+                    "target": roi
+                }})
+            # time.sleep(0.2)
+            logger.debug(f"选择队伍耗时: {(time.time() - start) * 1000:.0f}ms")
+        start = time.time()
         # 点击出征
-        context.run_task("点击出征")
+        context.run_action("熊_点击出征")
+        logger.debug(f"出征耗时: {(time.time() - start) * 1000:.0f}ms")
 
         # 验证返回集结列表
-        time.sleep(0.3)
-        for _ in range(5):
-            img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("熊_返回集结列表", img)
-            if detail is not None and detail.hit:
-                logger.debug("已返回集结列表")
-                return True
-            time.sleep(0.3)
-
-        # 未返回，点击返回按钮
-        logger.debug("未返回集结列表，点击返回")
-        context.run_action_direct(
-            JActionType.Click,
-            JClick(target=[30, 34, 32, 8]),
-        )
-
-        time.sleep(0.5)
+        time.sleep(0.2)
         img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("熊_返回集结列表", img)
+        detail = context.run_recognition("熊_在集结列表", img)
         if detail is not None and detail.hit:
-            logger.debug("点击返回后已回到集结列表")
+            logger.info(f"{team_id} 已出征")
             return True
 
-        logger.warning("无法返回集结列表")
+        logger.info(f"{team_id} 出征失败")
+        detail = None
+        while detail is None or not detail.hit:
+            context.run_action_direct(
+                JActionType.Click,
+                JClick(target=[30, 34, 32, 8]),
+            )
+            time.sleep(0.2)
+            img = context.tasker.controller.post_screencap().wait().get()
+            detail = context.run_recognition("熊_在集结列表", img)
+
         return False
