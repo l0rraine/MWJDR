@@ -75,7 +75,7 @@ class Memories(CustomAction):
         context: Context,
         level):
         global EPISODE
-        module_name = f"action.dream.dream_{EPISODE}"
+        module_name = f"action.dream_stages.dream_{EPISODE}"
         item_dict={}
         try:
             # 动态导入模块
@@ -134,7 +134,7 @@ class Memories(CustomAction):
         context: Context,
         level):
         global EPISODE
-        module_name = f"action.dream.dream_{EPISODE}"
+        module_name = f"action.dream_stages.dream_{EPISODE}"
         item_dict = {}
         try:
             # 动态导入模块
