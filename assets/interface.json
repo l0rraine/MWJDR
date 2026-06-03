@@ -113,6 +113,7 @@
             "name": "梦境寻忆",
             "entry": "梦境寻忆_入口",
             "option": [
+                "梦境寻忆阶段选择",
                 "梦境寻忆模式选择"
             ]
         },
@@ -717,6 +718,26 @@
                                 "队伍序号": "{队伍序号}"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "梦境寻忆阶段选择": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "当前阶段",
+                    "pattern_msg": "输入当前阶段",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "输入当前阶段,0表示最新阶段"
+                }
+            ],
+            "pipeline_override": {
+                "梦境寻忆_入口": {
+                    "custom_action_param": {
+                        "episode": "{当前阶段}"
                     }
                 }
             }

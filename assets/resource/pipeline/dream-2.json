@@ -1,0 +1,193 @@
+{
+  "梦境寻忆_2_闯关": {
+    "next": [
+      "梦境寻忆_2_小院关",
+      "梦境寻忆_2_飞机关",
+      "梦境寻忆_2_厨房关",
+      "梦境寻忆_2_街道关",
+      "梦境寻忆_2_病房关"
+    ]
+  },
+  "梦境寻忆_2_小院关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/2/小院.png"
+    ],
+    "roi": [
+      562,
+      874,
+      122,
+      129
+    ],
+    "focus": "关卡:小院",
+    "next": "梦境寻忆_2_开始_小院关"
+  },
+  "梦境寻忆_2_开始_小院关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "小院"
+    }
+  },
+  "梦境寻忆_2_伐木场关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/2/伐木场.png"
+    ],
+    "roi": [
+      52,
+      60,
+      157,
+      149
+    ],
+    "focus": "关卡:伐木场",
+    "next": "梦境寻忆_2_开始_伐木场关"
+  },
+  "梦境寻忆_2_开始_伐木场关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "伐木场"
+    }
+  },
+  "梦境寻忆_2_飞机关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/2/飞机.png"
+    ],
+    "roi": [
+      483,
+      522,
+      132,
+      131
+    ],
+    "focus": "关卡:飞机",
+    "next": "梦境寻忆_2_开始_飞机关"
+  },
+  "梦境寻忆_2_开始_飞机关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "飞机"
+    }
+  },
+  "梦境寻忆_2_厨房关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/2/厨房.png"
+    ],
+    "roi": [
+      554,
+      413,
+      139,
+      130
+    ],
+    "focus": "关卡:厨房",
+    "next": "梦境寻忆_2_开始_厨房关"
+  },
+  "梦境寻忆_2_开始_厨房关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "厨房"
+    }
+  },
+  "梦境寻忆_2_街道关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/2/街道.png"
+    ],
+    "roi": [
+      14,
+      321,
+      180,
+      177
+    ],
+    "focus": "关卡:街道",
+    "next": "梦境寻忆_2_开始_街道关"
+  },
+  "梦境寻忆_2_开始_街道关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "街道"
+    }
+  },
+  "梦境寻忆_2_病房关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/2/病房.png"
+    ],
+    "roi": [
+      504,
+      506,
+      94,
+      142
+    ],
+    "focus": "关卡:病房",
+    "next": "梦境寻忆_2_开始_病房关"
+  },
+  "梦境寻忆_2_开始_病房关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "病房"
+    }
+  },
+  "梦境寻忆_2_组队": {
+    "next": [
+      "梦境寻忆_2_组队_码头",
+      "梦境寻忆_2_组队_里程碑"
+    ]
+  },
+  "梦境寻忆_2_组队_码头": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "码头",
+    "next": [
+      "梦境寻忆_2_组队_开始_码头"
+    ]
+  },
+  "梦境寻忆_2_组队_开始_码头": {
+    "focus": "关卡:码头",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "码头"
+    }
+  },
+  "梦境寻忆_2_组队_里程碑": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "里程碑",
+    "next": [
+      "梦境寻忆_2_组队_开始_里程碑"
+    ]
+  },
+  "梦境寻忆_2_组队_开始_里程碑": {
+    "focus": "关卡:里程碑",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "里程碑"
+    }
+  }
+}

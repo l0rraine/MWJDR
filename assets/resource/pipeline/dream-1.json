@@ -1,0 +1,297 @@
+{
+  "梦境寻忆_1_闯关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/铃铛.png"
+    ],
+    "threshold": 0.8,
+    "roi": [
+      499,
+      0,
+      106,
+      106
+    ],
+    "next": [
+      "梦境寻忆_1_盾兵营关",
+      "梦境寻忆_1_锻造厂关",
+      "梦境寻忆_1_谷仓关",
+      "梦境寻忆_1_矛兵营关",
+      "梦境寻忆_1_工具间关",
+      "梦境寻忆_1_极光营地关",
+      "梦境寻忆_1_礼堂关",
+      "梦境寻忆_1_竞技场关",
+      "梦境寻忆_1_弓兵营关",
+      "梦境寻忆_1_办公室关"
+    ]
+  },
+  "梦境寻忆_1_盾兵营关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/盾兵营.png"
+    ],
+    "roi": [
+      474,
+      652,
+      137,
+      289
+    ],
+    "focus": "关卡:盾兵营",
+    "next": "梦境寻忆_1_开始_盾兵营关"
+  },
+  "梦境寻忆_1_开始_盾兵营关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "盾兵营"
+    }
+  },
+  "梦境寻忆_1_办公室关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/办公室.png"
+    ],
+    "roi": [
+      217,
+      194,
+      106,
+      124
+    ],
+    "focus": "关卡:办公室",
+    "next": "梦境寻忆_1_开始_办公室关"
+  },
+  "梦境寻忆_1_开始_办公室关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "办公室"
+    }
+  },
+  "梦境寻忆_1_锻造厂关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/锻造厂.png"
+    ],
+    "roi": [
+      297,
+      501,
+      95,
+      128
+    ],
+    "focus": "关卡:锻造厂",
+    "next": "梦境寻忆_1_开始_锻造厂关"
+  },
+  "梦境寻忆_1_开始_锻造厂关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "锻造厂"
+    }
+  },
+  "梦境寻忆_1_谷仓关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/谷仓.png"
+    ],
+    "roi": [
+      156,
+      159,
+      167,
+      150
+    ],
+    "focus": "关卡:谷仓",
+    "next": "梦境寻忆_1_开始_谷仓关"
+  },
+  "梦境寻忆_1_开始_谷仓关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "谷仓"
+    }
+  },
+  "梦境寻忆_1_矛兵营关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/矛兵营.png"
+    ],
+    "roi": [
+      482,
+      249,
+      107,
+      138
+    ],
+    "focus": "关卡:矛兵营",
+    "next": "梦境寻忆_1_开始_矛兵营关"
+  },
+  "梦境寻忆_1_开始_矛兵营关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "矛兵营"
+    }
+  },
+  "梦境寻忆_1_工具间关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/工具间.png"
+    ],
+    "roi": [
+      38,
+      743,
+      90,
+      194
+    ],
+    "focus": "关卡:工具间",
+    "next": "梦境寻忆_1_开始_工具间关"
+  },
+  "梦境寻忆_1_开始_工具间关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "工具间"
+    }
+  },
+  "梦境寻忆_1_竞技场关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/竞技场.png"
+    ],
+    "roi": [
+      61,
+      273,
+      100,
+      154
+    ],
+    "focus": "关卡:竞技场",
+    "next": "梦境寻忆_1_开始_竞技场关"
+  },
+  "梦境寻忆_1_开始_竞技场关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "竞技场"
+    }
+  },
+  "梦境寻忆_1_弓兵营关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/弓兵营.png"
+    ],
+    "roi": [
+      476,
+      390,
+      94,
+      108
+    ],
+    "focus": "关卡:弓兵营",
+    "next": "梦境寻忆_1_开始_弓兵营关"
+  },
+  "梦境寻忆_1_开始_弓兵营关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "弓兵营"
+    }
+  },
+  "梦境寻忆_1_极光营地关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/极光营地.png"
+    ],
+    "roi": [
+      117,
+      681,
+      82,
+      143
+    ],
+    "focus": "关卡:极光营地",
+    "next": "梦境寻忆_1_开始_极光营地关"
+  },
+  "梦境寻忆_1_开始_极光营地关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "极光营地"
+    }
+  },
+  "梦境寻忆_1_礼堂关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/1/礼堂.png"
+    ],
+    "roi": [
+      148,
+      105,
+      140,
+      113
+    ],
+    "focus": "关卡:礼堂",
+    "next": "梦境寻忆_1_开始_礼堂关"
+  },
+  "梦境寻忆_1_开始_礼堂关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "礼堂"
+    }
+  },
+  "梦境寻忆_1_组队": {
+    "next": [
+      "梦境寻忆_1_组队_指挥部",
+      "梦境寻忆_1_组队_里程碑"
+    ]
+  },
+  "梦境寻忆_1_组队_指挥部": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "指挥部",
+    "next": [
+      "梦境寻忆_1_组队_开始_指挥部"
+    ]
+  },
+  "梦境寻忆_1_组队_开始_指挥部": {
+    "focus": "关卡:指挥部",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "指挥部"
+    }
+  },
+  "梦境寻忆_1_组队_里程碑": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "里程碑",
+    "next": [
+      "梦境寻忆_1_组队_开始_里程碑"
+    ]
+  },
+  "梦境寻忆_1_组队_开始_里程碑": {
+    "focus": "关卡:里程碑",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "里程碑"
+    }
+  }
+}
