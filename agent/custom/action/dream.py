@@ -80,7 +80,7 @@ class Memories(CustomAction):
             # 动态导入模块
             mod = importlib.import_module(module_name)
             # 拼接函数名
-            func_name = f"dream_{EPISODE}_stage"
+            func_name = f"dream_stage"
             target_func = getattr(mod, func_name)
             # 调用函数
             item_dict = target_func(level)
@@ -140,7 +140,7 @@ class Memories(CustomAction):
             # 动态导入模块
             mod = importlib.import_module(module_name)
             # 拼接函数名
-            func_name = f"dream_{EPISODE}_team"
+            func_name = f"dream_team"
             target_func = getattr(mod, func_name)
             # 调用函数
             item_dict = target_func(level)

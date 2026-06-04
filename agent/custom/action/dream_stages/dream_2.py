@@ -1,4 +1,4 @@
-def dream_2_stage(level: str):
+def dream_stage(level: str):
     match level:
         case "小院":
             item_dict = {
@@ -479,7 +479,7 @@ def dream_2_stage(level: str):
             }
     return item_dict
 
-def dream_2_team(level: str):
+def dream_team(level: str):
     match level:
         case "码头":
             item_dict = {
