@@ -41,7 +41,6 @@ class DreamEffective(CustomAction):
             EPISODE = int(max_str.split("_")[1])
             logger.debug(f"当前最新阶段: {EPISODE}")
             for item in name_list:
-                logger.debug(item)
                 if max_str != item:
                     disable_switch(context,item)
         else:
@@ -105,17 +104,18 @@ class Memories(CustomAction):
                 img = context.tasker.controller.post_screencap().wait().get()
                 d = context.run_recognition_direct(
                     JRecognitionType.OCR,
-                    JOCR(expected=expected, roi=area, only_rec=False, threshold=0.8),
+                    JOCR(roi=area, only_rec=True, threshold=0.4),
                     img,
                 )
-
-                if d.best_result is None:
-                    continue 
-                t = d.best_result.text
+                if not d.filtered_results:
+                    continue
+                t = max(d.filtered_results, key=lambda r: r.score)
+                t = t.text.strip().capitalize()
                 if t not in item_dict:
                     if t not in done_dict:
                         if t not in miss_dict:
                             logger.info(f"缺失:{t}")
+                            self.screen_shot(context,t)
                         miss_dict[t] = 1
                     continue
 
@@ -123,7 +123,7 @@ class Memories(CustomAction):
                 click_rect(context, item_dict[t])
                 done_dict[t]=item_dict.pop(t)
                 time.sleep(0.5)     
-
+            time.sleep(0.3)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
@@ -148,7 +148,7 @@ class Memories(CustomAction):
             raise ValueError(f"不存在episode={EPISODE}对应的dream_{EPISODE}.py")
         except AttributeError:
             raise ValueError(f"dream_{EPISODE}.py 中无 {func_name} 函数")
-        
+
         areas = [
             [68, 1120, 111, 58],
             [281, 1123, 160, 54],
@@ -161,21 +161,25 @@ class Memories(CustomAction):
         detail = None
         expected=list(item_dict)
         done_dict={}
+        miss_dict = {}
         while detail is None or not detail.hit:
             for area in areas:
                 img = context.tasker.controller.post_screencap().wait().get()
                 d = context.run_recognition_direct(
                     JRecognitionType.OCR,
-                    JOCR(expected=expected, roi=area, only_rec=True),
+                    JOCR(roi=area, only_rec=True, threshold=0.4),
                     img,
                 )
-
-                if d.best_result is None:
-                    continue 
-                t = d.best_result.text
+                if not d.filtered_results:
+                    continue
+                t = max(d.filtered_results, key=lambda r: r.score)
+                t=t.text.strip().capitalize()
                 if t not in item_dict:
                     if t not in done_dict:
-                        logger.info(f"缺失:{t}")
+                        if t not in miss_dict:
+                            logger.info(f"缺失:{t}")
+                            self.screen_shot(context,t)
+                        miss_dict[t] = 1
                     continue
 
                 logger.debug(f"物品:{t}")
@@ -190,9 +194,10 @@ class Memories(CustomAction):
 
     def screen_shot(
         self,
-        context: Context
+        context: Context,
+        text:str
         ):
-        screen_array = context.tasker.controller.cached_image
+        screen_array = context.tasker.controller.post_screencap().wait().get()
 
         # Check resolution aspect ratio
         # height, width = screen_array.shape[:2]
@@ -211,16 +216,10 @@ class Memories(CustomAction):
 
         img = Image.fromarray(rgb_array)
 
-        save_dir = "temp"
+        save_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "temp")
         os.makedirs(save_dir, exist_ok=True)
         now = datetime.now()
-        img.save(f"{save_dir}/{self._get_format_timestamp(now)}.png")
-        logger.debug(f"截图保存至 {save_dir}/{self._get_format_timestamp(now)}.png")
-
-    def _get_format_timestamp(self, now):
-
-        date = now.strftime("%Y.%m.%d")
-        time = now.strftime("%H.%M.%S")
-        milliseconds = f"{now.microsecond // 1000:03d}"
-
-        return f"{date}-{time}.{milliseconds}"
+        text = re.sub(r"[*?]", "", text)
+        name =f"{text}_" + now.strftime("%Y%m%d%H%M%S.") + f"{now.microsecond // 1000:03d}.png"
+        img.save(os.path.join(save_dir, name))
+        logger.debug(f"截图保存至 temp/{name}")
