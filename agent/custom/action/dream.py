@@ -35,7 +35,6 @@ class DreamEffective(CustomAction):
         else:
             all = context.get_node_data("梦境寻忆_组队")["next"]
             name_list = [item["name"] for item in all]
-
         if EPISODE == "0":
             max_str = max(name_list, key=lambda d: int(d.split("_")[1]))
             EPISODE = int(max_str.split("_")[1])
@@ -104,25 +103,38 @@ class Memories(CustomAction):
                 img = context.tasker.controller.post_screencap().wait().get()
                 d = context.run_recognition_direct(
                     JRecognitionType.OCR,
-                    JOCR(roi=area, only_rec=True, threshold=0.4),
+                    JOCR(roi=area, only_rec=True),
                     img,
                 )
                 if not d.filtered_results:
                     continue
+
+                match = next(
+                    (
+                        key
+                        for key in item_dict
+                        if any(
+                            r.text.strip().capitalize() == key
+                            or key in r.text.strip().capitalize()
+                            for r in d.filtered_results
+                        )
+                    ),
+                    None,
+                )
+                if match:
+                    logger.debug(f"物品:{match}")
+                    click_rect(context, item_dict[match])
+                    done_dict[match] = item_dict.pop(match)
+                    time.sleep(0.5)
+                    continue
                 t = max(d.filtered_results, key=lambda r: r.score)
                 t = t.text.strip().capitalize()
-                if t not in item_dict:
-                    if t not in done_dict:
-                        if t not in miss_dict:
-                            logger.info(f"缺失:{t}")
-                            self.screen_shot(context,t)
-                        miss_dict[t] = 1
-                    continue
+                if t not in done_dict:
+                    if t not in miss_dict:
+                        logger.info(f"缺失:{t}")
+                        self.screen_shot(context,t)
+                    miss_dict[t] = 1
 
-                logger.debug(f"物品:{t}")
-                click_rect(context, item_dict[t])
-                done_dict[t]=item_dict.pop(t)
-                time.sleep(0.5)     
             time.sleep(0.3)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
@@ -167,25 +179,36 @@ class Memories(CustomAction):
                 img = context.tasker.controller.post_screencap().wait().get()
                 d = context.run_recognition_direct(
                     JRecognitionType.OCR,
-                    JOCR(roi=area, only_rec=True, threshold=0.4),
+                    JOCR(roi=area, only_rec=True),
                     img,
                 )
                 if not d.filtered_results:
                     continue
-                t = max(d.filtered_results, key=lambda r: r.score)
-                t=t.text.strip().capitalize()
-                if t not in item_dict:
-                    if t not in done_dict:
-                        if t not in miss_dict:
-                            logger.info(f"缺失:{t}")
-                            self.screen_shot(context,t)
-                        miss_dict[t] = 1
+                match = next(
+                    (
+                        key
+                        for key in item_dict
+                        if any(
+                            r.text.strip().capitalize() == key
+                            or key in r.text.strip().capitalize()
+                            for r in d.filtered_results
+                        )
+                    ),
+                    None,
+                )
+                if match:
+                    logger.debug(f"物品:{match}")
+                    click_rect(context, item_dict[match])
+                    done_dict[match] = item_dict.pop(match)
+                    time.sleep(0.5)
                     continue
-
-                logger.debug(f"物品:{t}")
-                click_rect(context, item_dict[t])
-                done_dict[t]=item_dict.pop(t)
-                time.sleep(0.5)     
+                t = max(d.filtered_results, key=lambda r: r.score)
+                t = t.text.strip().capitalize()
+                if t not in done_dict:
+                    if t not in miss_dict:
+                        logger.info(f"缺失:{t}")
+                        self.screen_shot(context, t)
+                    miss_dict[t] = 1
 
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
