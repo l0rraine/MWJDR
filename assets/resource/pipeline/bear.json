@@ -165,7 +165,32 @@
         "action": "Click",
         "next": [
             "熊_在队伍选择页面",
+            "熊_队列不足",
             "熊_在集结详情页面"
+        ]
+    },
+    "熊_队列不足": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": "OCR",
+        "expected": [
+            "行军队列"
+        ],
+        "roi": [
+            265,
+            311,
+            180,
+            59
+        ],
+        "action": "Click",
+        "target": [
+            321,
+            32,
+            35,
+            30
+        ],
+        "next": [
+            "熊_开始战斗"
         ]
     },
     "熊_在队伍选择页面": {
@@ -184,16 +209,15 @@
         ]
     },
     "熊_在集结详情页面": {
-        "focus": "熊_在集结详情页面，取消",
-        "pre_delay": 0,
-        "post_delay": 200,
+        "pre_delay": 100,
+        "post_delay": 100,
         "recognition": "TemplateMatch",
         "template": "熊/集结详情.png",
         "roi": [
-            62,
-            0,
-            200,
-            108
+            321,
+            463,
+            103,
+            99
         ],
         "action": "Click",
         "target": [
@@ -304,20 +328,6 @@
             424,
             136,
             60
-        ]
-    },
-    "熊_队列不足": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "recognition": "OCR",
-        "expected": [
-            "行军队列"
-        ],
-        "roi": [
-            265,
-            311,
-            180,
-            59
         ]
     },
     "熊_后退": {

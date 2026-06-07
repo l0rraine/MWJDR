@@ -30,10 +30,11 @@ DOWN_TEAMS = []
 TEAM_ORDER = []
 SEND_TEAMS = 0
 TOTAL_TEAMS = 0
+LAST_STAGE = 1
 # 每个阶段时长：5分14秒
 
 
-def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 3):
+def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 2):
     # 1. 获取今天的 日期 + 开始时间
     today = datetime.now().date()
     start = datetime.combine(today, datetime.strptime(start_time, "%H:%M").time())
@@ -52,7 +53,7 @@ def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 3):
     if total_seconds < 0:
         return 1, current_team  # 还没开始
 
-    current_stage = math.ceil(total_seconds / stage_seconds)
+    current_stage = math.floor(total_seconds / stage_seconds) + 1
     if total_seconds > (current_stage-1)*stage_seconds+60*wait_time:
         current_team = 2
     
@@ -76,7 +77,7 @@ def next_stage_seconds():
 class BearComputeExpected(CustomAction):
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS
+        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE
 
         param = json.loads(argv.custom_action_param)
         start_time_str = param.get("开始时间", "21:00")
@@ -98,6 +99,16 @@ class BearComputeExpected(CustomAction):
         current_stage, current_team = get_current_stage_and_team(
             start_time_str, wait_time
         )
+        # 如果在等待过程中过了一个阶段
+        if current_stage != LAST_STAGE:
+            SEND_TEAMS = 0
+            LAST_STAGE = current_stage
+            current_team = 1
+
+        if current_stage > 5:
+            logger.info("打熊已结束")
+            return CustomAction.RunResult(success=False)
+
         if current_stage == 5:
             TOTAL_TEAMS = len(TEAM_ORDER)
         else:
@@ -138,8 +149,7 @@ class BearComputeExpected(CustomAction):
                         "threshold": 0.9,
                         "method": 10001,
                     },
-                ],
-                "box_index": 1,
+                ]
             }
         }
         context.override_pipeline(pipeline)
@@ -169,12 +179,6 @@ class BearCombat(CustomAction):
         返回 True 表示成功出征并返回集结列表。
         """
         global SEND_TEAMS, TOTAL_TEAMS
-        img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("熊_队列不足", img)
-        if detail is not None and detail.hit:
-            context.run_action("熊_后退")
-            logger.debug(f"队列不足，无法出征")
-            return False
 
         start = time.time()
         if team_id > 0:
@@ -190,7 +194,7 @@ class BearCombat(CustomAction):
         context.run_action("熊_点击出征")
         logger.debug(f"出征耗时: {(time.time() - start) * 1000:.0f}ms")
 
-        time.sleep(0.1)
+        time.sleep(0.15)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("熊_士兵超出上限", img)
         if detail is not None and detail.hit:
@@ -198,8 +202,8 @@ class BearCombat(CustomAction):
             context.run_action("熊_后退")
             context.run_action("熊_后退")
             return False
-        # 验证返回集结列表
-        time.sleep(0.15)
+        
+        # 此时应已返回集结列表
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("熊_超出容量", img)
         if detail is not None and detail.hit:
@@ -208,15 +212,15 @@ class BearCombat(CustomAction):
 
         detail = context.run_recognition("熊_在集结列表", img)
         if detail is not None and detail.hit:
-            logger.info(f"{team_id} 已出征")
+            logger.info(f"队伍 {team_id} 已出征，剩余 {TOTAL_TEAMS-SEND_TEAMS} 只队伍")
             return True
 
-        logger.debug(f"{team_id} 出征失败")
-        detail = None
-        while detail is None or not detail.hit:
-
-            time.sleep(0.4)
-            img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("熊_在集结列表", img)
+        # logger.debug(f"{team_id} 出征失败")
+        # detail = None
+        # while detail is None or not detail.hit:
+        #     context.run_action("熊_后退")
+        #     time.sleep(0.4)
+        #     img = context.tasker.controller.post_screencap().wait().get()
+        #     detail = context.run_recognition("熊_在集结列表", img)
 
         return False
