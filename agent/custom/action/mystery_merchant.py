@@ -26,6 +26,7 @@ from utils import logger
 from utils.click_util import click_rect
 from utils.merchant_utils import add_offset, save_task_date, disable_switch
 
+
 SHOP_DIR = "神秘商店"
 
 # 参数节点前缀
@@ -65,10 +66,15 @@ class MysteryMerchantPurchase(CustomAction):
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         param = json.loads(argv.custom_action_param)
         diamond_limit = int(param.get("钻石刷新次数", 0))
-        context.run_task("神秘商店_上滑")
+        context.run_task("神秘商店_下滑")
         # 截取专武模板（当季专武图片从界面截取）
+        time.sleep(0.5)
         img = _screencap(context)
-        weapon_img = img[490:542, 85:174]
+        weapon_img = img[490:542, 85:194]
+        # save_dir = os.path.join(
+        #     os.path.dirname(__file__), "..", "..", "..", "temp", "cropped.png"
+        # )
+        # Image.fromarray(weapon_img[:, :, ::-1]).save(save_dir)
         context.override_image(f"{SHOP_DIR}/当季专武.png", weapon_img)
         logger.debug("已截取专武模板图片")
 
