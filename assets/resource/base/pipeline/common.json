@@ -6,7 +6,7 @@
         "recognition": {
             "type": "FeatureMatch",
             "param": {
-                "template": "./关闭礼包",
+                "template": "关闭礼包",
                 "roi": [
                     422,
                     4,

@@ -126,7 +126,7 @@
     },
     "识别队列动作": {
         "recognition": "TemplateMatch",
-        "template": "./队列",
+        "template": "队列",
         "roi": [
             10,
             240,

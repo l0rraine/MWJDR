@@ -50,7 +50,7 @@
     },
     "灯塔准备-1": {
         "recognition": "TemplateMatch",
-        "template": "./灯塔",
+        "template": "灯塔",
         "roi": [
             4,
             223,
@@ -73,7 +73,7 @@
     },
     "灯塔准备-2": {
         "recognition": "TemplateMatch",
-        "template": "./灯塔",
+        "template": "灯塔",
         "roi": [
             4,
             223,
