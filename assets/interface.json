@@ -57,17 +57,17 @@
         }
     },
     "import": [
-        "tasks/自动游历.json",
-        "tasks/启动游戏.json",
-        "tasks/自动灯塔.json",
-        "tasks/集结巨兽.json",
-        "tasks/使用物品集结.json",
-        "tasks/自动野兽.json",
-        "tasks/结束.json",
-        "tasks/商店购买.json",
-        "tasks/海岛协助打理.json",
-        "tasks/联盟总动员.json",
-        "tasks/梦境寻忆.json",
-        "tasks/打熊.json"
+        "resource/tasks/自动游历.json",
+        "resource/tasks/启动游戏.json",
+        "resource/tasks/自动灯塔.json",
+        "resource/tasks/集结巨兽.json",
+        "resource/tasks/使用物品集结.json",
+        "resource/tasks/自动野兽.json",
+        "resource/tasks/结束.json",
+        "resource/tasks/商店购买.json",
+        "resource/tasks/海岛协助打理.json",
+        "resource/tasks/联盟总动员.json",
+        "resource/tasks/梦境寻忆.json",
+        "resource/tasks/打熊.json"
     ]
 }
