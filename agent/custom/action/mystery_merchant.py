@@ -15,8 +15,10 @@
 """
 
 import json
+import os
 import time
 
+from PIL import Image
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
@@ -47,7 +49,7 @@ SCREEN2_SLOTS = [
 ]
 
 # 从50%折扣box计算的offset
-ITEM_FROM_50 = [51, 42, 57, 72]
+ITEM_FROM_50 = [41, 32, 67, 82]
 COLOR_FROM_50 = [36, 171, -37, -31]
 BUY_FROM_50 = [57, 212, 53, -16]
 
@@ -71,10 +73,10 @@ class MysteryMerchantPurchase(CustomAction):
         time.sleep(0.5)
         img = _screencap(context)
         weapon_img = img[490:542, 85:194]
-        # save_dir = os.path.join(
-        #     os.path.dirname(__file__), "..", "..", "..", "temp", "cropped.png"
-        # )
-        # Image.fromarray(weapon_img[:, :, ::-1]).save(save_dir)
+        save_dir = os.path.join(
+            os.path.dirname(__file__), "..", "..", "..", "temp", "cropped.png"
+        )
+        Image.fromarray(weapon_img[:, :, ::-1]).save(save_dir)
         context.override_image(f"{SHOP_DIR}/当季专武.png", weapon_img)
         logger.debug("已截取专武模板图片")
 
@@ -175,7 +177,6 @@ class MysteryMerchantPurchase(CustomAction):
         # 点击购买
         buy_roi = add_offset(discount_detail.box, BUY_FROM_50)
         click_rect(context, buy_roi)
-        logger.info(f"50%折扣发现{name}，点击购买")
         time.sleep(1.0)
         self._handle_confirm(context, name)
 

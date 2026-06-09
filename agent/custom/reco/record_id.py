@@ -32,6 +32,14 @@ class StartRecordIDOrNot(CustomAction):
             context.tasker.resource.override_pipeline(
                 {"查看队列_记录角色ID": {"enabled": True}}
             )
+        else:
+            context.override_pipeline({"识别角色ID_开始": {"enabled": True}})
+            context.tasker.resource.override_pipeline(
+                {"识别角色ID_开始": {"enabled": True}}
+            )
+            context.tasker.resource.override_pipeline(
+                {"查看队列_记录角色ID": {"enabled": False}}
+            )
 
         return CustomAction.RunResult(success=True)
 
