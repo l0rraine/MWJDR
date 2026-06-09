@@ -31,6 +31,7 @@ TEAM_ORDER = []
 SEND_TEAMS = 0
 TOTAL_TEAMS = 0
 LAST_STAGE = 1
+RESERVE_TEAM = 1
 # 每个阶段时长：5分14秒
 
 
@@ -72,12 +73,19 @@ def next_stage_seconds():
     logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
     return seconds
 
+@AgentServer.custom_action("熊_保留队伍")
+class BearReserveTeam(CustomAction):
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        param = json.loads(argv.custom_action_param)
+        global RESERVE_TEAM
+        RESERVE_TEAM = int(param.get("保留队伍", True))
+        return CustomAction.RunResult(success=True)
 
 @AgentServer.custom_action("熊_计算队伍")
 class BearComputeExpected(CustomAction):
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE
+        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM
 
         param = json.loads(argv.custom_action_param)
         start_time_str = param.get("开始时间", "21:00")
@@ -101,6 +109,7 @@ class BearComputeExpected(CustomAction):
         )
         # 如果在等待过程中过了一个阶段
         if current_stage != LAST_STAGE:
+            logger.log(f"当前切换为阶段 {current_stage}")
             SEND_TEAMS = 0
             LAST_STAGE = current_stage
             current_team = 1
@@ -112,7 +121,7 @@ class BearComputeExpected(CustomAction):
         if current_stage == 5:
             TOTAL_TEAMS = len(TEAM_ORDER)
         else:
-            TOTAL_TEAMS = len(TEAM_ORDER) - 1
+            TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
         first_team_names = [
             name.strip() for name in TEAMS_1.split(",") if name.strip()
@@ -161,13 +170,12 @@ class BearComputeExpected(CustomAction):
 class BearCombat(CustomAction):
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS
-        logger.debug(f"当前循环顺序: {TEAM_ORDER},共可派出队伍 {TOTAL_TEAMS} 支")
+
         if not self._select_team_and_deploy(context, TEAM_ORDER[0]):
             return CustomAction.RunResult(success=True)
 
         # [1,2,3,4] → [2,3,4,1]
         TEAM_ORDER = TEAM_ORDER[1:] + TEAM_ORDER[:1]
-        SEND_TEAMS = SEND_TEAMS+1
         if SEND_TEAMS == TOTAL_TEAMS:            
             time.sleep(next_stage_seconds())
             SEND_TEAMS = 0
@@ -181,7 +189,7 @@ class BearCombat(CustomAction):
         """
         global SEND_TEAMS, TOTAL_TEAMS
 
-        #start = time.time()
+        # start = time.time()
         if team_id > 0:
             roi = TEAM_ROI[team_id]
             context.run_action("熊_选择队伍",pipeline_override={
@@ -190,29 +198,30 @@ class BearCombat(CustomAction):
                 }})
             # time.sleep(0.2)
             # logger.debug(f"选择队伍耗时: {(time.time() - start) * 1000:.0f}ms")
-        #start = time.time()
+        # start = time.time()
         # 点击出征
         context.run_action("熊_点击出征")
         # logger.debug(f"出征耗时: {(time.time() - start) * 1000:.0f}ms")
 
-        time.sleep(0.15)
+        time.sleep(0.2)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("熊_士兵超出上限", img)
-        if detail.hit:
+        if detail and detail.hit:
             logger.debug(f"{team_id} 士兵超出上限,出征失败")
             context.run_action("熊_后退")
             context.run_action("熊_后退")
             return False
-        
+
         # 此时应已返回集结列表
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("熊_超出容量", img)
-        if detail.hit:
+        if detail and detail.hit:
             logger.debug(f"{team_id} 熊_超出容量,出征失败")
             return False
 
         detail = context.run_recognition("熊_在集结列表", img)
-        if detail.hit:
+        if detail and detail.hit:
+            SEND_TEAMS = SEND_TEAMS + 1
             logger.info(f"队伍 {team_id} 已出征，剩余 {TOTAL_TEAMS-SEND_TEAMS} 只队伍")
             return True
 
