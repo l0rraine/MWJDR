@@ -12,7 +12,7 @@
         {
             "name": "官服",
             "path": [
-                "{PROJECT_DIR}/resource"
+                "{PROJECT_DIR}/resource/base"
             ]
         }
     ],
@@ -121,7 +121,8 @@
             "name": "打熊",
             "entry": "熊_入口",
             "option": [
-                "打熊配置"
+                "打熊-是否保留队伍",
+                "打熊-配置"
             ]
         }
     ],
@@ -1080,9 +1081,29 @@
                 }
             ]
         },
-        "打熊配置": {
+        "打熊-是否保留队伍": {
+            "type": "switch",
+            "label": "是否保留队伍",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "熊-参数-保留队伍": {
+                            "custom_action_param": {
+                                "保留队伍": false
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "打熊-配置": {
             "type": "input",
-            "label": "打熊配置",
+            "label": "配置",
             "inputs": [
                 {
                     "name": "开始时间",
