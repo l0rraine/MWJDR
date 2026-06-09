@@ -8,6 +8,14 @@
             "[JumpBack]后退"
         ]
     },
+    "熊-参数-保留队伍": {
+        "enabled": true,
+        "action": "Custom",
+        "custom_action": "熊_保留队伍",
+        "custom_action_param": {
+            "保留队伍": true
+        }
+    },
     "熊_已在入口": {
         "recognition": "OCR",
         "expected": "联盟战争",
@@ -163,6 +171,8 @@
             }
         ],
         "box_index": 1,
+        "repeat": 2,
+        "repeat_delay": 100,
         "action": "Click",
         "target_offset": [
             5,
@@ -257,7 +267,7 @@
     },
     "熊_向下滚动": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "action": "Swipe",
         "begin": [
             433,
@@ -271,7 +281,7 @@
             21,
             11
         ],
-        "duration": 150
+        "duration": 100
     },
     "熊_加入集结失败": {
         "recognition": "TemplateMatch",
@@ -340,9 +350,9 @@
             "确认"
         ],
         "roi": [
-            287,
-            424,
-            136,
+            291,
+            417,
+            137,
             60
         ]
     },
