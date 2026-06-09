@@ -11,12 +11,15 @@
     ],
     "option": {
         "确保有队伍可用": {
-            "type": "checkbox",
+            "type": "switch",
             "label": "确保有队伍可用",
             "cases": [
                 {
-                    "name": "确保有队伍可用",
-                    "label": "确保有队伍可用",
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
                     "pipeline_override": {
                         "确保有空闲队列": {
                             "enabled": false

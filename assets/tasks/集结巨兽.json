@@ -37,22 +37,22 @@
             }
         },
         "19点后使用免费罐头": {
-            "type": "checkbox",
+            "type": "switch",
             "label": "19点后使用免费罐头",
+            "description": "打开时，19点后可以使用免费罐头",
             "cases": [
                 {
-                    "name": "19点后使用免费罐头",
-                    "label": "19点后使用免费罐头",
+                    "name": "Yes",
                     "pipeline_override": {
                         "自动集结_使用19点罐头": {
                             "enabled": true
                         }
                     }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {}
                 }
-            ],
-            "description": "打开时，19点后可以使用免费罐头",
-            "default_case": [
-                "No"
             ]
         },
         "巨兽作战设置": {
