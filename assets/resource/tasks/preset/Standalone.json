@@ -1,0 +1,14 @@
+{
+    "preset": [
+        {
+            "name": "各种小游戏",
+            "description": "这部分的每个任务都需独立运行",
+            "task": [
+                {
+                    "name": "梦境寻忆",
+                    "enabled": false
+                },
+            ]
+        }
+    ]
+}

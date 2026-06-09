@@ -24,39 +24,11 @@
         ]
     },
     "task": [],
-    "option": {
-        "先采联盟矿": {
-            "type": "checkbox",
-            "label": "先采联盟矿",
-            "cases": [
-                {
-                    "name": "先采联盟矿",
-                    "label": "先采联盟矿",
-                    "pipeline_override": {
-                        "挖矿_参数_联盟矿": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        },
-        "保留自动加入": {
-            "type": "checkbox",
-            "label": "保留自动加入",
-            "cases": [
-                {
-                    "name": "保留自动加入",
-                    "label": "保留自动加入",
-                    "pipeline_override": {
-                        "挖矿_参数_保留自动加入": {
-                            "enabled": false
-                        }
-                    }
-                }
-            ]
-        }
-    },
+    "option": {},
     "import": [
+        "resource/tasks/preset/Daily.json",
+        "resource/tasks/preset/Activity.json",
+        "resource/tasks/preset/Standalone.json",
         "resource/tasks/自动游历.json",
         "resource/tasks/启动游戏.json",
         "resource/tasks/自动灯塔.json",

@@ -42,16 +42,16 @@
             "description": "打开时，19点后可以使用免费罐头",
             "cases": [
                 {
+                    "name": "No",
+                    "pipeline_override": {}
+                },
+                {
                     "name": "Yes",
                     "pipeline_override": {
                         "自动集结_使用19点罐头": {
                             "enabled": true
                         }
                     }
-                },
-                {
-                    "name": "No",
-                    "pipeline_override": {}
                 }
             ]
         },

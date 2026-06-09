@@ -87,8 +87,20 @@
         "recognition": {
             "type": "ColorMatch",
             "param": {
-                "lower": [[5, 169, 223]],
-                "upper": [[5, 187, 230]],
+                "lower": [
+                    [
+                        5,
+                        169,
+                        223
+                    ]
+                ],
+                "upper": [
+                    [
+                        5,
+                        187,
+                        230
+                    ]
+                ],
                 "count": 1
             }
         },
@@ -99,13 +111,23 @@
             "type": "OCR",
             "param": {
                 "expected": "确定购买",
-                "roi": [283, 408, 151, 49]
+                "roi": [
+                    283,
+                    408,
+                    151,
+                    49
+                ]
             }
         },
         "action": {
             "type": "Click",
             "param": {
-                "target": [595, 695, 35, 21]
+                "target": [
+                    595,
+                    695,
+                    35,
+                    21
+                ]
             }
         },
         "post_delay": 500,
@@ -118,7 +140,12 @@
         "action": {
             "type": "Click",
             "param": {
-                "target": [264, 810, 205, 42]
+                "target": [
+                    264,
+                    810,
+                    205,
+                    42
+                ]
             }
         },
         "post_delay": 1000
@@ -128,7 +155,12 @@
             "type": "OCR",
             "param": {
                 "expected": "获取更多",
-                "roi": [275, 101, 156, 65]
+                "roi": [
+                    275,
+                    101,
+                    156,
+                    65
+                ]
             }
         },
         "action": "DoNothing"
@@ -138,7 +170,12 @@
         "action": {
             "type": "Click",
             "param": {
-                "target": [333, 33, 28, 10]
+                "target": [
+                    333,
+                    33,
+                    28,
+                    10
+                ]
             }
         },
         "post_delay": 1000
@@ -148,8 +185,18 @@
         "action": {
             "type": "Swipe",
             "param": {
-                "begin": [351, 987, 27, 15],
-                "end": [338, 529, 34, 23]
+                "begin": [
+                    351,
+                    987,
+                    27,
+                    15
+                ],
+                "end": [
+                    338,
+                    529,
+                    34,
+                    23
+                ]
             }
         },
         "post_delay": 1000
@@ -165,18 +212,18 @@
         "action": "DoNothing"
     },
     "联盟商店_参数_统帅经验": {
-        "enabled": true
+        "enabled": false
     },
     "联盟商店_参数_研究加速": {
-        "enabled": true
+        "enabled": false
     },
     "联盟商店_参数_训练加速": {
-        "enabled": true
+        "enabled": false
     },
     "联盟商店_参数_建筑加速": {
-        "enabled": true
+        "enabled": false
     },
     "联盟商店_参数_治疗加速": {
-        "enabled": true
+        "enabled": false
     }
 }

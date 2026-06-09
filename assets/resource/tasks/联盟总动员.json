@@ -19,7 +19,7 @@
                     "label": "第一栏位",
                     "pipeline_override": {
                         "联盟总动员_参数_是否启用第一栏位": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -28,7 +28,7 @@
                     "label": "第二栏位",
                     "pipeline_override": {
                         "联盟总动员_参数_是否启用第二栏位": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 }
@@ -37,13 +37,16 @@
         "任务选择": {
             "type": "checkbox",
             "label": "任务选择",
+            "default_case": [
+                "训练士兵-12万"
+            ],
             "cases": [
                 {
                     "name": "训练士兵-12万",
                     "label": "训练士兵-12万",
                     "pipeline_override": {
                         "联盟总动员_任务_训练士兵-12w": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -52,7 +55,7 @@
                     "label": "专精石-35",
                     "pipeline_override": {
                         "联盟总动员_任务_专精石-35": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -61,7 +64,7 @@
                     "label": "碎片-68",
                     "pipeline_override": {
                         "联盟总动员_任务_68碎片": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -70,7 +73,7 @@
                     "label": "火晶-150",
                     "pipeline_override": {
                         "联盟总动员_任务_150火晶": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -79,7 +82,7 @@
                     "label": "领主装备-8900",
                     "pipeline_override": {
                         "联盟总动员_任务_领主装备-8900": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -88,7 +91,7 @@
                     "label": "礼包-648",
                     "pipeline_override": {
                         "联盟总动员_任务_648礼包": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -97,7 +100,7 @@
                     "label": "礼包-328",
                     "pipeline_override": {
                         "联盟总动员_任务_328礼包": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 },
@@ -106,7 +109,7 @@
                     "label": "钻石-50000",
                     "pipeline_override": {
                         "联盟总动员_任务_50000钻石": {
-                            "enabled": false
+                            "enabled": true
                         }
                     }
                 }
