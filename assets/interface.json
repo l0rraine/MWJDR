@@ -23,109 +23,7 @@
             "{PROJECT_DIR}/../agent/main.py"
         ]
     },
-    "task": [
-        {
-            "name": "自动游历",
-            "entry": "自动游历_入口",
-            "option": [
-                "下午4点后自动游历"
-            ]
-        },
-        {
-            "name": "启动游戏",
-            "entry": "启动游戏",
-            "option": [
-                "切换角色",
-                "确保有队伍可用"
-            ]
-        },
-        {
-            "name": "自动灯塔",
-            "entry": "灯塔入口",
-            "option": [
-                "灯塔出征队伍设置"
-            ]
-        },
-        {
-            "name": "集结巨兽",
-            "entry": "自动集结_巨兽入口",
-            "option": [
-                "巨兽队伍设置",
-                "19点后使用免费罐头",
-                "巨兽作战设置"
-            ]
-        },
-        {
-            "name": "使用物品集结",
-            "entry": "集结物品_识别体力入口",
-            "option": [
-                "集结物品选择",
-                "使用物品队伍设置",
-                "使用物品体力设置"
-            ]
-        },
-        {
-            "name": "自动野兽",
-            "entry": "自动野兽_入口",
-            "option": [
-                "野兽队伍设置"
-            ]
-        },
-        {
-            "name": "结束",
-            "entry": "结束_入口",
-            "option": [
-                "打开自动集结"
-            ]
-        },
-        {
-            "name": "商店购买",
-            "entry": "商店购买_入口",
-            "option": [
-                "游荡商人",
-                "神秘商店",
-                "联盟商店"
-            ],
-            "doc": "商店购买完成后自动标记，[color:tomato]同日不重复购买[/color]。<br>游荡商人：非钻石物品和统帅经验。<br>神秘商店：免费物品、当季专武和50%折扣物品。<br>联盟商店：统帅经验和75%折扣物品。<br>"
-        },
-        {
-            "name": "海岛协助打理",
-            "entry": "海岛_入口",
-            "doc": "协助打理完成后自动标记，[color:tomato]同日不重复操作[/color]。"
-        },
-        {
-            "name": "联盟总动员",
-            "entry": "联盟总动员_入口",
-            "option": [
-                "是否启用第一栏位",
-                "是否启用第二栏位",
-                "训练士兵-12万",
-                "专精石-35",
-                "碎片-68",
-                "火晶-150",
-                "领主装备-8900",
-                "礼包-648",
-                "礼包-328",
-                "钻石-50000"
-            ]
-        },
-        {
-            "name": "梦境寻忆",
-            "entry": "梦境寻忆_入口",
-            "option": [
-                "梦境寻忆阶段选择",
-                "梦境寻忆模式选择"
-            ]
-        },
-        {
-            "name": "打熊",
-            "entry": "熊_入口",
-            "option": [
-                "打熊-是否保留队伍",
-                "打熊-配置"
-            ]
-        }
-    ],
+    "task": [],
     "option": {
         "下午4点后自动游历": {
             "type": "switch",
@@ -152,14 +50,12 @@
             "description": "打开时，自动游历只在每日下午4点后执行；免费领取不受影响，每次都执行"
         },
         "确保有队伍可用": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "确保有队伍可用",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "确保有队伍可用",
+                    "label": "确保有队伍可用",
                     "pipeline_override": {
                         "确保有空闲队列": {
                             "enabled": false
@@ -189,14 +85,12 @@
             ]
         },
         "先采联盟矿": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "先采联盟矿",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "先采联盟矿",
+                    "label": "先采联盟矿",
                     "pipeline_override": {
                         "挖矿_参数_联盟矿": {
                             "enabled": false
@@ -206,14 +100,12 @@
             ]
         },
         "保留自动加入": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "保留自动加入",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "保留自动加入",
+                    "label": "保留自动加入",
                     "pipeline_override": {
                         "挖矿_参数_保留自动加入": {
                             "enabled": false
@@ -223,14 +115,12 @@
             ]
         },
         "是否启用第一栏位": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "是否启用第一栏位",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "是否启用第一栏位",
+                    "label": "是否启用第一栏位",
                     "pipeline_override": {
                         "联盟总动员_参数_是否启用第一栏位": {
                             "enabled": false
@@ -240,14 +130,12 @@
             ]
         },
         "是否启用第二栏位": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "是否启用第二栏位",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "是否启用第二栏位",
+                    "label": "是否启用第二栏位",
                     "pipeline_override": {
                         "联盟总动员_参数_是否启用第二栏位": {
                             "enabled": false
@@ -257,14 +145,12 @@
             ]
         },
         "训练士兵-12万": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "训练士兵-12万",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "训练士兵-12万",
+                    "label": "训练士兵-12万",
                     "pipeline_override": {
                         "联盟总动员_任务_训练士兵-12w": {
                             "enabled": false
@@ -274,121 +160,107 @@
             ]
         },
         "专精石-35": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "专精石-35",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "专精石-35",
+                    "label": "专精石-35",
                     "pipeline_override": {
                         "联盟总动员_任务_专精石-35": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "领主装备-8900": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "领主装备-8900",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "领主装备-8900",
+                    "label": "领主装备-8900",
                     "pipeline_override": {
                         "联盟总动员_任务_领主装备-8900": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "礼包-648": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "礼包-648",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "礼包-648",
+                    "label": "礼包-648",
                     "pipeline_override": {
                         "联盟总动员_任务_648礼包": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "礼包-328": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "礼包-328",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "礼包-328",
+                    "label": "礼包-328",
                     "pipeline_override": {
                         "联盟总动员_任务_328礼包": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "钻石-50000": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "钻石-50000",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "钻石-50000",
+                    "label": "钻石-50000",
                     "pipeline_override": {
                         "联盟总动员_任务_50000钻石": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "碎片-68": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "碎片-68",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "碎片-68",
+                    "label": "碎片-68",
                     "pipeline_override": {
                         "联盟总动员_任务_68碎片": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "火晶-150": {
-            "type": "switch",
+            "type": "checkbox",
+            "label": "火晶-150",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "火晶-150",
+                    "label": "火晶-150",
                     "pipeline_override": {
                         "联盟总动员_任务_150火晶": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
@@ -517,23 +389,23 @@
             "description": "每天只打10次巨兽，打完停止"
         },
         "19点后使用免费罐头": {
-            "type": "switch",
-            "default_case": "No",
+            "type": "checkbox",
+            "label": "19点后使用免费罐头",
             "cases": [
                 {
-                    "name": "Yes",
+                    "name": "19点后使用免费罐头",
+                    "label": "19点后使用免费罐头",
                     "pipeline_override": {
                         "自动集结_使用19点罐头": {
                             "enabled": true
                         }
                     }
-                },
-                {
-                    "name": "No",
-                    "pipeline_override": {}
                 }
             ],
-            "description": "打开时，19点后可以使用免费罐头"
+            "description": "打开时，19点后可以使用免费罐头",
+            "default_case": [
+                "No"
+            ]
         },
         "集结物品选择": {
             "type": "select",
@@ -868,15 +740,12 @@
             }
         },
         "神秘商店-当季专武": {
-            "type": "switch",
+            "type": "checkbox",
             "label": "当季专武 50%",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "神秘商店-当季专武",
+                    "label": "当季专武 50%",
                     "pipeline_override": {
                         "神秘商店_参数_当季专武": {
                             "enabled": false
@@ -886,74 +755,62 @@
             ]
         },
         "神秘商店-宠物自选箱": {
-            "type": "switch",
+            "type": "checkbox",
             "label": "宠物自选箱",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "神秘商店-宠物自选箱",
+                    "label": "宠物自选箱",
                     "pipeline_override": {
                         "神秘商店_参数_宠物自选箱": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "神秘商店-高级野性标记": {
-            "type": "switch",
+            "type": "checkbox",
             "label": "高级野性标记",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "神秘商店-高级野性标记",
+                    "label": "高级野性标记",
                     "pipeline_override": {
                         "神秘商店_参数_高级野性标记": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "神秘商店-行军加速": {
-            "type": "switch",
+            "type": "checkbox",
             "label": "行军加速",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "神秘商店-行军加速",
+                    "label": "行军加速",
                     "pipeline_override": {
                         "神秘商店_参数_行军加速": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
         "神秘商店-橙碎": {
-            "type": "switch",
+            "type": "checkbox",
             "label": "橙碎",
             "cases": [
                 {
-                    "name": "No",
+                    "name": "神秘商店-橙碎",
+                    "label": "橙碎",
                     "pipeline_override": {
                         "神秘商店_参数_橙碎": {
                             "enabled": false
                         }
                     }
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
                 }
             ]
         },
@@ -988,15 +845,12 @@
             ]
         },
         "联盟商店-统帅经验": {
-            "type": "switch",
+            "type": "checkbox",
             "label": "统帅经验",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "联盟商店-统帅经验",
+                    "label": "统帅经验",
                     "pipeline_override": {
                         "联盟商店_参数_统帅经验": {
                             "enabled": false
@@ -1006,79 +860,75 @@
             ]
         },
         "联盟商店-研究加速": {
-            "type": "switch",
-            "default_case": "Yes",
+            "type": "checkbox",
             "label": "研究加速",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "联盟商店-研究加速",
+                    "label": "研究加速",
                     "pipeline_override": {
                         "联盟商店_参数_研究加速": {
                             "enabled": false
                         }
                     }
                 }
+            ],
+            "default_case": [
+                "Yes"
             ]
         },
         "联盟商店-训练加速": {
-            "type": "switch",
-            "default_case": "Yes",
+            "type": "checkbox",
             "label": "训练加速",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "联盟商店-训练加速",
+                    "label": "训练加速",
                     "pipeline_override": {
                         "联盟商店_参数_训练加速": {
                             "enabled": false
                         }
                     }
                 }
+            ],
+            "default_case": [
+                "Yes"
             ]
         },
         "联盟商店-建筑加速": {
-            "type": "switch",
-            "default_case": "Yes",
+            "type": "checkbox",
             "label": "建筑加速",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "联盟商店-建筑加速",
+                    "label": "建筑加速",
                     "pipeline_override": {
                         "联盟商店_参数_建筑加速": {
                             "enabled": false
                         }
                     }
                 }
+            ],
+            "default_case": [
+                "Yes"
             ]
         },
         "联盟商店-治疗加速": {
-            "type": "switch",
-            "default_case": "Yes",
+            "type": "checkbox",
             "label": "治疗加速",
             "cases": [
                 {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
+                    "name": "联盟商店-治疗加速",
+                    "label": "治疗加速",
                     "pipeline_override": {
                         "联盟商店_参数_治疗加速": {
                             "enabled": false
                         }
                     }
                 }
+            ],
+            "default_case": [
+                "Yes"
             ]
         },
         "打熊-是否保留队伍": {
@@ -1153,5 +1003,19 @@
                 }
             }
         }
-    }
+    },
+    "import": [
+        "tasks/自动游历.json",
+        "tasks/启动游戏.json",
+        "tasks/自动灯塔.json",
+        "tasks/集结巨兽.json",
+        "tasks/使用物品集结.json",
+        "tasks/自动野兽.json",
+        "tasks/结束.json",
+        "tasks/商店购买.json",
+        "tasks/海岛协助打理.json",
+        "tasks/联盟总动员.json",
+        "tasks/梦境寻忆.json",
+        "tasks/打熊.json"
+    ]
 }
