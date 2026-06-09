@@ -1,7 +1,38 @@
 {
-    "name": "自动野兽",
-    "entry": "自动野兽_入口",
-    "option": [
-        "野兽队伍设置"
-    ]
+    "task": [
+        {
+            "name": "自动野兽",
+            "entry": "自动野兽_入口",
+            "option": [
+                "野兽队伍设置"
+            ]
+        }
+    ],
+    "option": {
+        "野兽队伍设置": {
+            "type": "input",
+            "label": "队伍设置",
+            "inputs": [
+                {
+                    "name": "队伍序号",
+                    "pattern_msg": "请输入队伍序号，0表示默认队伍",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^(\\d+)$",
+                    "description": "请输入队伍序号，0表示默认队伍"
+                }
+            ],
+            "pipeline_override": {
+                "自动野兽_选择队伍": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "队伍序号": "{队伍序号}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

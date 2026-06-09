@@ -1,9 +1,88 @@
 {
-    "name": "使用物品集结",
-    "entry": "集结物品_识别体力入口",
-    "option": [
-        "集结物品选择",
-        "使用物品队伍设置",
-        "使用物品体力设置"
-    ]
+    "task": [
+        {
+            "name": "使用物品集结",
+            "entry": "集结物品_识别体力入口",
+            "option": [
+                "集结物品选择",
+                "使用物品队伍设置",
+                "使用物品体力设置"
+            ]
+        }
+    ],
+    "option": {
+        "集结物品选择": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "吉娜角",
+                    "pipeline_override": {
+                        "集结物品_点击吉娜角": {
+                            "enabled": true
+                        },
+                        "集结物品_点击收割者镰刀": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "收割者镰刀",
+                    "pipeline_override": {
+                        "集结物品_点击吉娜角": {
+                            "enabled": false
+                        },
+                        "集结物品_点击收割者镰刀": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "使用物品队伍设置": {
+            "type": "input",
+            "label": "队伍设置",
+            "inputs": [
+                {
+                    "name": "队伍序号",
+                    "pattern_msg": "请输入队伍序号，0表示默认队伍",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "请输入队伍序号，0表示默认队伍"
+                }
+            ],
+            "pipeline_override": {
+                "集结物品_选择队伍": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "队伍序号": "{队伍序号}"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "使用物品体力设置": {
+            "type": "input",
+            "label": "体力设置",
+            "inputs": [
+                {
+                    "name": "物品集结需要体力",
+                    "pattern_msg": "集结物品消耗的体力",
+                    "pipeline_type": "string",
+                    "default": "20",
+                    "verify": "^\\d+$",
+                    "description": "集结物品消耗的体力"
+                }
+            ],
+            "pipeline_override": {
+                "集结物品_识别体力": {
+                    "custom_action_param": {
+                        "体力消耗": "{物品集结需要体力}"
+                    }
+                }
+            }
+        }
+    }
 }

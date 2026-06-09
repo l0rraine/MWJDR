@@ -1,7 +1,37 @@
 {
-    "name": "自动游历",
-    "entry": "自动游历_入口",
-    "option": [
-        "下午4点后自动游历"
-    ]
+    "task": [
+        {
+            "name": "自动游历",
+            "entry": "自动游历_入口",
+            "option": [
+                "下午4点后自动游历"
+            ]
+        }
+    ],
+    "option": {
+        "下午4点后自动游历": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "下午4点后自动游历",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "自动游历_下午检查": {
+                            "custom_action_param": {
+                                "hour": 16,
+                                "enabled": false,
+                                "skip_node": "自动游历_点击自动"
+                            }
+                        }
+                    }
+                }
+            ],
+            "description": "打开时，自动游历只在每日下午4点后执行；免费领取不受影响，每次都执行"
+        }
+    }
 }

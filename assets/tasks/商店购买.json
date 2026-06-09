@@ -1,10 +1,305 @@
 {
-    "name": "商店购买",
-    "entry": "商店购买_入口",
-    "option": [
-        "游荡商人",
-        "神秘商店",
-        "联盟商店"
+    "task": [
+        {
+            "name": "商店购买",
+            "entry": "商店购买_入口",
+            "option": [
+                "游荡商人",
+                "神秘商店",
+                "联盟商店"
+            ],
+            "doc": "商店购买完成后自动标记，[color:tomato]同日不重复购买[/color]。<br>游荡商人：非钻石物品和统帅经验。<br>神秘商店：免费物品、当季专武和50%折扣物品。<br>联盟商店：统帅经验和75%折扣物品。<br>"
+        }
     ],
-    "doc": "商店购买完成后自动标记，[color:tomato]同日不重复购买[/color]。<br>游荡商人：非钻石物品和统帅经验。<br>神秘商店：免费物品、当季专武和50%折扣物品。<br>联盟商店：统帅经验和75%折扣物品。<br>"
+    "option": {
+        "游荡商人": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "游荡商人",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "游荡商人_开关": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "游荡商人-钻石刷新次数"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "游荡商人_开关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "游荡商人-钻石刷新次数": {
+            "type": "input",
+            "label": "钻石刷新次数",
+            "inputs": [
+                {
+                    "name": "钻石刷新次数",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "使用钻石刷新游荡商人的次数，0为不使用钻石刷新"
+                }
+            ],
+            "pipeline_override": {
+                "游荡商人_刷新控制": {
+                    "custom_action_param": {
+                        "钻石刷新次数": "{钻石刷新次数}"
+                    }
+                }
+            }
+        },
+        "神秘商店": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "神秘商店",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "神秘商店_开关": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "神秘商店-钻石刷新次数",
+                        "神秘商店-当季专武",
+                        "神秘商店-宠物自选箱",
+                        "神秘商店-高级野性标记",
+                        "神秘商店-行军加速",
+                        "神秘商店-橙碎"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "神秘商店_开关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商店-钻石刷新次数": {
+            "type": "input",
+            "label": "钻石刷新次数",
+            "inputs": [
+                {
+                    "name": "钻石刷新次数",
+                    "pipeline_type": "string",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "使用钻石刷新神秘商店的次数，0为不使用钻石刷新"
+                }
+            ],
+            "pipeline_override": {
+                "神秘商店_开始购买": {
+                    "custom_action_param": {
+                        "钻石刷新次数": "{钻石刷新次数}"
+                    }
+                }
+            }
+        },
+        "神秘商店-当季专武": {
+            "type": "checkbox",
+            "label": "当季专武 50%",
+            "cases": [
+                {
+                    "name": "神秘商店-当季专武",
+                    "label": "当季专武 50%",
+                    "pipeline_override": {
+                        "神秘商店_参数_当季专武": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商店-宠物自选箱": {
+            "type": "checkbox",
+            "label": "宠物自选箱",
+            "cases": [
+                {
+                    "name": "神秘商店-宠物自选箱",
+                    "label": "宠物自选箱",
+                    "pipeline_override": {
+                        "神秘商店_参数_宠物自选箱": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商店-高级野性标记": {
+            "type": "checkbox",
+            "label": "高级野性标记",
+            "cases": [
+                {
+                    "name": "神秘商店-高级野性标记",
+                    "label": "高级野性标记",
+                    "pipeline_override": {
+                        "神秘商店_参数_高级野性标记": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商店-行军加速": {
+            "type": "checkbox",
+            "label": "行军加速",
+            "cases": [
+                {
+                    "name": "神秘商店-行军加速",
+                    "label": "行军加速",
+                    "pipeline_override": {
+                        "神秘商店_参数_行军加速": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "神秘商店-橙碎": {
+            "type": "checkbox",
+            "label": "橙碎",
+            "cases": [
+                {
+                    "name": "神秘商店-橙碎",
+                    "label": "橙碎",
+                    "pipeline_override": {
+                        "神秘商店_参数_橙碎": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "联盟商店": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "联盟商店",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "联盟商店_开关": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "联盟商店-统帅经验",
+                        "联盟商店-研究加速",
+                        "联盟商店-训练加速",
+                        "联盟商店-建筑加速",
+                        "联盟商店-治疗加速"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "联盟商店_开关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "联盟商店-统帅经验": {
+            "type": "checkbox",
+            "label": "统帅经验",
+            "cases": [
+                {
+                    "name": "联盟商店-统帅经验",
+                    "label": "统帅经验",
+                    "pipeline_override": {
+                        "联盟商店_参数_统帅经验": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "联盟商店-研究加速": {
+            "type": "checkbox",
+            "label": "研究加速",
+            "cases": [
+                {
+                    "name": "联盟商店-研究加速",
+                    "label": "研究加速",
+                    "pipeline_override": {
+                        "联盟商店_参数_研究加速": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ],
+            "default_case": [
+                "Yes"
+            ]
+        },
+        "联盟商店-训练加速": {
+            "type": "checkbox",
+            "label": "训练加速",
+            "cases": [
+                {
+                    "name": "联盟商店-训练加速",
+                    "label": "训练加速",
+                    "pipeline_override": {
+                        "联盟商店_参数_训练加速": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ],
+            "default_case": [
+                "Yes"
+            ]
+        },
+        "联盟商店-建筑加速": {
+            "type": "checkbox",
+            "label": "建筑加速",
+            "cases": [
+                {
+                    "name": "联盟商店-建筑加速",
+                    "label": "建筑加速",
+                    "pipeline_override": {
+                        "联盟商店_参数_建筑加速": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ],
+            "default_case": [
+                "Yes"
+            ]
+        },
+        "联盟商店-治疗加速": {
+            "type": "checkbox",
+            "label": "治疗加速",
+            "cases": [
+                {
+                    "name": "联盟商店-治疗加速",
+                    "label": "治疗加速",
+                    "pipeline_override": {
+                        "联盟商店_参数_治疗加速": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ],
+            "default_case": [
+                "Yes"
+            ]
+        }
+    }
 }

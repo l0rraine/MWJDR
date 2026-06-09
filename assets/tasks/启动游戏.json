@@ -1,8 +1,80 @@
 {
-    "name": "启动游戏",
-    "entry": "启动游戏",
-    "option": [
-        "切换角色",
-        "确保有队伍可用"
-    ]
+    "task": [
+        {
+            "name": "启动游戏",
+            "entry": "启动游戏",
+            "option": [
+                "切换角色",
+                "确保有队伍可用"
+            ]
+        }
+    ],
+    "option": {
+        "确保有队伍可用": {
+            "type": "checkbox",
+            "label": "确保有队伍可用",
+            "cases": [
+                {
+                    "name": "确保有队伍可用",
+                    "label": "确保有队伍可用",
+                    "pipeline_override": {
+                        "确保有空闲队列": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "切换角色": {
+            "type": "switch",
+            "label": "设置角色",
+            "description": "关闭时为使用当前角色，打开时会检查当前是否为特定角色",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "开始切换角色": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "option": [
+                        "角色信息"
+                    ]
+                }
+            ]
+        },
+        "角色信息": {
+            "type": "input",
+            "label": "角色信息",
+            "inputs": [
+                {
+                    "name": "王国编号",
+                    "pipeline_type": "string",
+                    "default": "3194",
+                    "verify": "^(0|[1-9]\\d*)$"
+                },
+                {
+                    "name": "王国内序号",
+                    "pipeline_type": "string",
+                    "default": "1",
+                    "verify": "^[1-2]$"
+                }
+            ],
+            "pipeline_override": {
+                "确定角色": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "王国编号": "{王国编号}",
+                                "王国内序号": "{王国内序号}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,16 +1,172 @@
 {
-    "name": "联盟总动员",
-    "entry": "联盟总动员_入口",
-    "option": [
-        "是否启用第一栏位",
-        "是否启用第二栏位",
-        "训练士兵-12万",
-        "专精石-35",
-        "碎片-68",
-        "火晶-150",
-        "领主装备-8900",
-        "礼包-648",
-        "礼包-328",
-        "钻石-50000"
-    ]
+    "task": [
+        {
+            "name": "联盟总动员",
+            "entry": "联盟总动员_入口",
+            "option": [
+                "是否启用第一栏位",
+                "是否启用第二栏位",
+                "训练士兵-12万",
+                "专精石-35",
+                "碎片-68",
+                "火晶-150",
+                "领主装备-8900",
+                "礼包-648",
+                "礼包-328",
+                "钻石-50000"
+            ]
+        }
+    ],
+    "option": {
+        "是否启用第一栏位": {
+            "type": "checkbox",
+            "label": "是否启用第一栏位",
+            "cases": [
+                {
+                    "name": "是否启用第一栏位",
+                    "label": "是否启用第一栏位",
+                    "pipeline_override": {
+                        "联盟总动员_参数_是否启用第一栏位": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "是否启用第二栏位": {
+            "type": "checkbox",
+            "label": "是否启用第二栏位",
+            "cases": [
+                {
+                    "name": "是否启用第二栏位",
+                    "label": "是否启用第二栏位",
+                    "pipeline_override": {
+                        "联盟总动员_参数_是否启用第二栏位": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "训练士兵-12万": {
+            "type": "checkbox",
+            "label": "训练士兵-12万",
+            "cases": [
+                {
+                    "name": "训练士兵-12万",
+                    "label": "训练士兵-12万",
+                    "pipeline_override": {
+                        "联盟总动员_任务_训练士兵-12w": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "专精石-35": {
+            "type": "checkbox",
+            "label": "专精石-35",
+            "cases": [
+                {
+                    "name": "专精石-35",
+                    "label": "专精石-35",
+                    "pipeline_override": {
+                        "联盟总动员_任务_专精石-35": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "领主装备-8900": {
+            "type": "checkbox",
+            "label": "领主装备-8900",
+            "cases": [
+                {
+                    "name": "领主装备-8900",
+                    "label": "领主装备-8900",
+                    "pipeline_override": {
+                        "联盟总动员_任务_领主装备-8900": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "礼包-648": {
+            "type": "checkbox",
+            "label": "礼包-648",
+            "cases": [
+                {
+                    "name": "礼包-648",
+                    "label": "礼包-648",
+                    "pipeline_override": {
+                        "联盟总动员_任务_648礼包": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "礼包-328": {
+            "type": "checkbox",
+            "label": "礼包-328",
+            "cases": [
+                {
+                    "name": "礼包-328",
+                    "label": "礼包-328",
+                    "pipeline_override": {
+                        "联盟总动员_任务_328礼包": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "钻石-50000": {
+            "type": "checkbox",
+            "label": "钻石-50000",
+            "cases": [
+                {
+                    "name": "钻石-50000",
+                    "label": "钻石-50000",
+                    "pipeline_override": {
+                        "联盟总动员_任务_50000钻石": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "碎片-68": {
+            "type": "checkbox",
+            "label": "碎片-68",
+            "cases": [
+                {
+                    "name": "碎片-68",
+                    "label": "碎片-68",
+                    "pipeline_override": {
+                        "联盟总动员_任务_68碎片": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "火晶-150": {
+            "type": "checkbox",
+            "label": "火晶-150",
+            "cases": [
+                {
+                    "name": "火晶-150",
+                    "label": "火晶-150",
+                    "pipeline_override": {
+                        "联盟总动员_任务_150火晶": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        }
+    }
 }
