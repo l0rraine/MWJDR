@@ -53,7 +53,7 @@ def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 2):
     if total_seconds < 0:
         return 1, current_team  # 还没开始
 
-    current_stage = math.floor(total_seconds / stage_seconds) + 1
+    current_stage = math.ceil(total_seconds / stage_seconds)
     if total_seconds > (current_stage-1)*stage_seconds+60*wait_time:
         current_team = 2
     
@@ -68,7 +68,7 @@ def next_stage_seconds():
     stage_seconds = 5 * 60 + 14  # 314 秒
     next_stage = math.ceil(total_seconds / stage_seconds)
     next_stage_time = start + timedelta(seconds=next_stage * stage_seconds)
-    seconds = (next_stage_time - now).total_seconds() - 2  # 提前 2 秒醒来准备
+    seconds = (next_stage_time - now).total_seconds() + 0.5
     logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
     return seconds
 
@@ -139,6 +139,7 @@ class BearComputeExpected(CustomAction):
                         "recognition": "OCR",
                         "roi": [273, 170, 252, 956],
                         "expected": expected,
+                        "threshold": 0.6
                     },
                     {
                         "sub_name": "join",
@@ -180,7 +181,7 @@ class BearCombat(CustomAction):
         """
         global SEND_TEAMS, TOTAL_TEAMS
 
-        start = time.time()
+        #start = time.time()
         if team_id > 0:
             roi = TEAM_ROI[team_id]
             context.run_action("熊_选择队伍",pipeline_override={
@@ -188,16 +189,16 @@ class BearCombat(CustomAction):
                     "target": roi
                 }})
             # time.sleep(0.2)
-            logger.debug(f"选择队伍耗时: {(time.time() - start) * 1000:.0f}ms")
-        start = time.time()
+            # logger.debug(f"选择队伍耗时: {(time.time() - start) * 1000:.0f}ms")
+        #start = time.time()
         # 点击出征
         context.run_action("熊_点击出征")
-        logger.debug(f"出征耗时: {(time.time() - start) * 1000:.0f}ms")
+        # logger.debug(f"出征耗时: {(time.time() - start) * 1000:.0f}ms")
 
         time.sleep(0.15)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("熊_士兵超出上限", img)
-        if detail is not None and detail.hit:
+        if detail.hit:
             logger.debug(f"{team_id} 士兵超出上限,出征失败")
             context.run_action("熊_后退")
             context.run_action("熊_后退")
@@ -206,12 +207,12 @@ class BearCombat(CustomAction):
         # 此时应已返回集结列表
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("熊_超出容量", img)
-        if detail is not None and detail.hit:
+        if detail.hit:
             logger.debug(f"{team_id} 熊_超出容量,出征失败")
             return False
 
         detail = context.run_recognition("熊_在集结列表", img)
-        if detail is not None and detail.hit:
+        if detail.hit:
             logger.info(f"队伍 {team_id} 已出征，剩余 {TOTAL_TEAMS-SEND_TEAMS} 只队伍")
             return True
 

@@ -132,7 +132,6 @@
         "pre_delay": 0,
         "post_delay": 200,
         "recognition": "And",
-        "timeout": -1,
         "rate_limit": 50,
         "all_of": [
             {
@@ -219,13 +218,22 @@
     "熊_在集结详情页面": {
         "pre_delay": 100,
         "post_delay": 100,
-        "recognition": "TemplateMatch",
-        "template": "熊/集结详情.png",
+        "recognition": "ColorMatch",
         "roi": [
-            321,
-            463,
-            103,
-            99
+            190,
+            93,
+            43,
+            22
+        ],
+        "upper": [
+            164,
+            91,
+            79
+        ],
+        "lower": [
+            160,
+            89,
+            78
         ],
         "action": "Click",
         "target": [
@@ -339,7 +347,7 @@
         ]
     },
     "熊_后退": {
-        "pre_delay": 0,
+        "pre_delay": 100,
         "post_delay": 0,
         "action": "Click",
         "target": [
