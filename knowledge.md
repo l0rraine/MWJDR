@@ -25,6 +25,7 @@
 17. [商店购买子任务间跳转与空壳节点死循环](#17-商店购买子任务间跳转与空壳节点死循环)
 18. [Pipeline JSON 选项列表与 Python 解耦模式](#18-pipeline-json-选项列表与-python-解耦模式)
 19. [通用每日检查与记录日期 action](#19-通用每日检查与记录日期-action)
+20. [AgentServer 多线程限制与全局变量持久化](#20-agentserver-多线程限制与全局变量持久化)
 
 ---
 
@@ -1415,3 +1416,103 @@ class RecordDate(CustomAction):
 ### 核心原则
 
 > **当多个 Custom Action 的逻辑完全相同、仅参数不同时，应将其提取为通用 action，通过 `custom_action_param` 传参**。这避免了代码重复，也使得新增同类任务只需修改 JSON 配置。此模式与 §18 的"JSON 选项解耦"一脉相承——将变化的部分（参数）从 Python 代码移到 JSON 配置中。
+
+---
+
+## 20. AgentServer 多线程限制与全局变量持久化
+
+### 问题
+
+在 AgentServer（长进程）模式下，能否在后台线程中调用 MaaFramework API 实现并行监控（如监控游戏内通知、定时截图）？
+
+### 结论
+
+**不要在 AgentServer 中使用后台线程。** MaaFramework 的所有 API 都不是线程安全的，后台线程无法安全地执行任何框架操作。所有逻辑都应在 Pipeline 主线程的 Custom Action 中完成。
+
+### MaaFramework 线程安全性
+
+MaaFramework 的 Controller、Context、Tasker、Resource **均不是线程安全的**。从非 pipeline 线程调用会导致死锁或崩溃：
+
+| API | 现象 |
+|---|---|
+| `controller.post_screencap()` | 死锁（`access violation` 0xFFFFFFFFFFFFFFFF） |
+| `controller.cached_image` | 死锁 |
+| `context.run_recognition()` | 死锁或数据竞争 |
+| `context.run_action()` | 死锁 |
+| `Tasker()` 构造函数 | `NotImplemented` 错误 |
+
+以上结论经过 **6 次迭代验证**，每次尝试都导致了死锁或崩溃。详见下文"踩坑记录"。
+
+### AgentServer 全局变量持久化
+
+AgentServer 是长进程，**停止/重启任务不会重新加载 Python 模块**，模块级全局变量会保留上一次任务的状态。因此：
+
+- 任务重启时**必须手动重置所有全局状态**
+- 全局变量适合在任务间传递数据（如 `SEND_TEAMS`、`LAST_STAGE`）
+- 但绝不能假设全局变量在模块加载时被初始化为初始值
+
+```python
+# 任务入口 Custom Action 中
+global LAST_STAGE, SEND_TEAMS, FOUND_LEAD_TRUCK
+LAST_STAGE = 0
+SEND_TEAMS = 0
+FOUND_LEAD_TRUCK = {}
+```
+
+### 如果非要用后台线程（不推荐）
+
+如果确实有与 MaaFramework 完全无关的后台计算需求，必须遵守以下规则：
+
+**1. 绝对禁止从后台线程调用任何 MaaFramework API**（包括 Controller、Context、Tasker、Resource）。
+
+**2. 后台线程只能使用纯 Python 对象**：`threading.Event`、`threading.Lock`、Python `global` 变量、第三方纯 Python 库。
+
+**3. 用 `threading.Event.wait(timeout)` 替代 `time.sleep()`**，以实现可中断的等待：
+
+```python
+stop_event = threading.Event()
+
+def background_loop():
+    while not stop_event.is_set():
+        stop_event.wait(0.5)  # 可中断的等待，替代 time.sleep(0.5)
+        if stop_event.is_set():
+            break
+        # ... 纯 Python 逻辑 ...
+
+# 停止线程
+stop_event.set()
+```
+
+**4. 共享变量用 `Lock` 保护：**
+
+```python
+_lock = threading.Lock()
+_shared_data = []
+
+# 写入
+with _lock:
+    _shared_data.append(item)
+
+# 读取
+with _lock:
+    data = list(_shared_data)
+```
+
+**5. 任务重启时必须重置所有线程相关状态**，包括 `threading.Event`（否则 `is_set()` 返回上次的残留值）。
+
+### 踩坑记录（6 次迭代）
+
+| # | 尝试方案 | 结果 |
+|---|---|---|
+| 1 | 后台线程调 `context.run_recognition()` | 死锁 → 改用外部 OCR |
+| 2 | 后台线程用 `Tasker()` 构造独立 Tasker | `NotImplemented` 错误 |
+| 3 | 后台线程调 `controller.post_screencap()` | 死锁 → 改用共享截图 |
+| 4 | 后台线程读 `controller.cached_image` | 死锁 → 改用共享截图 |
+| 5 | 主线程用 `time.sleep()` 做长时间阻塞 | 后台线程无法及时停止 |
+| 6 | 不重置 `threading.Event` | 任务重启后 Event 仍为 set，后台线程不启动 |
+
+### 最终方案
+
+经过 6 次迭代后，**放弃了后台线程方案**，将所有逻辑合并到 Pipeline 主线程的 Custom Action 中（如 `熊_识别队伍` 同时负责阶段计算、OCR 识别和点击操作）。这彻底避免了多线程问题，代码也更简洁。
+
+> 💡 **核心原则：在 AgentServer 中，所有 MaaFramework 相关操作都应在 Pipeline 主线程中完成。不要引入后台线程。**

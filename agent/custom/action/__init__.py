@@ -20,8 +20,6 @@ __all__ = [
     "BeastBeginCombat",
     "BearCombat",
     "BearReserveTeam",
-    "BearStartMonitor",
-    "BearStopMonitor",
     "BearIdentifyTeam",
     "RecallTeam",
     "UniteScan",
