@@ -1,9 +1,10 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.pipeline import JActionType, JClick, JSwipe
+from maa.pipeline import JActionType, JClick, JSwipe, JRecognitionType, JOCR
 import json
 import time
+import threading
 
 from utils import logger
 from datetime import datetime, timedelta
@@ -33,6 +34,34 @@ TOTAL_TEAMS = 0
 LAST_STAGE = 1
 RESERVE_TEAM = 1
 # 每个阶段时长：5分14秒
+
+_monitor_stop = threading.Event()
+_teams_lock = threading.Lock()
+_monitor_context = None
+
+
+def _monitor_returned_teams():
+    """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1"""
+    while not _monitor_stop.is_set():
+        try:
+            result = _monitor_context.run_recognition_direct(
+                JRecognitionType.OCR,
+                JOCR(expected=["您的部队已经返回城镇"], roi=[212, 327, 324, 138]),
+            )
+            if result and result.best_result and result.best_result.text:
+                text = result.best_result.text
+                if "返回城镇" in text:
+                    global SEND_TEAMS
+                    with _teams_lock:
+                        SEND_TEAMS = SEND_TEAMS - 1
+                    logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
+                    _monitor_stop.wait(2)  # 避免重复识别同一条通知
+                    continue
+        except Exception as e:
+            logger.debug(f"监控线程异常: {e}")
+            _monitor_stop.wait(0.2)  # 错误时等待0.2s
+            continue
+        _monitor_stop.wait(0.5)  # 正常间隔0.5s
 
 
 def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 2):
@@ -72,6 +101,27 @@ def next_stage_seconds():
     seconds = (next_stage_time - now).total_seconds() + 0.5
     logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
     return seconds
+
+@AgentServer.custom_action("熊_启动返回监控")
+class BearStartMonitor(CustomAction):
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        global _monitor_context
+        _monitor_context = context
+        if not _monitor_stop.is_set():
+            _monitor_stop.clear()
+            t = threading.Thread(target=_monitor_returned_teams, daemon=True)
+            t.start()
+            logger.info("部队返回监控已启动")
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("熊_停止返回监控")
+class BearStopMonitor(CustomAction):
+    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+        _monitor_stop.set()
+        logger.info("部队返回监控已停止")
+        return CustomAction.RunResult(success=True)
+
 
 @AgentServer.custom_action("熊_保留队伍")
 class BearReserveTeam(CustomAction):
@@ -115,6 +165,7 @@ class BearComputeExpected(CustomAction):
             current_team = 1
 
         if current_stage > 5:
+            _monitor_stop.set()
             logger.info("打熊已结束")
             return CustomAction.RunResult(success=False)
 

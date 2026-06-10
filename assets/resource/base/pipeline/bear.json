@@ -115,6 +115,13 @@
         "pre_delay": 0,
         "post_delay": 200,
         "next": [
+            "熊_启动返回监控"
+        ]
+    },
+    "熊_启动返回监控": {
+        "action": "Custom",
+        "custom_action": "熊_启动返回监控",
+        "next": [
             "熊_识别队伍",
             "[JumpBack]熊_在集结详情页面",
             "[JumpBack]熊_计算队伍"
