@@ -124,14 +124,12 @@
         "next": [
             "熊_识别队伍",
             "[JumpBack]熊_在集结详情页面",
-            "[JumpBack]熊_计算队伍"
+            "[JumpBack]熊_向下滚动"
         ]
     },
-    "熊_计算队伍": {
-        "pre_delay": 0,
-        "post_delay": 100,
+    "熊_识别队伍": {
         "action": "Custom",
-        "custom_action": "熊_计算队伍",
+        "custom_action": "熊_识别队伍",
         "custom_action_param": {
             "开始时间": "21:00",
             "第一梯队": "",
@@ -139,54 +137,7 @@
             "等待时间": "2",
             "循环顺序": ""
         },
-        "next": [
-            "熊_向下滚动"
-        ]
-    },
-    "熊_识别队伍": {
-        "pre_delay": 0,
-        "post_delay": 200,
-        "recognition": "And",
         "rate_limit": 50,
-        "all_of": [
-            {
-                "sub_name": "team_name",
-                "recognition": "OCR",
-                "expected": [
-                    "edit in code"
-                ],
-                "roi": [
-                    273,
-                    170,
-                    252,
-                    956
-                ]
-            },
-            {
-                "sub_name": "join",
-                "recognition": "TemplateMatch",
-                "template": "熊/直接加入队伍.png",
-                "roi": "team_name",
-                "roi_offset": [
-                    310,
-                    87,
-                    0,
-                    58
-                ],
-                "threshold": 0.9,
-                "method": 10001
-            }
-        ],
-        "box_index": 1,
-        "repeat": 2,
-        "repeat_delay": 100,
-        "action": "Click",
-        "target_offset": [
-            5,
-            5,
-            -10,
-            -10
-        ],
         "next": [
             "熊_在队伍选择页面",
             "熊_队列不足",
@@ -273,22 +224,8 @@
         ]
     },
     "熊_向下滚动": {
-        "pre_delay": 0,
-        "post_delay": 200,
-        "action": "Swipe",
-        "begin": [
-            433,
-            909,
-            14,
-            10
-        ],
-        "end": [
-            423,
-            792,
-            21,
-            11
-        ],
-        "duration": 100
+        "action": "Custom",
+        "custom_action": "熊_向下滚动"
     },
     "熊_加入集结失败": {
         "recognition": "TemplateMatch",

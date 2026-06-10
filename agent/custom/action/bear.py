@@ -36,6 +36,7 @@ RESERVE_TEAM = 1
 # 每个阶段时长：5分14秒
 
 _monitor_stop = threading.Event()
+_BEAR_ENDED = False
 _teams_lock = threading.Lock()
 _monitor_ocr = None  # RapidOCR 引擎
 _latest_img = None  # 主 pipeline 共享的最新截图
@@ -125,8 +126,9 @@ class BearStartMonitor(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global _monitor_ocr
+        global _monitor_ocr, _BEAR_ENDED
         # 重置全局状态（任务重启时不会重新加载模块）
+        _BEAR_ENDED = False
         _monitor_stop.set()  # 先停止可能残留的旧线程
         time.sleep(0.1)  # 等待旧线程退出
         _monitor_stop.clear()
@@ -164,14 +166,22 @@ class BearReserveTeam(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
-@AgentServer.custom_action("熊_计算队伍")
-class BearComputeExpected(CustomAction):
+@AgentServer.custom_action("熊_识别队伍")
+class BearIdentifyTeam(CustomAction):
+    """合并原 熊_计算队伍 + 熊_识别队伍
+
+    1. 计算当前阶段/队伍配置（原 熊_计算队伍）
+    2. OCR 识别队伍名，获取匹配内容和坐标
+    3. 根据坐标偏移匹配「直接加入」按钮
+    4. 同时满足则点击加入
+    """
 
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
         global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM
 
+        # === 原 熊_计算队伍 逻辑 ===
         param = json.loads(argv.custom_action_param)
         start_time_str = param.get("开始时间", "21:00")
         first_team_names_str = param.get("第一梯队", "")
@@ -183,13 +193,11 @@ class BearComputeExpected(CustomAction):
         TEAMS_2 = second_team_names_str
 
         team_order_str = param.get("循环顺序", "0")
-
         if not TEAM_ORDER:
             TEAM_ORDER = [
                 int(x.strip()) for x in team_order_str.split(",") if x.strip()
             ]
         elif team_order_str:
-            # 任务重启时 TEAM_ORDER 非空，需要重新读取参数
             TEAM_ORDER = [
                 int(x.strip()) for x in team_order_str.split(",") if x.strip()
             ]
@@ -197,7 +205,6 @@ class BearComputeExpected(CustomAction):
         current_stage, current_team = get_current_stage_and_team(
             start_time_str, wait_time
         )
-        # 如果在等待过程中过了一个阶段
         if current_stage != LAST_STAGE:
             logger.info(f"当前切换为阶段 {current_stage}")
             SEND_TEAMS = 0
@@ -205,6 +212,8 @@ class BearComputeExpected(CustomAction):
             current_team = 1
 
         if current_stage > 5:
+            global _BEAR_ENDED
+            _BEAR_ENDED = True
             _monitor_stop.set()
             logger.info("打熊已结束")
             return CustomAction.RunResult(success=False)
@@ -224,33 +233,113 @@ class BearComputeExpected(CustomAction):
         else:
             expected = [rf".*{name}.*" for name in first_team_names + second_team_names]
 
-        # logger.debug(
-        #     f"当前阶段: {current_stage}，TEAMS_1: {TEAMS_1}, 当前队伍: {current_team}，识别期望: {expected}"
-        # )
-        pipeline = {
-            "熊_识别队伍": {
-                "all_of": [
-                    {
-                        "sub_name": "team_name",
+        if not expected:
+            logger.debug("无匹配队伍名配置，跳过识别")
+            return CustomAction.RunResult(success=False)
+
+        # === 原 熊_识别队伍 逻辑 ===
+        team_name_roi = [273, 170, 252, 956]
+        join_offset = [310, 87, 0, 58]
+        join_target_offset = [5, 5, -10, -10]
+
+        for attempt in range(2):  # 原 repeat: 2
+            if attempt > 0:
+                time.sleep(0.1)  # 原 repeat_delay: 100
+
+            img = context.tasker.controller.post_screencap().wait().get()
+            _store_latest_img(img)
+
+            # 1. OCR team_name
+            detail = context.run_recognition(
+                "熊_识别队伍_team_name",
+                img,
+                pipeline_override={
+                    "熊_识别队伍_team_name": {
                         "recognition": "OCR",
-                        "roi": [273, 170, 252, 956],
                         "expected": expected,
+                        "roi": team_name_roi,
                         "threshold": 0.6,
-                    },
-                    {
-                        "sub_name": "join",
+                    }
+                },
+            )
+            if not detail or not detail.hit:
+                continue
+
+            team_name_text = detail.best_result.text
+            team_name_box = detail.box  # [x, y, w, h]
+
+            # 2. 根据 team_name 坐标 + offset 计算 join ROI
+            join_roi = [
+                team_name_box[0] + join_offset[0],
+                team_name_box[1] + join_offset[1],
+                team_name_box[2] + join_offset[2],
+                team_name_box[3] + join_offset[3],
+            ]
+
+            # 3. TemplateMatch join 按钮
+            detail = context.run_recognition(
+                "熊_识别队伍_join",
+                img,
+                pipeline_override={
+                    "熊_识别队伍_join": {
                         "recognition": "TemplateMatch",
                         "template": "熊/直接加入队伍.png",
-                        "roi": "team_name",
-                        "roi_offset": [310, 87, 0, 58],
+                        "roi": join_roi,
                         "threshold": 0.9,
                         "method": 10001,
-                    },
-                ]
-            }
-        }
-        context.override_pipeline(pipeline)
-        context.tasker.resource.override_pipeline(pipeline)
+                    }
+                },
+            )
+            if not detail or not detail.hit:
+                continue
+
+            # 4. 两个都匹配，点击 join（原 box_index=1 + target_offset）
+            join_box = detail.box
+            click_target = [
+                join_box[0] + join_target_offset[0],
+                join_box[1] + join_target_offset[1],
+                max(join_box[2] + join_target_offset[2], 1),
+                max(join_box[3] + join_target_offset[3], 1),
+            ]
+
+            context.run_action(
+                "熊_点击加入按钮",
+                pipeline_override={
+                    "熊_点击加入按钮": {
+                        "action": "Click",
+                        "target": click_target,
+                    }
+                },
+            )
+
+            time.sleep(0.2)  # 原 post_delay: 200
+            return CustomAction.RunResult(success=True)
+
+        return CustomAction.RunResult(success=False)
+
+
+@AgentServer.custom_action("熊_向下滚动")
+class BearScrollDown(CustomAction):
+    """向下滑动，若打熊已结束则返回 False 终止 task"""
+
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global _BEAR_ENDED
+        if _BEAR_ENDED:
+            return CustomAction.RunResult(success=False)
+        context.run_action(
+            "熊_执行滚动",
+            pipeline_override={
+                "熊_执行滚动": {
+                    "action": "Swipe",
+                    "begin": [433, 909, 14, 10],
+                    "end": [423, 792, 21, 11],
+                    "duration": 100,
+                    "post_delay": 200,
+                }
+            },
+        )
         return CustomAction.RunResult(success=True)
 
 
