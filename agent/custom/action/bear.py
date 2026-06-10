@@ -59,19 +59,7 @@ def next_stage_seconds():
     next_stage = math.ceil(total_seconds / stage_seconds)
     next_stage_time = start + timedelta(seconds=next_stage * stage_seconds)
     seconds = (next_stage_time - now).total_seconds() + 0.5
-    logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
     return seconds
-
-
-@AgentServer.custom_action("熊_保留队伍")
-class BearReserveTeam(CustomAction):
-    def run(
-        self, context: Context, argv: CustomAction.RunArg
-    ) -> CustomAction.RunResult:
-        param = json.loads(argv.custom_action_param)
-        global RESERVE_TEAM
-        RESERVE_TEAM = int(param.get("保留队伍", True))
-        return CustomAction.RunResult(success=True)
 
 
 @AgentServer.custom_action("熊_识别队伍")
@@ -89,7 +77,7 @@ class BearIdentifyTeam(CustomAction):
     ) -> CustomAction.RunResult:
         global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK
 
-        # === 原 熊_计算队伍 逻辑 ===
+        # === 初始化 ===
         param = json.loads(argv.custom_action_param)
         start_time_str = param.get("开始时间", "21:00")
         lead_truck_names_str = param.get("大车头", "")
@@ -125,7 +113,7 @@ class BearIdentifyTeam(CustomAction):
         if not expected:
             return CustomAction.RunResult(success=False)
 
-        # === 原 熊_识别队伍 逻辑 ===
+        # === 识别车头名称 ===
         team_name_roi = [273, 170, 252, 956]
         join_offset = [310, 87, 0, 58]
         join_target_offset = [5, 5, -10, -10]
@@ -148,23 +136,47 @@ class BearIdentifyTeam(CustomAction):
         if not detail or not detail.hit:
             return CustomAction.RunResult(success=True)
 
+        # 2. 计算当前可派出的队伍总数
         truck_name_text = detail.best_result.text
 
+        history = {}
+        found = 0
         for truck in lead_truck_names:
-            if truck in truck_name_text:
-                FOUND_LEAD_TRUCK[truck] = current_stage
+            if current_stage > 1:
+                for i in range(current_stage - 1):
+                    if f"{truck}_{i+1}" in FOUND_LEAD_TRUCK:
+                        history[truck] = i + 1  # 车头是不是之前识别到过
 
-        found = sum(1 for v in FOUND_LEAD_TRUCK.values() if v == current_stage)
+            k = f"{truck}_{current_stage}"
+
+            # 当前识别结果是大车头且不在列表中则补充
+            if truck in truck_name_text and k not in FOUND_LEAD_TRUCK:
+                FOUND_LEAD_TRUCK[k] = next_stage_seconds()
+
+            # 这个车头之前都没有开车，那这次不管是不是他开车都不等他了
+            if history[truck] == 0:
+                found = found + 1
+            else:
+                # 之前开过车，并且这次是他开车，这次就不等了
+                if k in FOUND_LEAD_TRUCK:
+                    found = found + 1
+                else:  # 之前开过车，但是这次超过40s还不开，之后就不等了
+                    last_remain = FOUND_LEAD_TRUCK[f"{truck}_{history[truck]}"]
+                    this_remain = next_stage_seconds()
+                    if last_remain - this_remain >= 40:
+                        found = found + 1
+
+            # 之前开过车，这次没开车呢，那就需要等他
 
         RESERVE_TEAM = len(lead_truck_names) - found
         TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
         truck_name_box = detail.box  # [x, y, w, h]
 
-        # 2. 根据 team_name 坐标 + offset 计算 join ROI
+        # 3. 根据 team_name 坐标 + offset 计算 join ROI
         join_roi = [a + b for a, b in zip(truck_name_box, join_offset)]
 
-        # 3. TemplateMatch join 按钮
+        # 4. TemplateMatch join 按钮
         detail = context.run_recognition(
             "熊_识别队伍_join",
             img,
@@ -183,7 +195,7 @@ class BearIdentifyTeam(CustomAction):
 
         CURRENT_TRUCK = truck_name_text
 
-        # 4. 两个都匹配，点击 join（原 box_index=1 + target_offset）
+        # 5. 两个都匹配，点击加入按钮
         join_box = detail.box
         click_target = [a + b for a, b in zip(join_box, join_target_offset)]
 
@@ -201,7 +213,7 @@ class BearIdentifyTeam(CustomAction):
             },
         )
 
-        time.sleep(0.2)  # 原 post_delay: 200
+        time.sleep(0.2)
 
         return CustomAction.RunResult(success=True)
 
@@ -219,7 +231,9 @@ class BearCombat(CustomAction):
         # [1,2,3,4] → [2,3,4,1]
         TEAM_ORDER = TEAM_ORDER[1:] + TEAM_ORDER[:1]
         if SEND_TEAMS == TOTAL_TEAMS:
-            time.sleep(next_stage_seconds())
+            seconds = next_stage_seconds()
+            logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
+            time.sleep(seconds)
             SEND_TEAMS = 0
 
         return CustomAction.RunResult(success=True)
