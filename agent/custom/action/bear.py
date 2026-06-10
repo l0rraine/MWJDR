@@ -1,7 +1,6 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.tasker import Tasker
 from maa.pipeline import JActionType, JClick, JSwipe, JRecognitionType, JOCR
 import json
 import time
@@ -38,14 +37,14 @@ RESERVE_TEAM = 1
 
 _monitor_stop = threading.Event()
 _teams_lock = threading.Lock()
-_monitor_tasker = None
+_monitor_tasker = None  # 主 Tasker 的引用
 
 
 def _monitor_returned_teams():
     """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
 
-    使用独立 Tasker 实例的 post_recognition 进行识别，
-    不与主 pipeline 共享执行上下文，避免线程安全问题。
+    使用主 Tasker 的 post_recognition 异步 API 进行识别，
+    该 API 设计为线程安全，可从任意线程调用。
     """
     # 延迟启动避免与主 pipeline 的首次识别争抢
     _monitor_stop.wait(2)
@@ -116,10 +115,7 @@ class BearStartMonitor(CustomAction):
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
         global _monitor_tasker
-        if _monitor_tasker is None:
-            _monitor_tasker = Tasker()
-            _monitor_tasker.bind(context.tasker.resource, context.tasker.controller)
-            logger.info("监控 Tasker 已创建")
+        _monitor_tasker = context.tasker
         if not _monitor_stop.is_set():
             _monitor_stop.clear()
             t = threading.Thread(target=_monitor_returned_teams, daemon=True)
