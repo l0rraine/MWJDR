@@ -126,6 +126,10 @@ class BearStartMonitor(CustomAction):
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
         global _monitor_ocr
+        # 重置全局状态（任务重启时不会重新加载模块）
+        _monitor_stop.set()  # 先停止可能残留的旧线程
+        time.sleep(0.1)  # 等待旧线程退出
+        _monitor_stop.clear()
         if _monitor_ocr is None:
             _monitor_ocr = RapidOCR()
             logger.info("RapidOCR 引擎已初始化")
@@ -133,11 +137,9 @@ class BearStartMonitor(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         if img is not None:
             _store_latest_img(img)
-        if not _monitor_stop.is_set():
-            _monitor_stop.clear()
-            t = threading.Thread(target=_monitor_returned_teams, daemon=True)
-            t.start()
-            logger.info("部队返回监控已启动")
+        t = threading.Thread(target=_monitor_returned_teams, daemon=True)
+        t.start()
+        logger.info("部队返回监控已启动")
         return CustomAction.RunResult(success=True)
 
 
@@ -183,6 +185,11 @@ class BearComputeExpected(CustomAction):
         team_order_str = param.get("循环顺序", "0")
 
         if not TEAM_ORDER:
+            TEAM_ORDER = [
+                int(x.strip()) for x in team_order_str.split(",") if x.strip()
+            ]
+        elif team_order_str:
+            # 任务重启时 TEAM_ORDER 非空，需要重新读取参数
             TEAM_ORDER = [
                 int(x.strip()) for x in team_order_str.split(",") if x.strip()
             ]
