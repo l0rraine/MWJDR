@@ -33,7 +33,6 @@ LAST_STAGE = 0
 RESERVE_TEAM = 1
 FOUND_LEAD_TRUCK = {}
 CURRENT_TRUCK = ""
-_BEAR_ENDED = False
 
 
 def get_current_stage(start_time: str = "21:00"):
@@ -76,7 +75,7 @@ class BearIdentifyTeam(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK, _BEAR_ENDED
+        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK
 
         # === 初始化 ===
         param = json.loads(argv.custom_action_param)
@@ -102,7 +101,6 @@ class BearIdentifyTeam(CustomAction):
 
         if current_stage > 5:
             logger.info("打熊已结束")
-            _BEAR_ENDED = True
             return CustomAction.RunResult(success=False)
 
         lead_truck_names = [name.strip() for name in TRUCK_1.split(",") if name.strip()]
@@ -278,25 +276,3 @@ class BearCombat(CustomAction):
 
         return False
 
-
-@AgentServer.custom_action("熊_向下滚动")
-class BearScrollDown(CustomAction):
-    def run(
-        self, context: Context, argv: CustomAction.RunArg
-    ) -> CustomAction.RunResult:
-        global _BEAR_ENDED
-        if _BEAR_ENDED:
-            return CustomAction.RunResult(success=False)
-        context.run_action(
-            "__bear_scroll",
-            pipeline_override={
-                "__bear_scroll": {
-                    "action": "Swipe",
-                    "begin": [433, 909, 14, 10],
-                    "end": [423, 792, 21, 11],
-                    "duration": 100,
-                    "post_delay": 200,
-                }
-            },
-        )
-        return CustomAction.RunResult(success=True)
