@@ -1,6 +1,7 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
+from maa.tasker import Tasker
 from maa.pipeline import JActionType, JClick, JSwipe, JRecognitionType, JOCR
 import json
 import time
@@ -37,38 +38,40 @@ RESERVE_TEAM = 1
 
 _monitor_stop = threading.Event()
 _teams_lock = threading.Lock()
-_monitor_context = None
+_monitor_tasker = None
 
 
 def _monitor_returned_teams():
     """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
 
-    延迟启动避免与主 pipeline 的首次识别争抢内部锁。
+    使用独立 Tasker 实例的 post_recognition 进行识别，
+    不与主 pipeline 共享执行上下文，避免线程安全问题。
     """
-    # 等待主 pipeline 先跑完当前一轮识别，再开始监控
+    # 延迟启动避免与主 pipeline 的首次识别争抢
     _monitor_stop.wait(2)
     while not _monitor_stop.is_set():
         try:
-            img = _monitor_context.tasker.controller.post_screencap().wait().get()
+            img = _monitor_tasker.controller.post_screencap().wait().get()
             if img is None:
                 _monitor_stop.wait(0.5)
                 continue
-            pipeline_override = {
-                "_monitor_return": {
-                    "recognition": "OCR",
-                    "expected": ["您的部队已经返回城镇"],
-                    "roi": [212, 327, 324, 138],
-                }
-            }
-            _monitor_context.tasker.controller.append_pipeline(pipeline_override)
-            result = _monitor_context.run_recognition("_monitor_return", img)
-            if result and result.hit:
-                global SEND_TEAMS
-                with _teams_lock:
-                    SEND_TEAMS = SEND_TEAMS - 1
-                logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
-                _monitor_stop.wait(0.5)
-                continue
+            job = _monitor_tasker.post_recognition(
+                JRecognitionType.OCR,
+                JOCR(expected=["您的部队已经返回城镇"], roi=[212, 327, 324, 138]),
+                img,
+            )
+            job.wait()
+            task_detail = job.get(wait=False)
+            if task_detail:
+                for node in task_detail.nodes:
+                    reco = node.recognition
+                    if reco and reco.hit and reco.best_result:
+                        global SEND_TEAMS
+                        with _teams_lock:
+                            SEND_TEAMS = SEND_TEAMS - 1
+                        logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
+                        _monitor_stop.wait(2)
+                        break
         except Exception as e:
             logger.debug(f"监控线程异常: {e}")
             _monitor_stop.wait(0.2)
@@ -112,8 +115,11 @@ class BearStartMonitor(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global _monitor_context
-        _monitor_context = context
+        global _monitor_tasker
+        if _monitor_tasker is None:
+            _monitor_tasker = Tasker()
+            _monitor_tasker.bind(context.tasker.resource, context.tasker.controller)
+            logger.info("监控 Tasker 已创建")
         if not _monitor_stop.is_set():
             _monitor_stop.clear()
             t = threading.Thread(target=_monitor_returned_teams, daemon=True)
