@@ -23,7 +23,6 @@ __all__ = [
     "BearStartMonitor",
     "BearStopMonitor",
     "BearIdentifyTeam",
-    "BearScrollDown",
     "RecallTeam",
     "UniteScan",
     "MakeSureQueueAvailable",
