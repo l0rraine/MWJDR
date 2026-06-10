@@ -173,7 +173,7 @@ class BearComputeExpected(CustomAction):
         )
         # 如果在等待过程中过了一个阶段
         if current_stage != LAST_STAGE:
-            logger.log(f"当前切换为阶段 {current_stage}")
+            logger.info(f"当前切换为阶段 {current_stage}")
             SEND_TEAMS = 0
             LAST_STAGE = current_stage
             current_team = 1
