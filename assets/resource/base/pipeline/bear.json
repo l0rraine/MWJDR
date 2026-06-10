@@ -119,6 +119,7 @@
         ]
     },
     "熊_启动返回监控": {
+        "recognition": "DirectHit",
         "action": "Custom",
         "custom_action": "熊_启动返回监控",
         "next": [
