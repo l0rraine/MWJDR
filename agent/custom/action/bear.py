@@ -48,46 +48,36 @@ def _monitor_returned_teams():
                 JRecognitionType.OCR,
                 JOCR(expected=["您的部队已经返回城镇"], roi=[212, 327, 324, 138]),
             )
-            if result and result.best_result and result.best_result.text:
-                text = result.best_result.text
-                if "返回城镇" in text:
-                    global SEND_TEAMS
-                    with _teams_lock:
-                        SEND_TEAMS = SEND_TEAMS - 1
-                    logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
-                    _monitor_stop.wait(2)  # 避免重复识别同一条通知
-                    continue
+            if result and result.hit:
+                global SEND_TEAMS
+                with _teams_lock:
+                    SEND_TEAMS = SEND_TEAMS - 1
+                logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
+                _monitor_stop.wait(2)  # 避免重复识别同一条通知
+                continue
         except Exception as e:
             logger.debug(f"监控线程异常: {e}")
             _monitor_stop.wait(0.2)  # 错误时等待0.2s
             continue
-        _monitor_stop.wait(0.5)  # 正常间隔0.5s
+        _monitor_stop.wait(0.8)  # 正常间隔0.5s
 
 
 def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 2):
-    # 1. 获取今天的 日期 + 开始时间
     today = datetime.now().date()
     start = datetime.combine(today, datetime.strptime(start_time, "%H:%M").time())
-
-    # 2. 获取当前系统时间
     now = datetime.now()
-
-    # 3. 计算时间差（秒）
     total_seconds = (now - start).total_seconds()
-
-    # 4. 阶段时长：5分14秒
     stage_seconds = 5 * 60 + 14  # 314 秒
-
     current_team = 1
-    # 5. 计算当前阶段（从 1 开始）
     if total_seconds < 0:
         return 1, current_team  # 还没开始
 
     current_stage = math.ceil(total_seconds / stage_seconds)
-    if total_seconds > (current_stage-1)*stage_seconds+60*wait_time:
+    if total_seconds > (current_stage - 1) * stage_seconds + 60 * wait_time:
         current_team = 2
-    
+
     return current_stage, current_team
+
 
 def next_stage_seconds():
     global START_TIME
@@ -102,9 +92,12 @@ def next_stage_seconds():
     logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
     return seconds
 
+
 @AgentServer.custom_action("熊_启动返回监控")
 class BearStartMonitor(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         global _monitor_context
         _monitor_context = context
         if not _monitor_stop.is_set():
@@ -117,7 +110,9 @@ class BearStartMonitor(CustomAction):
 
 @AgentServer.custom_action("熊_停止返回监控")
 class BearStopMonitor(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         _monitor_stop.set()
         logger.info("部队返回监控已停止")
         return CustomAction.RunResult(success=True)
@@ -125,16 +120,21 @@ class BearStopMonitor(CustomAction):
 
 @AgentServer.custom_action("熊_保留队伍")
 class BearReserveTeam(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         param = json.loads(argv.custom_action_param)
         global RESERVE_TEAM
         RESERVE_TEAM = int(param.get("保留队伍", True))
         return CustomAction.RunResult(success=True)
 
+
 @AgentServer.custom_action("熊_计算队伍")
 class BearComputeExpected(CustomAction):
 
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM
 
         param = json.loads(argv.custom_action_param)
@@ -174,9 +174,7 @@ class BearComputeExpected(CustomAction):
         else:
             TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
-        first_team_names = [
-            name.strip() for name in TEAMS_1.split(",") if name.strip()
-        ]
+        first_team_names = [name.strip() for name in TEAMS_1.split(",") if name.strip()]
         second_team_names = [
             name.strip() for name in TEAMS_2.split(",") if name.strip()
         ]
@@ -184,9 +182,7 @@ class BearComputeExpected(CustomAction):
         if current_team == 1:
             expected = [rf".*{name}.*" for name in first_team_names]
         else:
-            expected = [
-                rf".*{name}.*" for name in first_team_names+second_team_names
-            ]
+            expected = [rf".*{name}.*" for name in first_team_names + second_team_names]
 
         # logger.debug(
         #     f"当前阶段: {current_stage}，TEAMS_1: {TEAMS_1}, 当前队伍: {current_team}，识别期望: {expected}"
@@ -199,7 +195,7 @@ class BearComputeExpected(CustomAction):
                         "recognition": "OCR",
                         "roi": [273, 170, 252, 956],
                         "expected": expected,
-                        "threshold": 0.6
+                        "threshold": 0.6,
                     },
                     {
                         "sub_name": "join",
@@ -217,9 +213,12 @@ class BearComputeExpected(CustomAction):
         context.tasker.resource.override_pipeline(pipeline)
         return CustomAction.RunResult(success=True)
 
+
 @AgentServer.custom_action("熊_加入集结")
 class BearCombat(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
         global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS
 
         if not self._select_team_and_deploy(context, TEAM_ORDER[0]):
@@ -227,7 +226,7 @@ class BearCombat(CustomAction):
 
         # [1,2,3,4] → [2,3,4,1]
         TEAM_ORDER = TEAM_ORDER[1:] + TEAM_ORDER[:1]
-        if SEND_TEAMS == TOTAL_TEAMS:            
+        if SEND_TEAMS == TOTAL_TEAMS:
             time.sleep(next_stage_seconds())
             SEND_TEAMS = 0
 
@@ -243,10 +242,9 @@ class BearCombat(CustomAction):
         # start = time.time()
         if team_id > 0:
             roi = TEAM_ROI[team_id]
-            context.run_action("熊_选择队伍",pipeline_override={
-                "熊_选择队伍": {
-                    "target": roi
-                }})
+            context.run_action(
+                "熊_选择队伍", pipeline_override={"熊_选择队伍": {"target": roi}}
+            )
             # time.sleep(0.2)
             # logger.debug(f"选择队伍耗时: {(time.time() - start) * 1000:.0f}ms")
         # start = time.time()
