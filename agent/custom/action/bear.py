@@ -44,9 +44,11 @@ def _monitor_returned_teams():
     """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1"""
     while not _monitor_stop.is_set():
         try:
+            img = _monitor_context.tasker.controller.post_screencap().wait().get()
             result = _monitor_context.run_recognition_direct(
                 JRecognitionType.OCR,
                 JOCR(expected=["您的部队已经返回城镇"], roi=[212, 327, 324, 138]),
+                image=img,
             )
             if result and result.hit:
                 global SEND_TEAMS
