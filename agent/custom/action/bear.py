@@ -67,7 +67,7 @@ def _monitor_returned_teams():
                 with _teams_lock:
                     SEND_TEAMS = SEND_TEAMS - 1
                 logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
-                _monitor_stop.wait(2)
+                _monitor_stop.wait(0.5)
                 continue
         except Exception as e:
             logger.debug(f"监控线程异常: {e}")
