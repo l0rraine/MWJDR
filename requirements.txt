@@ -2,3 +2,4 @@ maafw==5.10.4
 loguru
 pillow
 pytz
+rapidocr-onnxruntime

@@ -1,7 +1,7 @@
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.context import Context
-from maa.pipeline import JActionType, JClick, JSwipe, JRecognitionType, JOCR
+from rapidocr_onnxruntime import RapidOCR
 import json
 import time
 import threading
@@ -38,33 +38,35 @@ RESERVE_TEAM = 1
 _monitor_stop = threading.Event()
 _teams_lock = threading.Lock()
 _monitor_tasker = None  # 主 Tasker 的引用
+_monitor_ocr = None  # RapidOCR 引擎
+
+# 监控通知的 ROI
+_MONITOR_ROI = [212, 327, 324, 138]
+_MONITOR_EXPECTED = "返回城镇"
 
 
 def _monitor_returned_teams():
     """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
 
-    使用主 Tasker 的 post_recognition 异步 API 进行识别，
-    该 API 设计为线程安全，可从任意线程调用。
+    仅使用 controller.post_screencap 获取截图（Controller 级 API，线程安全），
+    使用 RapidOCR 做独立 OCR 识别，完全不涉及 MaaFramework Tasker API。
     """
     # 延迟启动避免与主 pipeline 的首次识别争抢
     _monitor_stop.wait(2)
+    roi_x, roi_y, roi_w, roi_h = _MONITOR_ROI
     while not _monitor_stop.is_set():
         try:
             img = _monitor_tasker.controller.post_screencap().wait().get()
             if img is None:
                 _monitor_stop.wait(0.5)
                 continue
-            job = _monitor_tasker.post_recognition(
-                JRecognitionType.OCR,
-                JOCR(expected=["您的部队已经返回城镇"], roi=[212, 327, 324, 138]),
-                img,
-            )
-            job.wait()
-            task_detail = job.get(wait=False)
-            if task_detail:
-                for node in task_detail.nodes:
-                    reco = node.recognition
-                    if reco and reco.hit and reco.best_result:
+            # 裁剪 ROI 区域
+            cropped = img[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
+            result, _ = _monitor_ocr(cropped)
+            if result:
+                for item in result:
+                    text = item[1]
+                    if _MONITOR_EXPECTED in text:
                         global SEND_TEAMS
                         with _teams_lock:
                             SEND_TEAMS = SEND_TEAMS - 1
@@ -114,8 +116,11 @@ class BearStartMonitor(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global _monitor_tasker
+        global _monitor_tasker, _monitor_ocr
         _monitor_tasker = context.tasker
+        if _monitor_ocr is None:
+            _monitor_ocr = RapidOCR()
+            logger.info("RapidOCR 引擎已初始化")
         if not _monitor_stop.is_set():
             _monitor_stop.clear()
             t = threading.Thread(target=_monitor_returned_teams, daemon=True)
