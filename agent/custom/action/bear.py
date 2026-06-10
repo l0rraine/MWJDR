@@ -41,27 +41,39 @@ _monitor_context = None
 
 
 def _monitor_returned_teams():
-    """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1"""
+    """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
+
+    延迟启动避免与主 pipeline 的首次识别争抢内部锁。
+    """
+    # 等待主 pipeline 先跑完当前一轮识别，再开始监控
+    _monitor_stop.wait(2)
     while not _monitor_stop.is_set():
         try:
             img = _monitor_context.tasker.controller.post_screencap().wait().get()
-            result = _monitor_context.run_recognition_direct(
-                JRecognitionType.OCR,
-                JOCR(expected=["您的部队已经返回城镇"], roi=[212, 327, 324, 138]),
-                image=img,
-            )
+            if img is None:
+                _monitor_stop.wait(0.5)
+                continue
+            pipeline_override = {
+                "_monitor_return": {
+                    "recognition": "OCR",
+                    "expected": ["您的部队已经返回城镇"],
+                    "roi": [212, 327, 324, 138],
+                }
+            }
+            _monitor_context.tasker.controller.append_pipeline(pipeline_override)
+            result = _monitor_context.run_recognition("_monitor_return", img)
             if result and result.hit:
                 global SEND_TEAMS
                 with _teams_lock:
                     SEND_TEAMS = SEND_TEAMS - 1
                 logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
-                _monitor_stop.wait(2)  # 避免重复识别同一条通知
+                _monitor_stop.wait(2)
                 continue
         except Exception as e:
             logger.debug(f"监控线程异常: {e}")
-            _monitor_stop.wait(0.2)  # 错误时等待0.2s
+            _monitor_stop.wait(0.2)
             continue
-        _monitor_stop.wait(0.8)  # 正常间隔0.5s
+        _monitor_stop.wait(0.5)
 
 
 def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 2):
