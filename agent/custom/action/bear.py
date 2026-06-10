@@ -33,6 +33,7 @@ LAST_STAGE = 0
 RESERVE_TEAM = 1
 FOUND_LEAD_TRUCK = {}
 CURRENT_TRUCK = ""
+_BEAR_ENDED = False
 
 
 def get_current_stage(start_time: str = "21:00"):
@@ -44,7 +45,7 @@ def get_current_stage(start_time: str = "21:00"):
     if total_seconds < 0:
         return 1  # 还没开始
 
-    current_stage = math.ceil(total_seconds / stage_seconds)
+    current_stage = max(1, math.ceil(total_seconds / stage_seconds))
 
     return current_stage
 
@@ -75,7 +76,7 @@ class BearIdentifyTeam(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK
+        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK, _BEAR_ENDED
 
         # === 初始化 ===
         param = json.loads(argv.custom_action_param)
@@ -101,6 +102,7 @@ class BearIdentifyTeam(CustomAction):
 
         if current_stage > 5:
             logger.info("打熊已结束")
+            _BEAR_ENDED = True
             return CustomAction.RunResult(success=False)
 
         lead_truck_names = [name.strip() for name in TRUCK_1.split(",") if name.strip()]
@@ -154,7 +156,7 @@ class BearIdentifyTeam(CustomAction):
                 FOUND_LEAD_TRUCK[k] = next_stage_seconds()
 
             # 这个车头之前都没有开车，那这次不管是不是他开车都不等他了
-            if history[truck] == 0:
+            if history.get(truck, 0) == 0:
                 found = found + 1
             else:
                 # 之前开过车，并且这次是他开车，这次就不等了
@@ -213,7 +215,7 @@ class BearIdentifyTeam(CustomAction):
             },
         )
 
-        time.sleep(0.2)
+        time.sleep(0.3)
 
         return CustomAction.RunResult(success=True)
 
@@ -275,3 +277,26 @@ class BearCombat(CustomAction):
             return True
 
         return False
+
+
+@AgentServer.custom_action("熊_向下滚动")
+class BearScrollDown(CustomAction):
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global _BEAR_ENDED
+        if _BEAR_ENDED:
+            return CustomAction.RunResult(success=False)
+        context.run_action(
+            "__bear_scroll",
+            pipeline_override={
+                "__bear_scroll": {
+                    "action": "Swipe",
+                    "begin": [433, 909, 14, 10],
+                    "end": [423, 792, 21, 11],
+                    "duration": 100,
+                    "post_delay": 200,
+                }
+            },
+        )
+        return CustomAction.RunResult(success=True)
