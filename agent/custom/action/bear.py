@@ -25,15 +25,16 @@ TEAM_ROI = [
 ]
 
 START_TIME = ""
-TEAMS_1 = []
-TEAMS_2 = []
+TRUCK_1 = []
+TRUCK_2 = []
 DOWN_TEAMS = []
 TEAM_ORDER = []
 SEND_TEAMS = 0
 TOTAL_TEAMS = 0
 LAST_STAGE = 0
 RESERVE_TEAM = 1
-# 每个阶段时长：5分14秒
+FOUND_LEAD_TRUCK = {}
+CURRENT_TRUCK = ""
 
 _monitor_stop = threading.Event()
 _teams_lock = threading.Lock()
@@ -78,7 +79,7 @@ def _monitor_returned_teams():
                     if _MONITOR_EXPECTED in text:
                         global SEND_TEAMS
                         with _teams_lock:
-                            SEND_TEAMS = SEND_TEAMS - 1
+                            SEND_TEAMS = max(SEND_TEAMS - 1, 0)
                         logger.info(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
                         _monitor_stop.wait(2)
                         break
@@ -89,21 +90,18 @@ def _monitor_returned_teams():
         _monitor_stop.wait(0.5)
 
 
-def get_current_stage_and_team(start_time: str = "21:00", wait_time: int = 2):
+def get_current_stage(start_time: str = "21:00"):
     today = datetime.now().date()
     start = datetime.combine(today, datetime.strptime(start_time, "%H:%M").time())
     now = datetime.now()
     total_seconds = (now - start).total_seconds()
     stage_seconds = 5 * 60 + 14  # 314 秒
-    current_team = 1
     if total_seconds < 0:
-        return 1, current_team  # 还没开始
+        return 1  # 还没开始
 
     current_stage = math.ceil(total_seconds / stage_seconds)
-    if total_seconds > (current_stage - 1) * stage_seconds + 60 * wait_time:
-        current_team = 2
 
-    return current_stage, current_team
+    return current_stage
 
 
 def next_stage_seconds():
@@ -152,17 +150,6 @@ class BearStopMonitor(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
-@AgentServer.custom_action("熊_保留队伍")
-class BearReserveTeam(CustomAction):
-    def run(
-        self, context: Context, argv: CustomAction.RunArg
-    ) -> CustomAction.RunResult:
-        param = json.loads(argv.custom_action_param)
-        global RESERVE_TEAM
-        RESERVE_TEAM = int(param.get("保留队伍", True))
-        return CustomAction.RunResult(success=True)
-
-
 @AgentServer.custom_action("熊_识别队伍")
 class BearIdentifyTeam(CustomAction):
     """合并原 熊_计算队伍 + 熊_识别队伍
@@ -176,18 +163,17 @@ class BearIdentifyTeam(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TEAMS_1, TEAMS_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM
+        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK
 
         # === 原 熊_计算队伍 逻辑 ===
         param = json.loads(argv.custom_action_param)
         start_time_str = param.get("开始时间", "21:00")
-        first_team_names_str = param.get("第一梯队", "")
-        second_team_names_str = param.get("第二梯队", "")
-        wait_time = int(param.get("等待时间", 3))
+        lead_truck_names_str = param.get("大车头", "")
+        secondary_truck_names_str = param.get("小车头", "")
 
         START_TIME = start_time_str
-        TEAMS_1 = first_team_names_str
-        TEAMS_2 = second_team_names_str
+        TRUCK_1 = lead_truck_names_str
+        TRUCK_2 = secondary_truck_names_str
 
         team_order_str = param.get("循环顺序", "0")
         if not TEAM_ORDER:
@@ -195,34 +181,23 @@ class BearIdentifyTeam(CustomAction):
                 int(x.strip()) for x in team_order_str.split(",") if x.strip()
             ]
 
-        current_stage, current_team = get_current_stage_and_team(
-            start_time_str, wait_time
-        )
+        current_stage = get_current_stage(start_time_str)
         if current_stage != LAST_STAGE:
             logger.info(f"当前为阶段 {current_stage}")
-            SEND_TEAMS = 0
             LAST_STAGE = current_stage
-            current_team = 1
+            SEND_TEAMS = 0
 
         if current_stage > 5:
             _monitor_stop.set()
             logger.info("打熊已结束")
             return CustomAction.RunResult(success=False)
 
-        if current_stage == 5:
-            TOTAL_TEAMS = len(TEAM_ORDER)
-        else:
-            TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
-
-        first_team_names = [name.strip() for name in TEAMS_1.split(",") if name.strip()]
-        second_team_names = [
-            name.strip() for name in TEAMS_2.split(",") if name.strip()
+        lead_truck_names = [name.strip() for name in TRUCK_1.split(",") if name.strip()]
+        secondary_truck_names = [
+            name.strip() for name in TRUCK_2.split(",") if name.strip()
         ]
 
-        if current_team == 1:
-            expected = [rf".*{name}.*" for name in first_team_names]
-        else:
-            expected = [rf".*{name}.*" for name in first_team_names + second_team_names]
+        expected = [rf".*{name}.*" for name in lead_truck_names + secondary_truck_names]
 
         if not expected:
             return CustomAction.RunResult(success=False)
@@ -251,11 +226,21 @@ class BearIdentifyTeam(CustomAction):
         if not detail or not detail.hit:
             return CustomAction.RunResult(success=True)
 
-        team_name_text = detail.best_result.text
-        team_name_box = detail.box  # [x, y, w, h]
+        truck_name_text = detail.best_result.text
+
+        for truck in lead_truck_names:
+            if truck in truck_name_text:
+                FOUND_LEAD_TRUCK[truck] = current_stage
+
+        found = sum(1 for v in FOUND_LEAD_TRUCK.values() if v == current_stage)
+
+        RESERVE_TEAM = len(lead_truck_names) - found
+        TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
+
+        truck_name_box = detail.box  # [x, y, w, h]
 
         # 2. 根据 team_name 坐标 + offset 计算 join ROI
-        join_roi = [a + b for a, b in zip(team_name_box, join_offset)]
+        join_roi = [a + b for a, b in zip(truck_name_box, join_offset)]
 
         # 3. TemplateMatch join 按钮
         detail = context.run_recognition(
@@ -273,6 +258,8 @@ class BearIdentifyTeam(CustomAction):
         )
         if not detail or not detail.hit:
             return CustomAction.RunResult(success=True)
+
+        CURRENT_TRUCK = truck_name_text
 
         # 4. 两个都匹配，点击 join（原 box_index=1 + target_offset）
         join_box = detail.box
@@ -320,7 +307,7 @@ class BearCombat(CustomAction):
 
         返回 True 表示成功出征并返回集结列表。
         """
-        global SEND_TEAMS, TOTAL_TEAMS
+        global SEND_TEAMS, TOTAL_TEAMS, CURRENT_TRUCK
 
         # start = time.time()
         if team_id > 0:
@@ -356,7 +343,7 @@ class BearCombat(CustomAction):
         detail = context.run_recognition("熊_在集结列表", img)
         if detail and detail.hit:
             SEND_TEAMS = SEND_TEAMS + 1
-            logger.info(f"队伍 {team_id} 已出征，剩余 {TOTAL_TEAMS-SEND_TEAMS} 只队伍")
+            logger.info(f"{team_id} 号队伍已加入 {CURRENT_TRUCK}")
             return True
 
         # logger.debug(f"{team_id} 出征失败")

@@ -4,32 +4,11 @@
             "name": "打熊",
             "entry": "熊_入口",
             "option": [
-                "打熊-是否保留队伍",
                 "打熊-配置"
             ]
         }
     ],
     "option": {
-        "打熊-是否保留队伍": {
-            "type": "switch",
-            "label": "是否保留队伍",
-            "cases": [
-                {
-                    "name": "Yes",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "No",
-                    "pipeline_override": {
-                        "熊-参数-保留队伍": {
-                            "custom_action_param": {
-                                "保留队伍": false
-                            }
-                        }
-                    }
-                }
-            ]
-        },
         "打熊-配置": {
             "type": "input",
             "label": "配置",
@@ -42,22 +21,15 @@
                     "description": "开始打熊的时间，格式 HH:MM"
                 },
                 {
-                    "name": "第一梯队",
-                    "label": "第一梯队的队伍名",
+                    "name": "大车头",
+                    "label": "大车头",
                     "pipeline_type": "string",
                     "default": "",
                     "description": "多个以英文逗号隔开"
                 },
                 {
-                    "name": "等待时间",
-                    "label": "等待时间",
-                    "pipeline_type": "int",
-                    "default": "2",
-                    "description": "等待时间内，只加入第一梯队里的队伍，等待时间后才加入第二梯队的队伍"
-                },
-                {
-                    "name": "第二梯队",
-                    "label": "第二梯队的队伍名",
+                    "name": "小车头",
+                    "label": "小车头",
                     "pipeline_type": "string",
                     "default": "",
                     "description": "多个以英文逗号隔开"
@@ -75,8 +47,8 @@
                     "custom_action_param": {
                         "开始时间": "{开始时间}",
                         "等待时间": "{等待时间}",
-                        "第一梯队": "{第一梯队}",
-                        "第二梯队": "{第二梯队}",
+                        "大车头": "{大车头}",
+                        "小车头": "{小车头}",
                         "循环顺序": "{循环顺序}"
                     }
                 }

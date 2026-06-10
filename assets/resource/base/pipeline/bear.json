@@ -8,14 +8,6 @@
             "[JumpBack]后退"
         ]
     },
-    "熊-参数-保留队伍": {
-        "enabled": true,
-        "action": "Custom",
-        "custom_action": "熊_保留队伍",
-        "custom_action_param": {
-            "保留队伍": true
-        }
-    },
     "熊_已在入口": {
         "recognition": "OCR",
         "expected": "联盟战争",
@@ -134,8 +126,8 @@
         "custom_action": "熊_识别队伍",
         "custom_action_param": {
             "开始时间": "21:00",
-            "第一梯队": "",
-            "第二梯队": "",
+            "大车头": "",
+            "小车头": "",
             "等待时间": "2",
             "循环顺序": ""
         },
