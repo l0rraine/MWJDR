@@ -39,39 +39,26 @@ _monitor_stop = threading.Event()
 _teams_lock = threading.Lock()
 _monitor_tasker = None  # 主 Tasker 的引用
 _monitor_ocr = None  # RapidOCR 引擎
-_latest_img = None  # 主 pipeline 共享的最新截图
-_img_lock = threading.Lock()  # 保护 _latest_img 的读写
 
 # 监控通知的 ROI
 _MONITOR_ROI = [212, 327, 324, 138]
 _MONITOR_EXPECTED = "返回城镇"
 
 
-def _store_latest_img(img):
-    """存储最新截图供后台监控线程使用"""
-    global _latest_img
-    with _img_lock:
-        _latest_img = img.copy()
-
-
 def _monitor_returned_teams():
     """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
 
-    从主 pipeline 共享的 _latest_img 读取截图，使用 RapidOCR 做独立识别。
-    完全不调用任何 MaaFramework API，确保线程安全。
+    从 controller.cached_image 读取 pipeline 缓存的截图，
+    使用 RapidOCR 做独立识别，不调用任何 MaaFramework 主动 API。
     """
     roi_x, roi_y, roi_w, roi_h = _MONITOR_ROI
     while not _monitor_stop.is_set():
         try:
-            with _img_lock:
-                img = _latest_img
-                if img is not None:
-                    cropped = img[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
-                else:
-                    cropped = None
-            if cropped is None:
+            img = _monitor_tasker.controller.cached_image
+            if img is None:
                 _monitor_stop.wait(0.5)
                 continue
+            cropped = img[roi_y:roi_y + roi_h, roi_x:roi_x + roi_w]
             result, _ = _monitor_ocr(cropped)
             if result:
                 for item in result:
@@ -285,7 +272,6 @@ class BearCombat(CustomAction):
 
         time.sleep(0.2)
         img = context.tasker.controller.post_screencap().wait().get()
-        _store_latest_img(img)
         detail = context.run_recognition("熊_士兵超出上限", img)
         if detail and detail.hit:
             logger.debug(f"{team_id} 士兵超出上限,出征失败")
@@ -295,7 +281,6 @@ class BearCombat(CustomAction):
 
         # 此时应已返回集结列表
         img = context.tasker.controller.post_screencap().wait().get()
-        _store_latest_img(img)
         detail = context.run_recognition("熊_超出容量", img)
         if detail and detail.hit:
             logger.debug(f"{team_id} 熊_超出容量,出征失败")
