@@ -18,7 +18,7 @@
             57
         ],
         "next": [
-            "熊_开始战斗"
+            "熊_初始化参数"
         ]
     },
     "熊_点击加入集结": {
@@ -37,7 +37,7 @@
         "action": "Click",
         "post_delay": 500,
         "next": [
-            "熊_开始战斗"
+            "熊_初始化参数"
         ]
     },
     "熊_点击联盟": {
@@ -100,6 +100,19 @@
             }
         },
         "next": [
+            "熊_初始化参数"
+        ]
+    },
+    "熊_初始化参数": {
+        "action": "Custom",
+        "custom_action": "熊_初始化参数",
+        "custom_action_param": {
+            "开始时间": "21:00",
+            "大车头": "",
+            "小车头": "",
+            "循环顺序": ""
+        },
+        "next": [
             "熊_开始战斗"
         ]
     },
@@ -109,26 +122,35 @@
         "next": [
             "熊_识别队伍",
             "[JumpBack]熊_在集结详情页面",
-            "[JumpBack]熊_向下滚动"
+            "[JumpBack]熊_计算队伍"
         ]
     },
     "熊_识别队伍": {
         "pre_delay": 0,
         "post_delay": 0,
-        "action": "Custom",
-        "custom_action": "熊_识别队伍",
-        "custom_action_param": {
-            "开始时间": "21:00",
-            "大车头": "",
-            "小车头": "",
-            "等待时间": "2",
-            "循环顺序": ""
-        },
+        "recognition": "Custom",
+        "custom_recognition": "熊_识别队伍",
         "rate_limit": 50,
+        "action": "Click",
+        "repeat": 2,
+        "repeat_delay": 100,
+        "target_offset": [
+            5,
+            5,
+            -10,
+            -10
+        ],
         "next": [
             "熊_在队伍选择页面",
             "熊_队列不足",
             "熊_在集结详情页面"
+        ]
+    },
+    "熊_计算队伍": {
+        "action": "Custom",
+        "custom_action": "熊_计算队伍",
+        "next": [
+            "熊_向下滚动"
         ]
     },
     "熊_向下滚动": {
