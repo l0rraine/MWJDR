@@ -25,7 +25,6 @@ TEAM_ROI = [
 START_TIME = ""
 TRUCK_1 = []
 TRUCK_2 = []
-DOWN_TEAMS = []
 TEAM_ORDER = []
 SEND_TEAMS = 0
 TOTAL_TEAMS = 0
@@ -187,7 +186,7 @@ class BearIdentifyTeam(CustomAction):
         # 优先识别大车头
         result_sorted = sorted(
             detail.filtered_results,
-            key=lambda x: 0 if any(x["text"] in s for s in TRUCK_1) else 1,
+            key=lambda x: 0 if any(s in x.text for s in TRUCK_1) else 1,
         )
 
         for result in result_sorted:
