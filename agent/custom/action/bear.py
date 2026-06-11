@@ -137,7 +137,7 @@ class BearRecoTeam(CustomRecognition):
             )
             if detail and detail.hit:
                 CURRENT_TRUCK = result.text
-                return CustomRecognition.AnalyzeResult(box=detail.box, detail=detail)
+                return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
 
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 
