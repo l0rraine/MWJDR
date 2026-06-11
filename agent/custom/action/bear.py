@@ -33,6 +33,7 @@ LAST_STAGE = 0
 RESERVE_TEAM = 1
 FOUND_LEAD_TRUCK = {}
 CURRENT_TRUCK = ""
+LEAD_TRUCK_OF_CURRENT_STAGE = 0
 
 
 def get_current_stage(start_time: str = "21:00"):
@@ -75,7 +76,7 @@ class BearIdentifyTeam(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK
+        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK, LEAD_TRUCK_OF_CURRENT_STAGE
 
         # === 初始化 ===
         param = json.loads(argv.custom_action_param)
@@ -84,8 +85,6 @@ class BearIdentifyTeam(CustomAction):
         secondary_truck_names_str = param.get("小车头", "")
 
         START_TIME = start_time_str
-        TRUCK_1 = lead_truck_names_str
-        TRUCK_2 = secondary_truck_names_str
 
         team_order_str = param.get("循环顺序", "0")
         if not TEAM_ORDER:
@@ -98,17 +97,22 @@ class BearIdentifyTeam(CustomAction):
             logger.info(f"当前为阶段 {current_stage}")
             LAST_STAGE = current_stage
             SEND_TEAMS = 0
+            LEAD_TRUCK_OF_CURRENT_STAGE = 0
 
         if current_stage > 5:
             logger.info("打熊已结束")
             return CustomAction.RunResult(success=False)
 
-        lead_truck_names = [name.strip() for name in TRUCK_1.split(",") if name.strip()]
-        secondary_truck_names = [
-            name.strip() for name in TRUCK_2.split(",") if name.strip()
+        TRUCK_1 = [
+            name.strip() for name in lead_truck_names_str.split(",") if name.strip()
+        ]
+        TRUCK_2 = [
+            name.strip()
+            for name in secondary_truck_names_str.split(",")
+            if name.strip()
         ]
 
-        expected = [rf".*{name}.*" for name in lead_truck_names + secondary_truck_names]
+        expected = [rf".*{name}.*" for name in TRUCK_1 + TRUCK_2]
 
         if not expected:
             return CustomAction.RunResult(success=False)
@@ -137,83 +141,100 @@ class BearIdentifyTeam(CustomAction):
             return CustomAction.RunResult(success=True)
 
         # 2. 计算当前可派出的队伍总数
-        truck_name_text = detail.best_result.text
-
         history = {}
         found = 0
-        for truck in lead_truck_names:
-            if current_stage > 1:
-                for i in range(current_stage - 1):
-                    if f"{truck}_{i+1}" in FOUND_LEAD_TRUCK:
-                        history[truck] = i + 1  # 车头是不是之前识别到过
+        for truck in TRUCK_1:
+            for i in range(current_stage):
+                if f"{truck}_{i+1}" in FOUND_LEAD_TRUCK:
+                    history[truck] = i + 1  # 车头是不是之前识别到过
 
-            k = f"{truck}_{current_stage}"
-
-            # 当前识别结果是大车头且不在列表中则补充
-            if truck in truck_name_text and k not in FOUND_LEAD_TRUCK:
-                FOUND_LEAD_TRUCK[k] = next_stage_seconds()
-
-            # 这个车头之前都没有开车，那这次不管是不是他开车都不等他了
+            # 如果当前不是第一阶段并且这个大车头没有开过车，那么不为这个车头保留队伍
             if history.get(truck, 0) == 0:
-                found = found + 1
+                if current_stage > 1:
+                    found = found + 1
             else:
-                # 之前开过车，并且这次是他开车，这次就不等了
+                # 之前开过车，并且这个阶段已经检测到这个大车头，不为这个车头保留队伍
+                k = f"{truck}_{current_stage}"
                 if k in FOUND_LEAD_TRUCK:
                     found = found + 1
-                else:  # 之前开过车，但是这次超过40s还不开，之后就不等了
+                else:  # 之前开过车，但是这个阶段超过40s还不开，那就不保留队伍
                     last_remain = FOUND_LEAD_TRUCK[f"{truck}_{history[truck]}"]
                     this_remain = next_stage_seconds()
-                    if last_remain - this_remain >= 40:
+                    if last_remain - this_remain >= min(40, this_remain):
                         found = found + 1
 
-            # 之前开过车，这次没开车呢，那就需要等他
+            # 之前开过车，这次没开车呢，那就需要保留队伍
 
-        RESERVE_TEAM = len(lead_truck_names) - found
+        RESERVE_TEAM = len(TRUCK_1) - found
         TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
-        truck_name_box = detail.box  # [x, y, w, h]
-
-        # 3. 根据 team_name 坐标 + offset 计算 join ROI
-        join_roi = [a + b for a, b in zip(truck_name_box, join_offset)]
-
-        # 4. TemplateMatch join 按钮
-        detail = context.run_recognition(
-            "熊_识别队伍_join",
-            img,
-            pipeline_override={
-                "熊_识别队伍_join": {
-                    "recognition": "TemplateMatch",
-                    "template": "熊/直接加入队伍.png",
-                    "roi": join_roi,
-                    "threshold": 0.9,
-                    "method": 10001,
-                }
-            },
-        )
-        if not detail or not detail.hit:
+        # 假设队伍已经派完
+        if SEND_TEAMS >= TOTAL_TEAMS:
+            # 且大车头已经全部出现，则开始等待
+            if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
+                seconds = next_stage_seconds()
+                logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
+                time.sleep(seconds)
             return CustomAction.RunResult(success=True)
 
-        CURRENT_TRUCK = truck_name_text
+        for result in detail.filtered_results:
+            truck = next((s for s in TRUCK_1 if s in result.text), "")
+            k = f"{truck}_{current_stage}"
+            if truck and k not in FOUND_LEAD_TRUCK:
+                FOUND_LEAD_TRUCK[k] = next_stage_seconds()
+                LEAD_TRUCK_OF_CURRENT_STAGE = LEAD_TRUCK_OF_CURRENT_STAGE + 1
 
-        # 5. 两个都匹配，点击加入按钮
-        join_box = detail.box
-        click_target = [a + b for a, b in zip(join_box, join_target_offset)]
-
-        context.run_action(
-            "熊_点击加入按钮",
-            pipeline_override={
-                "熊_点击加入按钮": {
-                    "pre_delay": 0,
-                    "post_delay": 0,
-                    "action": "Click",
-                    "target": click_target,
-                    "repeat": 2,
-                    "repeat_delay": 100,
-                }
-            },
+        # 优先识别大车头
+        result_sorted = sorted(
+            detail.filtered_results,
+            key=lambda x: 0 if any(x["text"] in s for s in TRUCK_1) else 1,
         )
 
-        time.sleep(0.3)
+        for result in result_sorted:
+            truck_name_box = result.box  # [x, y, w, h]
+
+            # 3. 根据 team_name 坐标 + offset 计算 join ROI
+            join_roi = [a + b for a, b in zip(truck_name_box, join_offset)]
+
+            # 4. TemplateMatch join 按钮
+            detail = context.run_recognition(
+                "熊_识别队伍_join",
+                img,
+                pipeline_override={
+                    "熊_识别队伍_join": {
+                        "recognition": "TemplateMatch",
+                        "template": "熊/直接加入队伍.png",
+                        "roi": join_roi,
+                        "threshold": 0.9,
+                        "method": 10001,
+                    }
+                },
+            )
+            if not detail or not detail.hit:
+                return CustomAction.RunResult(success=True)
+
+            CURRENT_TRUCK = result.text
+
+            # 5. 两个都匹配，点击加入按钮
+            join_box = detail.box
+            click_target = [a + b for a, b in zip(join_box, join_target_offset)]
+
+            context.run_action(
+                "熊_点击加入按钮",
+                pipeline_override={
+                    "熊_点击加入按钮": {
+                        "pre_delay": 0,
+                        "post_delay": 0,
+                        "action": "Click",
+                        "target": click_target,
+                        "repeat": 2,
+                        "repeat_delay": 100,
+                    }
+                },
+            )
+
+            time.sleep(0.3)
+            break
 
         return CustomAction.RunResult(success=True)
 
@@ -223,18 +244,20 @@ class BearCombat(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS
+        global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, TRUCK_1
 
         if not self._select_team_and_deploy(context, TEAM_ORDER[0]):
             return CustomAction.RunResult(success=True)
 
         # [1,2,3,4] → [2,3,4,1]
         TEAM_ORDER = TEAM_ORDER[1:] + TEAM_ORDER[:1]
-        if SEND_TEAMS == TOTAL_TEAMS:
-            seconds = next_stage_seconds()
-            logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
-            time.sleep(seconds)
-            SEND_TEAMS = 0
+        if SEND_TEAMS >= TOTAL_TEAMS:
+            if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
+                seconds = next_stage_seconds()
+                logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
+                time.sleep(seconds)
+            else:
+                logger.info("队伍已全部派出，开始监控大车头")
 
         return CustomAction.RunResult(success=True)
 
@@ -275,4 +298,3 @@ class BearCombat(CustomAction):
             return True
 
         return False
-
