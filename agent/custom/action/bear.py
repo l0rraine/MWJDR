@@ -213,7 +213,7 @@ class BearRecoTeam(CustomRecognition):
                 FOUND_LEAD_TRUCK[k] = next_stage_seconds()
                 LEAD_TRUCK_OF_CURRENT_STAGE = LEAD_TRUCK_OF_CURRENT_STAGE + 1
                 logger.debug(
-                    f"{current_stage} 阶段发现大车头 {k}, 现有大车头 {LEAD_TRUCK_OF_CURRENT_STAGE}"
+                    f"{current_stage} 阶段发现大车头 {truck}, 现有大车头 {LEAD_TRUCK_OF_CURRENT_STAGE}"
                 )
 
         # 队伍已派完，不再加入，但大车头扫描已在上面完成

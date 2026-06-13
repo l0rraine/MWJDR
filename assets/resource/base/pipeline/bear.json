@@ -213,22 +213,13 @@
     "熊_在集结详情页面": {
         "pre_delay": 100,
         "post_delay": 100,
-        "recognition": "ColorMatch",
+        "recognition": "TemplateMatch",
+        "template": "熊/集结详情.png",
         "roi": [
-            190,
-            93,
-            43,
-            22
-        ],
-        "upper": [
-            164,
-            91,
-            79
-        ],
-        "lower": [
-            160,
-            89,
-            78
+            321,
+            463,
+            103,
+            99
         ],
         "action": "Click",
         "target": [
