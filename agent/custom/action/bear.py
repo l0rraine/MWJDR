@@ -155,6 +155,15 @@ class BearComputeTeam(CustomAction):
                 seconds = next_stage_seconds()
                 logger.info(f"队伍已全部派出，等待下一阶段，剩余时间: {seconds:.0f}秒")
                 time.sleep(seconds)
+
+                # 等待结束后立即初始化新阶段，避免 JumpBack 后熊_识别队伍
+                # 仍用旧的 SEND_TEAMS/TOTAL_TEAMS 导致白跑一轮
+                new_stage = get_current_stage(START_TIME)
+                if new_stage != LAST_STAGE:
+                    logger.info(f"当前为阶段 {new_stage}")
+                    LAST_STAGE = new_stage
+                    SEND_TEAMS = 0
+                    LEAD_TRUCK_OF_CURRENT_STAGE = 0
             else:
                 logger.info("队伍已全部派出，开始监控大车头")
 
