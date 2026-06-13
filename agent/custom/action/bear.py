@@ -148,13 +148,15 @@ class BearComputeTeam(CustomAction):
         RESERVE_TEAM = len(TRUCK_1) - found
         TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
-        # 假设队伍已经派完
+        # 队伍已全部派出
         if SEND_TEAMS >= TOTAL_TEAMS:
-            # 且大车头已经全部出现，则开始等待
             if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
+                # 大车头已全部出现，等待下一阶段
                 seconds = next_stage_seconds()
-                logger.info(f"开始等待1，剩余时间: {seconds:.0f}秒")
+                logger.info(f"队伍已全部派出，等待下一阶段，剩余时间: {seconds:.0f}秒")
                 time.sleep(seconds)
+            else:
+                logger.info("队伍已全部派出，开始监控大车头")
 
         return CustomAction.RunResult(success=True)
 
@@ -193,26 +195,20 @@ class BearRecoTeam(CustomRecognition):
         if not detail or not detail.hit:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
+        # 先检查是否已派完，避免更新 FOUND_LEAD_TRUCK 后影响下一轮 TOTAL_TEAMS 计算
+        if SEND_TEAMS >= TOTAL_TEAMS:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
         current_stage = get_current_stage(START_TIME)
         for result in detail.filtered_results:
             truck = next((s for s in TRUCK_1 if s in result.text), "")
             k = f"{truck}_{current_stage}"
             if truck and k not in FOUND_LEAD_TRUCK:
                 FOUND_LEAD_TRUCK[k] = next_stage_seconds()
-
                 LEAD_TRUCK_OF_CURRENT_STAGE = LEAD_TRUCK_OF_CURRENT_STAGE + 1
                 logger.debug(
                     f"{current_stage} 阶段发现大车头 {k}, 现有大车头 {LEAD_TRUCK_OF_CURRENT_STAGE}"
                 )
-
-        # 假设队伍已经派完
-        if SEND_TEAMS >= TOTAL_TEAMS:
-            # 且大车头已经全部出现，则开始等待
-            if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
-                seconds = next_stage_seconds()
-                logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
-                time.sleep(seconds)
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 优先识别大车头
         result_sorted = sorted(
@@ -260,13 +256,6 @@ class BearCombat(CustomAction):
 
         # [1,2,3,4] → [2,3,4,1]
         TEAM_ORDER = TEAM_ORDER[1:] + TEAM_ORDER[:1]
-        if SEND_TEAMS >= TOTAL_TEAMS:
-            if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
-                seconds = next_stage_seconds()
-                logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
-                time.sleep(seconds)
-            else:
-                logger.info("队伍已全部派出，开始监控大车头")
 
         return CustomAction.RunResult(success=True)
 
