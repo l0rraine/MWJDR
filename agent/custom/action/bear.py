@@ -66,82 +66,6 @@ def next_stage_seconds():
     return seconds
 
 
-@AgentServer.custom_recognition("熊_识别队伍")
-class BearRecoTeam(CustomRecognition):
-    def analyze(
-        self,
-        context: Context,
-        argv: CustomRecognition.AnalyzeArg,
-    ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
-        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK, LEAD_TRUCK_OF_CURRENT_STAGE
-
-        expected = [rf".*{name}.*" for name in TRUCK_1 + TRUCK_2]
-
-        if not expected:
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-        img = context.tasker.controller.post_screencap().wait().get()
-
-        team_name_roi = [273, 170, 252, 956]
-        join_offset = [310, 87, 0, 58]
-        join_target_offset = [5, 5, -10, -10]
-
-        # 1. OCR team_name
-        detail = context.run_recognition(
-            "熊_识别队伍_team_name",
-            img,
-            pipeline_override={
-                "熊_识别队伍_team_name": {
-                    "recognition": "OCR",
-                    "expected": expected,
-                    "roi": team_name_roi,
-                    "threshold": 0.6,
-                }
-            },
-        )
-        if not detail or not detail.hit:
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-
-        current_stage = get_current_stage(START_TIME)
-        for result in detail.filtered_results:
-            truck = next((s for s in TRUCK_1 if s in result.text), "")
-            k = f"{truck}_{current_stage}"
-            if truck and k not in FOUND_LEAD_TRUCK:
-                FOUND_LEAD_TRUCK[k] = next_stage_seconds()
-                LEAD_TRUCK_OF_CURRENT_STAGE = LEAD_TRUCK_OF_CURRENT_STAGE + 1
-
-        # 优先识别大车头
-        result_sorted = sorted(
-            detail.filtered_results,
-            key=lambda x: 0 if any(s in x.text for s in TRUCK_1) else 1,
-        )
-
-        for result in result_sorted:
-            truck_name_box = result.box  # [x, y, w, h]
-
-            # 3. 根据 team_name 坐标 + offset 计算 join ROI
-            join_roi = [a + b for a, b in zip(truck_name_box, join_offset)]
-
-            # 4. TemplateMatch join 按钮
-            detail = context.run_recognition(
-                "熊_识别队伍_join",
-                img,
-                pipeline_override={
-                    "熊_识别队伍_join": {
-                        "recognition": "TemplateMatch",
-                        "template": "熊/直接加入队伍.png",
-                        "roi": join_roi,
-                        "threshold": 0.9,
-                        "method": 10001,
-                    }
-                },
-            )
-            if detail and detail.hit:
-                CURRENT_TRUCK = result.text
-                return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
-
-        return CustomRecognition.AnalyzeResult(box=None, detail={})
-
-
 @AgentServer.custom_action("熊_初始化参数")
 class BearInitPara(CustomAction):
     def run(
@@ -161,17 +85,6 @@ class BearInitPara(CustomAction):
             TEAM_ORDER = [
                 int(x.strip()) for x in team_order_str.split(",") if x.strip()
             ]
-
-        current_stage = get_current_stage(start_time_str)
-        if current_stage != LAST_STAGE:
-            logger.info(f"当前为阶段 {current_stage}")
-            LAST_STAGE = current_stage
-            SEND_TEAMS = 0
-            LEAD_TRUCK_OF_CURRENT_STAGE = 0
-
-        if current_stage > 5:
-            logger.info("打熊已结束")
-            return CustomAction.RunResult(success=False)
 
         TRUCK_1 = [
             name.strip() for name in lead_truck_names_str.split(",") if name.strip()
@@ -194,9 +107,20 @@ class BearComputeTeam(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TRUCK_1, START_TIME, TEAM_ORDER, FOUND_LEAD_TRUCK, RESERVE_TEAM, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, SEND_TEAMS
-        logger.info(START_TIME)
+        global TRUCK_1, START_TIME, TEAM_ORDER, FOUND_LEAD_TRUCK, RESERVE_TEAM, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, SEND_TEAMS, LAST_STAGE
+
         current_stage = get_current_stage(START_TIME)
+
+        if current_stage != LAST_STAGE:
+            logger.info(f"当前为阶段 {current_stage}")
+            LAST_STAGE = current_stage
+            SEND_TEAMS = 0
+            LEAD_TRUCK_OF_CURRENT_STAGE = 0
+
+        if current_stage > 5:
+            logger.info("打熊已结束")
+            return CustomAction.RunResult(success=False)
+
         history = {}
         found = 0
         for truck in TRUCK_1:
@@ -235,13 +159,102 @@ class BearComputeTeam(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
+@AgentServer.custom_recognition("熊_识别队伍")
+class BearRecoTeam(CustomRecognition):
+    def analyze(
+        self,
+        context: Context,
+        argv: CustomRecognition.AnalyzeArg,
+    ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
+        global TRUCK_1, TRUCK_2, TEAM_ORDER, TOTAL_TEAMS, START_TIME, SEND_TEAMS, LAST_STAGE, RESERVE_TEAM, CURRENT_TRUCK, LEAD_TRUCK_OF_CURRENT_STAGE
+        expected = [rf".*{name}.*" for name in TRUCK_1 + TRUCK_2]
+
+        if not expected:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+        img = context.tasker.controller.post_screencap().wait().get()
+
+        team_name_roi = [273, 170, 252, 956]
+        join_offset = [310, 87, 0, 58]
+
+        # 1. OCR team_name
+        detail = context.run_recognition(
+            "熊_识别队伍_team_name",
+            img,
+            pipeline_override={
+                "熊_识别队伍_team_name": {
+                    "recognition": "OCR",
+                    "expected": expected,
+                    "roi": team_name_roi,
+                    "threshold": 0.6,
+                }
+            },
+        )
+
+        if not detail or not detail.hit:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        current_stage = get_current_stage(START_TIME)
+        for result in detail.filtered_results:
+            truck = next((s for s in TRUCK_1 if s in result.text), "")
+            k = f"{truck}_{current_stage}"
+            if truck and k not in FOUND_LEAD_TRUCK:
+                FOUND_LEAD_TRUCK[k] = next_stage_seconds()
+
+                LEAD_TRUCK_OF_CURRENT_STAGE = LEAD_TRUCK_OF_CURRENT_STAGE + 1
+                logger.debug(
+                    f"{current_stage} 阶段发现大车头 {k}, 现有大车头 {LEAD_TRUCK_OF_CURRENT_STAGE}"
+                )
+
+        # 假设队伍已经派完
+        if SEND_TEAMS >= TOTAL_TEAMS:
+            # 且大车头已经全部出现，则开始等待
+            if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
+                seconds = next_stage_seconds()
+                logger.info(f"开始等待，剩余时间: {seconds:.0f}秒")
+                time.sleep(seconds)
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        # 优先识别大车头
+        result_sorted = sorted(
+            detail.filtered_results,
+            key=lambda x: 0 if any(s in x.text for s in TRUCK_1) else 1,
+        )
+
+        for result in result_sorted:
+            truck_name_box = result.box  # [x, y, w, h]
+
+            # 3. 根据 team_name 坐标 + offset 计算 join ROI
+            join_roi = [a + b for a, b in zip(truck_name_box, join_offset)]
+
+            # 4. TemplateMatch join 按钮
+            detail = context.run_recognition(
+                "熊_识别队伍_join",
+                img,
+                pipeline_override={
+                    "熊_识别队伍_join": {
+                        "recognition": "TemplateMatch",
+                        "template": "熊/直接加入队伍.png",
+                        "roi": join_roi,
+                        "threshold": 0.9,
+                        "method": 10001,
+                    }
+                },
+            )
+
+            if detail and detail.hit:
+                CURRENT_TRUCK = result.text
+                logger.debug(f"准备加入 {CURRENT_TRUCK}")
+                return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
+
+        return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+
 @AgentServer.custom_action("熊_加入集结")
 class BearCombat(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
         global TEAM_ORDER, SEND_TEAMS, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, TRUCK_1
-        logger.debug("sdf")
         if not self._select_team_and_deploy(context, TEAM_ORDER[0]):
             return CustomAction.RunResult(success=True)
 
@@ -263,7 +276,6 @@ class BearCombat(CustomAction):
         返回 True 表示成功出征并返回集结列表。
         """
         global SEND_TEAMS, TOTAL_TEAMS, CURRENT_TRUCK
-        logger.debug("???")
         if team_id > 0:
             roi = TEAM_ROI[team_id]
             context.run_action(
