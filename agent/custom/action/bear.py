@@ -195,10 +195,7 @@ class BearRecoTeam(CustomRecognition):
         if not detail or not detail.hit:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
-        # 先检查是否已派完，避免更新 FOUND_LEAD_TRUCK 后影响下一轮 TOTAL_TEAMS 计算
-        if SEND_TEAMS >= TOTAL_TEAMS:
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-
+        # 始终扫描大车头（即使队伍已派完，也需要记录大车头出现情况）
         current_stage = get_current_stage(START_TIME)
         for result in detail.filtered_results:
             truck = next((s for s in TRUCK_1 if s in result.text), "")
@@ -209,6 +206,10 @@ class BearRecoTeam(CustomRecognition):
                 logger.debug(
                     f"{current_stage} 阶段发现大车头 {k}, 现有大车头 {LEAD_TRUCK_OF_CURRENT_STAGE}"
                 )
+
+        # 队伍已派完，不再加入，但大车头扫描已在上面完成
+        if SEND_TEAMS >= TOTAL_TEAMS:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 优先识别大车头
         result_sorted = sorted(
