@@ -19,3 +19,9 @@ try:
     from .click_util import *
 except ImportError:
     logger.warning("click_util module import failed")
+
+try:
+    from .img_util import *
+
+except ImportError:
+    logger.warning("img_util module import failed")
