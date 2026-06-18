@@ -74,11 +74,9 @@ class BeginCombat(CustomAction):
         # CombatRepetitionCount.init(7)
 
         if repeat_limit != 0:
-            CombatRepetitionCount.reset()
             CombatRepetitionCount.init(repeat_limit)
 
         if can_limit != 0:
-            CombatRepetitionCount.reset()
             CombatRepetitionCount.init(can_limit)
 
         _, minutes, seconds = timelib.get_time_from_ocr(context, "识别集结时间", 200)
