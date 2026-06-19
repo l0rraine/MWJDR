@@ -22,6 +22,7 @@ __all__ = [
     "BearInitPara",
     "BearComputeTeam",
     "BearRecoTeam",
+    "BearSetSendTeams",
     "RecallTeam",
     "UniteScan",
     "MakeSureQueueAvailable",

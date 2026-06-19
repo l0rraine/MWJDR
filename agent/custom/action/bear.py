@@ -8,6 +8,8 @@ from maa.define import RectType
 from maa.context import Context
 import json
 import time
+from rapidocr_onnxruntime import RapidOCR
+import threading
 
 from utils import logger
 from datetime import datetime, timedelta
@@ -66,6 +68,70 @@ def next_stage_seconds():
     return seconds
 
 
+_monitor_stop = threading.Event()
+_teams_lock = threading.Lock()
+_monitor_ocr = None  # RapidOCR 引擎
+_latest_img = None  # 主 pipeline 共享的最新截图
+_img_lock = threading.Lock()
+
+# 监控通知的 ROI
+_MONITOR_ROI = [212, 327, 324, 138]
+_MONITOR_EXPECTED = "返回城镇"
+
+
+def _store_latest_img(img):
+    """存储最新截图供后台监控线程使用"""
+    global _latest_img
+    with _img_lock:
+        _latest_img = img.copy()
+
+
+def _monitor_returned_teams():
+    """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
+
+    从共享变量 _latest_img 读取截图，使用 RapidOCR 做独立识别。
+    完全不访问任何 MaaFramework 对象，确保线程安全。
+    """
+    roi_x, roi_y, roi_w, roi_h = _MONITOR_ROI
+    while not _monitor_stop.is_set():
+        try:
+            with _img_lock:
+                img = _latest_img
+                if img is not None:
+                    cropped = img[roi_y : roi_y + roi_h, roi_x : roi_x + roi_w]
+                else:
+                    cropped = None
+            if cropped is None:
+                _monitor_stop.wait(0.5)
+                continue
+            result, _ = _monitor_ocr(cropped)
+            if result:
+                for item in result:
+                    text = item[1]
+                    if _MONITOR_EXPECTED in text:
+                        global SEND_TEAMS
+                        with _teams_lock:
+                            SEND_TEAMS = max(SEND_TEAMS - 1, 0)
+                        logger.debug(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
+                        _monitor_stop.wait(2)
+                        break
+        except Exception as e:
+            logger.debug(f"监控线程异常: {e}")
+            _monitor_stop.wait(0.2)
+            continue
+        _monitor_stop.wait(0.5)
+
+
+@AgentServer.custom_action("熊_无剩余队列")
+class BearSetSendTeams(CustomAction):
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global SEND_TEAMS, TOTAL_TEAMS
+        SEND_TEAMS = TOTAL_TEAMS
+        return CustomAction.RunResult(success=True)
+
+
 @AgentServer.custom_action("熊_初始化参数")
 class BearInitPara(CustomAction):
     def run(
@@ -95,6 +161,23 @@ class BearInitPara(CustomAction):
             if name.strip()
         ]
 
+        # 启动监控线程
+
+        global _monitor_ocr
+        _monitor_stop.set()  # 先停止可能残留的旧线程
+        time.sleep(0.1)  # 等待旧线程退出
+        _monitor_stop.clear()
+        if _monitor_ocr is None:
+            _monitor_ocr = RapidOCR()
+            logger.info("RapidOCR 引擎已初始化")
+        # 存储当前截图供监控线程使用
+        img = context.tasker.controller.post_screencap().wait().get()
+        if img is not None:
+            _store_latest_img(img)
+        t = threading.Thread(target=_monitor_returned_teams, daemon=True)
+        t.start()
+        logger.info("部队返回监控已启动")
+
         return CustomAction.RunResult(success=True)
 
 
@@ -111,14 +194,15 @@ class BearComputeTeam(CustomAction):
 
         current_stage = get_current_stage(START_TIME)
 
-        if current_stage != LAST_STAGE:
+        if current_stage > LAST_STAGE:
             logger.info(f"当前为第 {current_stage} 轮")
             LAST_STAGE = current_stage
-            SEND_TEAMS = 0
+            # SEND_TEAMS = 0
             LEAD_TRUCK_OF_CURRENT_STAGE = 0
 
         if current_stage > 5:
             logger.info("打熊已结束")
+            _monitor_stop.set()
             return CustomAction.RunResult(success=False)
 
         history = {}
@@ -154,18 +238,18 @@ class BearComputeTeam(CustomAction):
         TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
         # 队伍已全部派出
-        if SEND_TEAMS >= TOTAL_TEAMS:
-            if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
-                # 大车头已全部出现，等待下一阶段
-                seconds = next_stage_seconds() + 1
-                logger.info(f"队伍已全部派出，等待下一阶段，剩余时间: {seconds:.0f}秒")
-                time.sleep(seconds)
+        # if SEND_TEAMS >= TOTAL_TEAMS:
+        #     if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
+        #         # 大车头已全部出现，等待下一阶段
+        #         seconds = next_stage_seconds() + 1
+        #         logger.info(f"队伍已全部派出，等待下一阶段，剩余时间: {seconds:.0f}秒")
+        #         time.sleep(seconds)
 
-                new_stage = LAST_STAGE + 1
-                logger.info(f"当前为第 {new_stage} 轮")
-                LAST_STAGE = new_stage
-                SEND_TEAMS = 0
-                LEAD_TRUCK_OF_CURRENT_STAGE = 0
+        #         new_stage = LAST_STAGE + 1
+        #         logger.info(f"当前为第 {new_stage} 轮")
+        #         LAST_STAGE = new_stage
+        #         SEND_TEAMS = 0
+        #         LEAD_TRUCK_OF_CURRENT_STAGE = 0
 
         return CustomAction.RunResult(success=True)
 
@@ -183,6 +267,7 @@ class BearRecoTeam(CustomRecognition):
         if not expected:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         img = context.tasker.controller.post_screencap().wait().get()
+        _store_latest_img(img)
 
         team_name_roi = [273, 170, 252, 956]
         join_offset = [310, 87, 0, 58]
@@ -286,6 +371,7 @@ class BearCombat(CustomAction):
 
         time.sleep(0.3)
         img = context.tasker.controller.post_screencap().wait().get()
+        _store_latest_img(img)
         # from utils.img_util import screen_shot
 
         # screen_shot(context, "检查熊_士兵超出上限")

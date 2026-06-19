@@ -192,6 +192,15 @@
             30
         ],
         "next": [
+            "熊_剩余队列为0"
+        ]
+    },
+    "熊_剩余队列为0": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "Custom",
+        "custom_action": "熊_无剩余队列",
+        "next": [
             "熊_开始战斗"
         ]
     },
