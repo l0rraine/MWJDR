@@ -84,7 +84,7 @@ def _store_latest_img(img):
     """存储最新截图供后台监控线程使用"""
     global _latest_img
     with _img_lock:
-        _latest_img = img.copy()
+        _latest_img = img.copy() if img is not None else None
 
 
 def _monitor_returned_teams():
@@ -175,8 +175,7 @@ class BearInitPara(CustomAction):
             logger.info("RapidOCR 引擎已初始化")
         # 存储当前截图供监控线程使用
         img = context.tasker.controller.post_screencap().wait().get()
-        if img is not None:
-            _store_latest_img(img)
+        _store_latest_img(img)
         _monitor_thread = threading.Thread(target=_monitor_returned_teams, daemon=True)
         _monitor_thread.start()
         logger.info("部队返回监控已启动")
