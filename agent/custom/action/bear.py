@@ -71,6 +71,7 @@ def next_stage_seconds():
 _monitor_stop = threading.Event()
 _teams_lock = threading.Lock()
 _monitor_ocr = None  # RapidOCR 引擎
+_monitor_thread = None  # 当前监控线程引用
 _latest_img = None  # 主 pipeline 共享的最新截图
 _img_lock = threading.Lock()
 
@@ -128,7 +129,8 @@ class BearSetSendTeams(CustomAction):
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
         global SEND_TEAMS, TOTAL_TEAMS
-        SEND_TEAMS = TOTAL_TEAMS
+        with _teams_lock:
+            SEND_TEAMS = TOTAL_TEAMS
         return CustomAction.RunResult(success=True)
 
 
@@ -163,9 +165,10 @@ class BearInitPara(CustomAction):
 
         # 启动监控线程
 
-        global _monitor_ocr
-        _monitor_stop.set()  # 先停止可能残留的旧线程
-        time.sleep(0.1)  # 等待旧线程退出
+        global _monitor_ocr, _monitor_thread
+        _monitor_stop.set()  # 通知旧线程退出
+        if _monitor_thread is not None:
+            _monitor_thread.join(timeout=1.0)  # 等待旧线程实际退出
         _monitor_stop.clear()
         if _monitor_ocr is None:
             _monitor_ocr = RapidOCR()
@@ -174,8 +177,8 @@ class BearInitPara(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
         if img is not None:
             _store_latest_img(img)
-        t = threading.Thread(target=_monitor_returned_teams, daemon=True)
-        t.start()
+        _monitor_thread = threading.Thread(target=_monitor_returned_teams, daemon=True)
+        _monitor_thread.start()
         logger.info("部队返回监控已启动")
 
         return CustomAction.RunResult(success=True)
@@ -302,7 +305,9 @@ class BearRecoTeam(CustomRecognition):
                 )
 
         # 队伍已派完，不再加入，但大车头扫描已在上面完成
-        if SEND_TEAMS >= TOTAL_TEAMS:
+        with _teams_lock:
+            teams_exhausted = SEND_TEAMS >= TOTAL_TEAMS
+        if teams_exhausted:
             # if LEAD_TRUCK_OF_CURRENT_STAGE != len(TRUCK_1):
             # logger.debug("队伍已全部派出，继续监控大车头")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
@@ -392,7 +397,8 @@ class BearCombat(CustomAction):
 
         detail = context.run_recognition("熊_在集结列表", img)
         if detail and detail.hit:
-            SEND_TEAMS = SEND_TEAMS + 1
+            with _teams_lock:
+                SEND_TEAMS = SEND_TEAMS + 1
             logger.info(f"{team_id} 号队伍已加入 {CURRENT_TRUCK}")
             return True
 
