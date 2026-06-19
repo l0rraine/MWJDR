@@ -62,7 +62,7 @@ def next_stage_seconds():
     stage_seconds = 5 * 60 + 14  # 314 秒
     next_stage = math.ceil(total_seconds / stage_seconds)
     next_stage_time = start + timedelta(seconds=next_stage * stage_seconds)
-    seconds = (next_stage_time - now).total_seconds() + 0.5
+    seconds = (next_stage_time - now).total_seconds()
     return seconds
 
 
@@ -131,14 +131,14 @@ class BearComputeTeam(CustomAction):
             # 如果当前不是第一阶段并且这个大车头没有开过车，那么不为这个车头保留队伍
             if history.get(truck, 0) == 0:
                 if current_stage > 1:
-                    logger.debug(f"第{current_stage}轮: {truck} 之前没开过车")
+                    # logger.debug(f"第{current_stage}轮: {truck} 之前没开过车")
                     found = found + 1
             else:
                 # 之前开过车，并且这个阶段已经检测到这个大车头，不为这个车头保留队伍
                 k = f"{truck}_{current_stage}"
                 if k in FOUND_LEAD_TRUCK:
                     found = found + 1
-                    logger.debug(f"第{current_stage}轮: {truck} 已开车")
+                    # logger.debug(f"第{current_stage}轮: {truck} 已开车")
                 else:  # 之前开过车，但是这个阶段超过40s还不开，那就不保留队伍
                     last_remain = FOUND_LEAD_TRUCK[f"{truck}_{history[truck]}"]
                     this_remain = next_stage_seconds()
@@ -157,18 +157,15 @@ class BearComputeTeam(CustomAction):
         if SEND_TEAMS >= TOTAL_TEAMS:
             if LEAD_TRUCK_OF_CURRENT_STAGE == len(TRUCK_1):
                 # 大车头已全部出现，等待下一阶段
-                seconds = next_stage_seconds()
+                seconds = next_stage_seconds() + 1
                 logger.info(f"队伍已全部派出，等待下一阶段，剩余时间: {seconds:.0f}秒")
                 time.sleep(seconds)
 
-                # 等待结束后立即初始化新阶段，避免 JumpBack 后熊_识别队伍
-                # 仍用旧的 SEND_TEAMS/TOTAL_TEAMS 导致白跑一轮
-                new_stage = get_current_stage(START_TIME)
-                if new_stage != LAST_STAGE:
-                    logger.info(f"当前为第 {new_stage} 轮")
-                    LAST_STAGE = new_stage
-                    SEND_TEAMS = 0
-                    LEAD_TRUCK_OF_CURRENT_STAGE = 0
+                new_stage = LAST_STAGE + 1
+                logger.info(f"当前为第 {new_stage} 轮")
+                LAST_STAGE = new_stage
+                SEND_TEAMS = 0
+                LEAD_TRUCK_OF_CURRENT_STAGE = 0
 
         return CustomAction.RunResult(success=True)
 
@@ -221,8 +218,8 @@ class BearRecoTeam(CustomRecognition):
 
         # 队伍已派完，不再加入，但大车头扫描已在上面完成
         if SEND_TEAMS >= TOTAL_TEAMS:
-            if LEAD_TRUCK_OF_CURRENT_STAGE != len(TRUCK_1):
-                logger.debug("队伍已全部派出，继续监控大车头")
+            # if LEAD_TRUCK_OF_CURRENT_STAGE != len(TRUCK_1):
+            # logger.debug("队伍已全部派出，继续监控大车头")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 优先识别大车头
@@ -289,13 +286,15 @@ class BearCombat(CustomAction):
 
         time.sleep(0.3)
         img = context.tasker.controller.post_screencap().wait().get()
-        from utils.img_util import screen_shot
+        # from utils.img_util import screen_shot
 
-        screen_shot(context, "检查熊_士兵超出上限")
+        # screen_shot(context, "检查熊_士兵超出上限")
         detail = context.run_recognition("熊_士兵超出上限", img)
         if detail and detail.hit:
             logger.debug(f"{team_id} 士兵超出上限,出征失败")
+            time.sleep(0.15)
             context.run_action("熊_后退")
+            time.sleep(0.15)
             context.run_action("熊_后退")
             return False
 

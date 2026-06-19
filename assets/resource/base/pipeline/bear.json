@@ -121,7 +121,7 @@
         "post_delay": 200,
         "next": [
             "熊_识别队伍",
-            "[JumpBack]熊_在集结详情页面",
+            "熊_在集结详情页面",
             "[JumpBack]熊_计算队伍"
         ]
     },
@@ -298,7 +298,7 @@
         ]
     },
     "熊_后退": {
-        "pre_delay": 100,
+        "pre_delay": 0,
         "post_delay": 0,
         "action": "Click",
         "target": [
