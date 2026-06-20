@@ -1,0 +1,27 @@
+{
+    "新手_入口": {
+        "next": [
+            "新手_不可能任务",
+            "[JumpBack]挖矿_入口",
+            "[JumpBack]训练士兵_快捷",
+            "[JumpBack]新手_等待"
+        ]
+    },
+    "新手_不可能任务": {
+        "recognition": "OCR",
+        "expected": [
+            "这是不可能出现的字符"
+        ],
+        "roi": [
+            1,
+            1,
+            1,
+            1
+        ]
+    },
+    "新手_等待": {
+        "recognition": "DirectHit",
+        "pre_delay": 60000,
+        "action": "DoNothing"
+    }
+}
