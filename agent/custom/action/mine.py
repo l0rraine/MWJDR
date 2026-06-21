@@ -22,6 +22,7 @@ recall_region = [
 LAST_MINES = []
 CURRENT_MINES = []
 NEXT_MINE = ""
+MAX_MINE_TEAMS = 4
 MINES = ["肉", "木", "煤", "铁"]
 
 
@@ -52,7 +53,14 @@ class MineRecoTeam(CustomRecognition):
         context: Context,
         argv: CustomRecognition.AnalyzeArg,
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
-        global CURRENT_MINES, LAST_MINES, NEXT_MINE, MINES
+        global CURRENT_MINES, LAST_MINES, NEXT_MINE, MINES, MAX_MINE_TEAMS
+
+        # 读取用户配置的挖矿队伍数量
+        try:
+            param = json.loads(argv.custom_recognition_param)
+            MAX_MINE_TEAMS = int(param.get("max_teams", 4))
+        except Exception:
+            MAX_MINE_TEAMS = 4
 
         img = context.tasker.controller.post_screencap().wait().get()
 
@@ -76,16 +84,26 @@ class MineRecoTeam(CustomRecognition):
         CURRENT_MINES.clear()
         CURRENT_MINES = get_current_mines(context, img)
 
-        NEXT_MINE = None
-        # 算出本轮消失的矿（已采集完成）
-        finished_mines = [item for item in LAST_MINES if item not in CURRENT_MINES]
-        logger.debug("已采完矿：", finished_mines)
+        # 已达到最大挖矿队伍数
+        if len(CURRENT_MINES) >= MAX_MINE_TEAMS:
+            logger.debug(f"已达到最大挖矿队伍数 {MAX_MINE_TEAMS}")
+            if not LAST_MINES:
+                LAST_MINES = CURRENT_MINES
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
 
-        # 遍历矿序，筛选：不在当前矿 且 不是刚采完的矿
-        for mine in MINES:
-            if mine not in CURRENT_MINES and mine not in finished_mines:
+        NEXT_MINE = None
+        # 空位：不在当前挖矿中的矿
+        free_mines = [mine for mine in MINES if mine not in CURRENT_MINES]
+
+        # 优先1：还没挖过的矿类型
+        for mine in free_mines:
+            if mine not in LAST_MINES:
                 NEXT_MINE = mine
                 break
+
+        # 优先2：都挖过了，补刚空出来的
+        if not NEXT_MINE and free_mines:
+            NEXT_MINE = free_mines[0]
 
         logger.debug(
             f"LAST_MINES:{LAST_MINES},CURRENT_MINES:{CURRENT_MINES},NEXT_MINE:{NEXT_MINE}"

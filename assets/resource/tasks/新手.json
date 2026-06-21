@@ -3,8 +3,56 @@
         {
             "name": "快乐新手期",
             "entry": "新手_入口",
-            "option": []
+            "option": [
+                "新手-挖矿配置"
+            ]
         }
     ],
-    "option": {}
+    "option": {
+        "新手-挖矿配置": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "2",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "3",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "4",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "4"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
 }
