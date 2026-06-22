@@ -8,9 +8,6 @@ from maa.define import RectType
 from maa.context import Context
 import json
 import time
-from rapidocr_onnxruntime import RapidOCR
-import threading
-
 from utils import logger
 from datetime import datetime, timedelta
 import math
@@ -68,59 +65,33 @@ def next_stage_seconds():
     return seconds
 
 
-_monitor_stop = threading.Event()
-_teams_lock = threading.Lock()
-_monitor_ocr = None  # RapidOCR 引擎
-_monitor_thread = None  # 当前监控线程引用
-_latest_img = None  # 主 pipeline 共享的最新截图
-_img_lock = threading.Lock()
-
-# 监控通知的 ROI
-_MONITOR_ROI = [212, 327, 324, 138]
-_MONITOR_EXPECTED = "返回城镇"
+# 通知区域 ROI，用于检测“返回城镇”
+_NOTIFY_ROI = [212, 327, 324, 138]
+_return_notified = False  # 上升沿检测：避免同一条通知重复扣减
 
 
-def _store_latest_img(img):
-    """存储最新截图供后台监控线程使用"""
-    global _latest_img
-    with _img_lock:
-        _latest_img = img.copy() if img is not None else None
+def _check_return_notification(context: Context, img) -> None:
+    """在主流程截图时顺便检测通知区域是否有"返回城镇"，
+    检测到则 SEND_TEAMS -1。使用上升沿逻辑，同一条通知只扣一次。"""
+    global SEND_TEAMS, _return_notified
 
-
-def _monitor_returned_teams():
-    """后台线程：监控'部队已返回'通知，检测到则 SEND_TEAMS -1
-
-    从共享变量 _latest_img 读取截图，使用 RapidOCR 做独立识别。
-    完全不访问任何 MaaFramework 对象，确保线程安全。
-    """
-    roi_x, roi_y, roi_w, roi_h = _MONITOR_ROI
-    while not _monitor_stop.is_set():
-        try:
-            with _img_lock:
-                img = _latest_img
-                if img is not None:
-                    cropped = img[roi_y : roi_y + roi_h, roi_x : roi_x + roi_w]
-                else:
-                    cropped = None
-            if cropped is None:
-                _monitor_stop.wait(0.5)
-                continue
-            result, _ = _monitor_ocr(cropped)
-            if result:
-                for item in result:
-                    text = item[1]
-                    if _MONITOR_EXPECTED in text:
-                        global SEND_TEAMS
-                        with _teams_lock:
-                            SEND_TEAMS = max(SEND_TEAMS - 1, 0)
-                        logger.debug(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
-                        _monitor_stop.wait(2)
-                        break
-        except Exception as e:
-            logger.debug(f"监控线程异常: {e}")
-            _monitor_stop.wait(0.2)
-            continue
-        _monitor_stop.wait(0.5)
+    detail = context.run_recognition(
+        "熊_检测返回城镇",
+        img,
+        pipeline_override={
+            "熊_检测返回城镇": {
+                "recognition": "OCR",
+                "expected": ["返回城镇"],
+                "roi": _NOTIFY_ROI,
+                "threshold": 0.6,
+            }
+        },
+    )
+    hit = detail and detail.hit
+    if hit and not _return_notified:
+        SEND_TEAMS = max(SEND_TEAMS - 1, 0)
+        logger.debug(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
+    _return_notified = hit  # 更新状态
 
 
 @AgentServer.custom_action("熊_无剩余队列")
@@ -129,8 +100,7 @@ class BearSetSendTeams(CustomAction):
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
         global SEND_TEAMS, TOTAL_TEAMS
-        with _teams_lock:
-            SEND_TEAMS = TOTAL_TEAMS
+        SEND_TEAMS = TOTAL_TEAMS
         return CustomAction.RunResult(success=True)
 
 
@@ -163,23 +133,6 @@ class BearInitPara(CustomAction):
             if name.strip()
         ]
 
-        # 启动监控线程
-
-        global _monitor_ocr, _monitor_thread
-        _monitor_stop.set()  # 通知旧线程退出
-        if _monitor_thread is not None:
-            _monitor_thread.join(timeout=1.0)  # 等待旧线程实际退出
-        _monitor_stop.clear()
-        if _monitor_ocr is None:
-            _monitor_ocr = RapidOCR()
-            logger.info("RapidOCR 引擎已初始化")
-        # 存储当前截图供监控线程使用
-        img = context.tasker.controller.post_screencap().wait().get()
-        _store_latest_img(img)
-        _monitor_thread = threading.Thread(target=_monitor_returned_teams, daemon=True)
-        _monitor_thread.start()
-        logger.info("部队返回监控已启动")
-
         return CustomAction.RunResult(success=True)
 
 
@@ -204,7 +157,6 @@ class BearComputeTeam(CustomAction):
 
         if current_stage > 5:
             logger.info("打熊已结束")
-            _monitor_stop.set()
             return CustomAction.RunResult(success=False)
 
         history = {}
@@ -269,7 +221,9 @@ class BearRecoTeam(CustomRecognition):
         if not expected:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         img = context.tasker.controller.post_screencap().wait().get()
-        _store_latest_img(img)
+
+        # 顺便检测通知区域“返回城镇”，发现则 SEND_TEAMS -1
+        _check_return_notification(context, img)
 
         team_name_roi = [273, 170, 252, 956]
         join_offset = [310, 87, 0, 58]
@@ -304,8 +258,7 @@ class BearRecoTeam(CustomRecognition):
                 )
 
         # 队伍已派完，不再加入，但大车头扫描已在上面完成
-        with _teams_lock:
-            teams_exhausted = SEND_TEAMS >= TOTAL_TEAMS
+        teams_exhausted = SEND_TEAMS >= TOTAL_TEAMS
         if teams_exhausted:
             # if LEAD_TRUCK_OF_CURRENT_STAGE != len(TRUCK_1):
             # logger.debug("队伍已全部派出，继续监控大车头")
@@ -375,7 +328,10 @@ class BearCombat(CustomAction):
 
         time.sleep(0.3)
         img = context.tasker.controller.post_screencap().wait().get()
-        _store_latest_img(img)
+
+        # 顺便检测通知区域“返回城镇"
+        _check_return_notification(context, img)
+
         # from utils.img_util import screen_shot
 
         # screen_shot(context, "检查熊_士兵超出上限")
@@ -396,8 +352,7 @@ class BearCombat(CustomAction):
 
         detail = context.run_recognition("熊_在集结列表", img)
         if detail and detail.hit:
-            with _teams_lock:
-                SEND_TEAMS = SEND_TEAMS + 1
+            SEND_TEAMS = SEND_TEAMS + 1
             logger.info(f"{team_id} 号队伍已加入 {CURRENT_TRUCK}")
             return True
 
