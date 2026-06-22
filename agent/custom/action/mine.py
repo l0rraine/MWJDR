@@ -38,6 +38,7 @@ def get_current_mines(context: Context, img):
                     "recognition": "TemplateMatch",
                     "template": f"{mine}.png",
                     "roi": [11, 241, 47, 226],
+                    "threshold": 0.8,
                 }
             },
         )
@@ -83,6 +84,8 @@ class MineRecoTeam(CustomRecognition):
 
         CURRENT_MINES.clear()
         CURRENT_MINES = get_current_mines(context, img)
+
+        logger.debug(f"CURRENT_MINES:{CURRENT_MINES}")
 
         # 已达到最大挖矿队伍数
         if len(CURRENT_MINES) >= MAX_MINE_TEAMS:
