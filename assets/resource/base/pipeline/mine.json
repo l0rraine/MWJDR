@@ -6,33 +6,25 @@
             "max_teams": "4"
         }
     },
-    "挖矿_启肉": {
-        "action": "Custom",
-        "custom_action": "挖矿_启矿",
-        "custom_action_param": {
-            "mine": ""
-        }
+    "挖矿_矿种选项": {
+        "next": [
+            "挖矿_矿_肉",
+            "挖矿_矿_木",
+            "挖矿_矿_煤",
+            "挖矿_矿_铁"
+        ]
     },
-    "挖矿_启木": {
-        "action": "Custom",
-        "custom_action": "挖矿_启矿",
-        "custom_action_param": {
-            "mine": ""
-        }
+    "挖矿_矿_肉": {
+        "enabled": false
     },
-    "挖矿_启煤": {
-        "action": "Custom",
-        "custom_action": "挖矿_启矿",
-        "custom_action_param": {
-            "mine": ""
-        }
+    "挖矿_矿_木": {
+        "enabled": false
     },
-    "挖矿_启铁": {
-        "action": "Custom",
-        "custom_action": "挖矿_启矿",
-        "custom_action_param": {
-            "mine": ""
-        }
+    "挖矿_矿_煤": {
+        "enabled": false
+    },
+    "挖矿_矿_铁": {
+        "enabled": false
     },
     "挖矿_入口": {
         "recognition": "Custom",

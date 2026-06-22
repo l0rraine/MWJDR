@@ -19,10 +19,8 @@
                     "name": "肉",
                     "label": "肉",
                     "pipeline_override": {
-                        "挖矿_启肉": {
-                            "custom_action_param": {
-                                "mine": "肉"
-                            }
+                        "挖矿_矿_肉": {
+                            "enabled": true
                         }
                     }
                 },
@@ -30,10 +28,8 @@
                     "name": "木",
                     "label": "木",
                     "pipeline_override": {
-                        "挖矿_启木": {
-                            "custom_action_param": {
-                                "mine": "木"
-                            }
+                        "挖矿_矿_木": {
+                            "enabled": true
                         }
                     }
                 },
@@ -41,10 +37,8 @@
                     "name": "煤",
                     "label": "煤",
                     "pipeline_override": {
-                        "挖矿_启煤": {
-                            "custom_action_param": {
-                                "mine": "煤"
-                            }
+                        "挖矿_矿_煤": {
+                            "enabled": true
                         }
                     }
                 },
@@ -52,10 +46,8 @@
                     "name": "铁",
                     "label": "铁",
                     "pipeline_override": {
-                        "挖矿_启铁": {
-                            "custom_action_param": {
-                                "mine": "铁"
-                            }
+                        "挖矿_矿_铁": {
+                            "enabled": true
                         }
                     }
                 }
