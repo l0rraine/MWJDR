@@ -1,11 +1,4 @@
 {
-    "挖矿_设置参数": {
-        "action": "Custom",
-        "custom_action": "挖矿_设置参数",
-        "custom_action_param": {
-            "max_teams": "4"
-        }
-    },
     "挖矿_矿种选项": {
         "next": [
             "挖矿_矿_肉",
@@ -29,6 +22,9 @@
     "挖矿_入口": {
         "recognition": "Custom",
         "custom_recognition": "挖矿_识别队伍",
+        "custom_recognition_param": {
+            "max_teams": "4"
+        },
         "next": [
             "挖矿_点击放大镜"
         ]
