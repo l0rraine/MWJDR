@@ -68,6 +68,7 @@ def next_stage_seconds():
 # 通知区域 ROI，用于检测“返回城镇”
 _NOTIFY_ROI = [212, 327, 324, 138]
 _return_cooldown = 0  # 上次扣减时间戳，间隔 >=2s 才视为新通知
+_scroll_cooldown = 0  # 上次滚动时间戳，间隔 >=2s 才滚动
 
 
 def _check_return_notification(context: Context, img) -> None:
@@ -358,3 +359,28 @@ class BearCombat(CustomAction):
             return True
 
         return False
+
+
+@AgentServer.custom_action("熊_向下滚动")
+class BearScrollDown(CustomAction):
+    """2s 冷却的向下滚动，冷却期内跳过滑动直接返回成功，不影响识别频率。"""
+
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global _scroll_cooldown
+        now = time.time()
+        if now - _scroll_cooldown >= 2:
+            _scroll_cooldown = now
+            context.run_action(
+                "熊_执行滚动",
+                pipeline_override={
+                    "熊_执行滚动": {
+                        "action": "Swipe",
+                        "begin": [433, 909, 14, 10],
+                        "end": [423, 792, 21, 11],
+                        "duration": 100,
+                    }
+                },
+            )
+        return CustomAction.RunResult(success=True)
