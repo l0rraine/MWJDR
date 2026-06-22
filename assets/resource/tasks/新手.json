@@ -5,21 +5,19 @@
             "entry": "新手_入口",
             "option": [
                 "新手-挖矿配置",
-                "挖矿-肉",
-                "挖矿-木",
-                "挖矿-煤",
-                "挖矿-铁"
+                "挖矿-矿种"
             ]
         }
     ],
     "option": {
-        "挖矿-肉": {
-            "type": "switch",
-            "default_case": "Yes",
-            "label": "肉",
+        "挖矿-矿种": {
+            "type": "checkbox",
+            "label": "矿",
+            "default_case": ["肉", "木", "煤", "铁"],
             "cases": [
                 {
-                    "name": "Yes",
+                    "name": "肉",
+                    "label": "肉",
                     "pipeline_override": {
                         "挖矿_入口": {
                             "custom_recognition_param": {
@@ -29,24 +27,8 @@
                     }
                 },
                 {
-                    "name": "No",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "肉": "0"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "挖矿-木": {
-            "type": "switch",
-            "default_case": "Yes",
-            "label": "木",
-            "cases": [
-                {
-                    "name": "Yes",
+                    "name": "木",
+                    "label": "木",
                     "pipeline_override": {
                         "挖矿_入口": {
                             "custom_recognition_param": {
@@ -56,24 +38,8 @@
                     }
                 },
                 {
-                    "name": "No",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "木": "0"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "挖矿-煤": {
-            "type": "switch",
-            "default_case": "Yes",
-            "label": "煤",
-            "cases": [
-                {
-                    "name": "Yes",
+                    "name": "煤",
+                    "label": "煤",
                     "pipeline_override": {
                         "挖矿_入口": {
                             "custom_recognition_param": {
@@ -83,38 +49,12 @@
                     }
                 },
                 {
-                    "name": "No",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "煤": "0"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        "挖矿-铁": {
-            "type": "switch",
-            "default_case": "Yes",
-            "label": "铁",
-            "cases": [
-                {
-                    "name": "Yes",
+                    "name": "铁",
+                    "label": "铁",
                     "pipeline_override": {
                         "挖矿_入口": {
                             "custom_recognition_param": {
                                 "铁": "1"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "No",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "铁": "0"
                             }
                         }
                     }

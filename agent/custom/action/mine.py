@@ -62,7 +62,7 @@ class MineRecoTeam(CustomRecognition):
             param = json.loads(argv.custom_recognition_param)
             MAX_MINE_TEAMS = int(param.get("max_teams", 4))
             # 根据用户选择的矿构造 MINES
-            MINES = [m for m in ALL_MINES if param.get(m, "1") == "1"]
+            MINES = [m for m in ALL_MINES if param.get(m, "0") == "1"]
         except Exception:
             MAX_MINE_TEAMS = 4
             MINES = list(ALL_MINES)
