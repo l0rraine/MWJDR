@@ -11,115 +11,50 @@
     ],
     "option": {
         "挖矿-矿种": {
-            "type": "select",
+            "type": "checkbox",
             "label": "矿",
+            "default_case": ["肉", "木", "煤", "铁"],
             "cases": [
                 {
-                    "name": "肉木煤铁",
+                    "name": "肉",
+                    "label": "肉",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,木,煤,铁"
+                        "挖矿_启肉": {
+                            "custom_action_param": {
+                                "mine": "肉"
                             }
                         }
                     }
                 },
                 {
-                    "name": "肉木煤",
+                    "name": "木",
+                    "label": "木",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,木,煤"
+                        "挖矿_启木": {
+                            "custom_action_param": {
+                                "mine": "木"
                             }
                         }
                     }
                 },
                 {
-                    "name": "肉木铁",
+                    "name": "煤",
+                    "label": "煤",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,木,铁"
+                        "挖矿_启煤": {
+                            "custom_action_param": {
+                                "mine": "煤"
                             }
                         }
                     }
                 },
                 {
-                    "name": "肉煤铁",
+                    "name": "铁",
+                    "label": "铁",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,煤,铁"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "木煤铁",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "木,煤,铁"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "肉木",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,木"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "肉煤",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,煤"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "肉铁",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "肉,铁"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "木煤",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "木,煤"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "木铁",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "木,铁"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "煤铁",
-                    "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
-                                "mines": "煤,铁"
+                        "挖矿_启铁": {
+                            "custom_action_param": {
+                                "mine": "铁"
                             }
                         }
                     }

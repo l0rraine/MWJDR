@@ -4,10 +4,35 @@
         "custom_action": "挖矿_设置参数",
         "custom_action_param": {
             "max_teams": "4"
-        },
-        "next": [
-            "挖矿_入口"
-        ]
+        }
+    },
+    "挖矿_启肉": {
+        "action": "Custom",
+        "custom_action": "挖矿_启矿",
+        "custom_action_param": {
+            "mine": ""
+        }
+    },
+    "挖矿_启木": {
+        "action": "Custom",
+        "custom_action": "挖矿_启矿",
+        "custom_action_param": {
+            "mine": ""
+        }
+    },
+    "挖矿_启煤": {
+        "action": "Custom",
+        "custom_action": "挖矿_启矿",
+        "custom_action_param": {
+            "mine": ""
+        }
+    },
+    "挖矿_启铁": {
+        "action": "Custom",
+        "custom_action": "挖矿_启矿",
+        "custom_action_param": {
+            "mine": ""
+        }
     },
     "挖矿_入口": {
         "recognition": "Custom",
