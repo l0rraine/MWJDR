@@ -27,6 +27,21 @@ ALL_MINES = ["肉", "木", "煤", "铁"]
 MINES = list(ALL_MINES)
 
 
+@AgentServer.custom_action("挖矿_设置参数")
+class MineSetParam(CustomAction):
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global MAX_MINE_TEAMS
+        try:
+            param = json.loads(argv.custom_action_param)
+            MAX_MINE_TEAMS = int(param.get("max_teams", 4))
+        except Exception:
+            MAX_MINE_TEAMS = 4
+        logger.info(f"挖矿队伍上限: {MAX_MINE_TEAMS}")
+        return CustomAction.RunResult(success=True)
+
+
 def get_current_mines(context: Context, img):
     global MINES
     m = []
@@ -57,14 +72,11 @@ class MineRecoTeam(CustomRecognition):
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
         global CURRENT_MINES, LAST_MINES, NEXT_MINE, MINES, MAX_MINE_TEAMS
 
-        # 读取用户配置
+        # 读取用户选择的矿种
         try:
             param = json.loads(argv.custom_recognition_param)
-            MAX_MINE_TEAMS = int(param.get("max_teams", 4))
-            # 根据用户选择的矿构造 MINES
             MINES = [m for m in ALL_MINES if param.get(m, "0") == "1"]
         except Exception:
-            MAX_MINE_TEAMS = 4
             MINES = list(ALL_MINES)
 
         img = context.tasker.controller.post_screencap().wait().get()

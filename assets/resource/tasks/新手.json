@@ -67,8 +67,8 @@
                 {
                     "name": "1",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
+                        "挖矿_设置参数": {
+                            "custom_action_param": {
                                 "max_teams": "1"
                             }
                         }
@@ -77,8 +77,8 @@
                 {
                     "name": "2",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
+                        "挖矿_设置参数": {
+                            "custom_action_param": {
                                 "max_teams": "2"
                             }
                         }
@@ -87,8 +87,8 @@
                 {
                     "name": "3",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
+                        "挖矿_设置参数": {
+                            "custom_action_param": {
                                 "max_teams": "3"
                             }
                         }
@@ -97,8 +97,8 @@
                 {
                     "name": "4",
                     "pipeline_override": {
-                        "挖矿_入口": {
-                            "custom_recognition_param": {
+                        "挖矿_设置参数": {
+                            "custom_action_param": {
                                 "max_teams": "4"
                             }
                         }

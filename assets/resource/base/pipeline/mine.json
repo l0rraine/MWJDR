@@ -1,4 +1,14 @@
 {
+    "挖矿_设置参数": {
+        "action": "Custom",
+        "custom_action": "挖矿_设置参数",
+        "custom_action_param": {
+            "max_teams": "4"
+        },
+        "next": [
+            "挖矿_入口"
+        ]
+    },
     "挖矿_入口": {
         "recognition": "Custom",
         "custom_recognition": "挖矿_识别队伍",
