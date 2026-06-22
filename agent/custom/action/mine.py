@@ -59,9 +59,8 @@ class MineSetParam(CustomAction):
 
         # 清空 MINES，调用 4 个启矿节点重建
         MINES = []
-        img = context.tasker.controller.post_screencap().wait().get()
         for node in ["挖矿_启肉", "挖矿_启木", "挖矿_启煤", "挖矿_启铁"]:
-            context.run_action(node, img)
+            context.run_action(node)
 
         if not MINES:
             MINES = list(ALL_MINES)
