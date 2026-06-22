@@ -23,7 +23,8 @@ LAST_MINES = []
 CURRENT_MINES = []
 NEXT_MINE = ""
 MAX_MINE_TEAMS = 4
-MINES = ["肉", "木", "煤", "铁"]
+ALL_MINES = ["肉", "木", "煤", "铁"]
+MINES = list(ALL_MINES)
 
 
 def get_current_mines(context: Context, img):
@@ -56,12 +57,15 @@ class MineRecoTeam(CustomRecognition):
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
         global CURRENT_MINES, LAST_MINES, NEXT_MINE, MINES, MAX_MINE_TEAMS
 
-        # 读取用户配置的挖矿队伍数量
+        # 读取用户配置
         try:
             param = json.loads(argv.custom_recognition_param)
             MAX_MINE_TEAMS = int(param.get("max_teams", 4))
+            # 根据用户选择的矿构造 MINES
+            MINES = [m for m in ALL_MINES if param.get(m, "1") == "1"]
         except Exception:
             MAX_MINE_TEAMS = 4
+            MINES = list(ALL_MINES)
 
         img = context.tasker.controller.post_screencap().wait().get()
 
