@@ -68,7 +68,6 @@ def next_stage_seconds():
 # 通知区域 ROI，用于检测“返回城镇”
 _NOTIFY_ROI = [212, 327, 324, 138]
 _return_cooldown = 0  # 上次扣减时间戳，间隔 >=2s 才视为新通知
-_scroll_cooldown = 0  # 上次滚动时间戳，间隔 >=2s 才滚动
 
 
 def _check_return_notification(context: Context, img) -> None:
@@ -359,6 +358,9 @@ class BearCombat(CustomAction):
             return True
 
         return False
+
+
+_scroll_cooldown = 0  # 上次滚动时间戳，间隔 >=2s 才滚动
 
 
 @AgentServer.custom_action("熊_向下滚动")
