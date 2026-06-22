@@ -75,7 +75,11 @@ class MineRecoTeam(CustomRecognition):
         # 读取用户选择的矿种
         try:
             param = json.loads(argv.custom_recognition_param)
-            MINES = [m for m in ALL_MINES if param.get(m, "0") == "1"]
+            mines_str = param.get("mines", "")
+            if mines_str:
+                MINES = [m.strip() for m in mines_str.split(",") if m.strip() in ALL_MINES]
+            else:
+                MINES = list(ALL_MINES)
         except Exception:
             MINES = list(ALL_MINES)
 
