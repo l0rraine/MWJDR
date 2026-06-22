@@ -67,13 +67,13 @@ def next_stage_seconds():
 
 # 通知区域 ROI，用于检测“返回城镇”
 _NOTIFY_ROI = [212, 327, 324, 138]
-_return_notified = False  # 上升沿检测：避免同一条通知重复扣减
+_return_cooldown = 0  # 上次扣减时间戳，间隔 >=2s 才视为新通知
 
 
 def _check_return_notification(context: Context, img) -> None:
     """在主流程截图时顺便检测通知区域是否有"返回城镇"，
-    检测到则 SEND_TEAMS -1。使用上升沿逻辑，同一条通知只扣一次。"""
-    global SEND_TEAMS, _return_notified
+    检测到则 SEND_TEAMS -1。两次扣减间隔至少 2s，避免同一条通知重复计数。"""
+    global SEND_TEAMS, _return_cooldown
 
     detail = context.run_recognition(
         "熊_检测返回城镇",
@@ -87,11 +87,12 @@ def _check_return_notification(context: Context, img) -> None:
             }
         },
     )
-    hit = detail and detail.hit
-    if hit and not _return_notified:
-        SEND_TEAMS = max(SEND_TEAMS - 1, 0)
-        logger.debug(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
-    _return_notified = hit  # 更新状态
+    if detail and detail.hit:
+        now = time.time()
+        if now - _return_cooldown >= 2:
+            SEND_TEAMS = max(SEND_TEAMS - 1, 0)
+            _return_cooldown = now
+            logger.debug(f"检测到部队返回，剩余 {SEND_TEAMS} 只队伍")
 
 
 @AgentServer.custom_action("熊_无剩余队列")
