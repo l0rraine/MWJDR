@@ -104,52 +104,48 @@ class JoinRecoTeam(CustomRecognition):
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
         global JOIN_TEAM, JOIN_TARGETS
 
+        # 1. 读取队伍编号
         try:
-            # 1. 读取队伍编号
-            try:
-                param = json.loads(argv.custom_recognition_param)
-                JOIN_TEAM = int(param.get("team", "1"))
-            except Exception:
-                JOIN_TEAM = 1
+            param = json.loads(argv.custom_recognition_param)
+            JOIN_TEAM = int(param.get("team", "1"))
+        except Exception:
+            JOIN_TEAM = 1
 
-            # 2. 读取勾选目标
-            JOIN_TARGETS = _read_join_targets(context)
-            if not JOIN_TARGETS:
-                return CustomRecognition.AnalyzeResult(box=None, detail={})
-
-            img = context.tasker.controller.post_screencap().wait().get()
-
-            # 3. 队列判断（与挖矿_识别队伍数量一致的 OCR）
-            detail = context.run_recognition("加入集结_识别队列数量", img)
-            if not detail or not detail.hit:
-                return CustomRecognition.AnalyzeResult(box=None, detail={})
-            res = re.match(r"(\d+)\D(\d+)", detail.best_result.text)
-            if not res:
-                return CustomRecognition.AnalyzeResult(box=None, detail={})
-            if res.group(1) == res.group(2):
-                return CustomRecognition.AnalyzeResult(box=None, detail={})
-
-            # 4. 识别「加入集结」按钮
-            detail = context.run_recognition(
-                "加入集结_识别按钮",
-                img,
-                pipeline_override={
-                    "加入集结_识别按钮": {
-                        "recognition": "TemplateMatch",
-                        "template": "加入集结.png",
-                        "roi": [643, 523, 44, 47],
-                        "threshold": 0.8,
-                        "method": 10001,
-                    }
-                },
-            )
-            if not detail or not detail.hit:
-                return CustomRecognition.AnalyzeResult(box=None, detail={})
-
-            return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
-        except Exception as e:
-            logger.warning(f"加入集结_识别队伍异常: {e}")
+        # 2. 读取勾选目标
+        JOIN_TARGETS = _read_join_targets(context)
+        if not JOIN_TARGETS:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        img = context.tasker.controller.post_screencap().wait().get()
+
+        # 3. 队列判断（与挖矿_识别队伍数量一致的 OCR）
+        detail = context.run_recognition("加入集结_识别队列数量", img)
+        if not detail or not detail.hit:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+        res = re.match(r"(\d+)\D(\d+)", detail.best_result.text)
+        if not res:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+        if res.group(1) == res.group(2):
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        # 4. 识别「加入集结」按钮
+        detail = context.run_recognition(
+            "加入集结_识别按钮",
+            img,
+            pipeline_override={
+                "加入集结_识别按钮": {
+                    "recognition": "TemplateMatch",
+                    "template": "加入集结.png",
+                    "roi": [643, 523, 44, 47],
+                    "threshold": 0.8,
+                    "method": 10001,
+                }
+            },
+        )
+        if not detail or not detail.hit:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
 
 
 @AgentServer.custom_action("加入集结_执行加入")
@@ -175,74 +171,68 @@ class JoinDeploy(CustomAction):
     ) -> CustomAction.RunResult:
         global JOIN_TEAM
 
-        try:
-            if not JOIN_TARGETS:
-                return CustomAction.RunResult(success=True)
+        if not JOIN_TARGETS:
+            return CustomAction.RunResult(success=True)
 
-            img = context.tasker.controller.post_screencap().wait().get()
+        img = context.tasker.controller.post_screencap().wait().get()
 
-            # 1. OCR 目标名
-            detail = context.run_recognition(
-                "加入集结_识别目标_ocr",
+        # 1. OCR 目标名
+        detail = context.run_recognition(
+            "加入集结_识别目标_ocr",
+            img,
+            pipeline_override={
+                "加入集结_识别目标_ocr": {
+                    "recognition": "OCR",
+                    "expected": JOIN_TARGETS,
+                    "roi": [238, 183, 293, 936],
+                    "threshold": 0.6,
+                }
+            },
+        )
+        if not detail or not detail.hit:
+            return CustomAction.RunResult(success=True)
+
+        # 2. 排序：雪怪最优先，等级1-8逆序
+        result_sorted = sorted(
+            detail.filtered_results, key=lambda x: _target_sort_key(x.text)
+        )
+
+        # 3. 逐个尝试匹配「直接加入队伍」按钮
+        for result in result_sorted:
+            target_box = result.box
+            join_roi = [a + b for a, b in zip(target_box, _JOIN_OFFSET)]
+
+            join_detail = context.run_recognition(
+                "加入集结_识别_join",
                 img,
                 pipeline_override={
-                    "加入集结_识别目标_ocr": {
-                        "recognition": "OCR",
-                        "expected": JOIN_TARGETS,
-                        "roi": [238, 183, 293, 936],
-                        "threshold": 0.6,
+                    "加入集结_识别_join": {
+                        "recognition": "TemplateMatch",
+                        "template": "熊/直接加入队伍.png",
+                        "roi": join_roi,
+                        "threshold": 0.9,
+                        "method": 10001,
                     }
                 },
             )
-            if not detail or not detail.hit:
-                return CustomAction.RunResult(success=True)
-
-            # 2. 排序：雪怪最优先，等级1-8逆序
-            result_sorted = sorted(
-                detail.filtered_results, key=lambda x: _target_sort_key(x.text)
-            )
-
-            # 3. 逐个尝试匹配「直接加入队伍」按钮
-            for result in result_sorted:
-                target_box = result.box
-                join_roi = [a + b for a, b in zip(target_box, _JOIN_OFFSET)]
-
-                join_detail = context.run_recognition(
-                    "加入集结_识别_join",
-                    img,
+            if join_detail and join_detail.hit:
+                # 点击加入按钮进入队伍选择页
+                context.run_action(
+                    "加入集结_点击加入",
                     pipeline_override={
-                        "加入集结_识别_join": {
-                            "recognition": "TemplateMatch",
-                            "template": "熊/直接加入队伍.png",
-                            "roi": join_roi,
-                            "threshold": 0.9,
-                            "method": 10001,
-                        }
+                        "加入集结_点击加入": {"target": list(join_detail.box)}
                     },
                 )
-                if join_detail and join_detail.hit:
-                    # 点击加入按钮进入队伍选择页
+                # 选队并出征
+                if JOIN_TEAM > 0 and JOIN_TEAM < len(TEAM_ROI):
                     context.run_action(
-                        "加入集结_点击加入",
+                        "加入集结_选择队伍",
                         pipeline_override={
-                            "加入集结_点击加入": {"target": list(join_detail.box)}
+                            "加入集结_选择队伍": {"target": TEAM_ROI[JOIN_TEAM]}
                         },
                     )
-                    # 选队并出征
-                    if JOIN_TEAM > 0 and JOIN_TEAM < len(TEAM_ROI):
-                        context.run_action(
-                            "加入集结_选择队伍",
-                            pipeline_override={
-                                "加入集结_选择队伍": {"target": TEAM_ROI[JOIN_TEAM]}
-                            },
-                        )
-                    context.run_action("加入集结_点击出征")
-                    logger.info(f"加入集结：已加入 {result.text}，队伍={JOIN_TEAM}")
-                    return CustomAction.RunResult(success=True)
+                context.run_action("加入集结_点击出征")
+                logger.info(f"加入集结：已加入 {result.text}，队伍={JOIN_TEAM}")
+                return CustomAction.RunResult(success=True)
 
-            return CustomAction.RunResult(success=True)
-        except Exception as e:
-            # 任何异常都返回 success=True，避免 error_handling 阻断 JumpBack
-            # 导致整个新手任务终止。异常时经 加入集结_后退 → 新手_等待 回主循环。
-            logger.warning(f"加入集结_执行加入异常: {e}")
-            return CustomAction.RunResult(success=True)
+        return CustomAction.RunResult(success=True)
