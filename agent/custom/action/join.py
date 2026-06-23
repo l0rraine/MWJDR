@@ -8,6 +8,7 @@ import re
 from typing import List, Union, Optional
 
 from utils import logger
+from utils.img_util import screen_shot
 
 # 队伍 ROI，与 bear.py / combat.py 中 ChangeTeam 一致
 # 索引 0 为默认队伍，无需点击
@@ -152,6 +153,9 @@ class JoinRecoTarget(CustomRecognition):
         img = context.tasker.controller.post_screencap().wait().get()
 
         # 1. OCR 目标名（可能命中多个）
+        ocr_roi = [238, 183, 293, 936]
+        logger.info(f"加入集结：OCR目标 roi={ocr_roi}, expected={JOIN_TARGETS}")
+        screen_shot(context, "加入集结_识别目标_OCR前")
         detail = context.run_recognition(
             "加入集结_识别目标_ocr",
             img,
@@ -159,15 +163,20 @@ class JoinRecoTarget(CustomRecognition):
                 "加入集结_识别目标_ocr": {
                     "recognition": "OCR",
                     "expected": JOIN_TARGETS,
-                    "roi": [238, 183, 293, 936],
+                    "roi": ocr_roi,
                     "threshold": 0.6,
                 }
             },
         )
         if not detail or not detail.hit:
-            logger.debug("加入集结：未识别到目标")
+            logger.info("加入集结：未识别到目标")
+            screen_shot(context, "加入集结_未识别到目标")
             self._fallback_back(context)
             return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        # 打印所有 OCR 命中结果
+        for r in detail.filtered_results:
+            logger.info(f"加入集结：OCR命中 text={r.text}, box={list(r.box)}")
 
         # 2. 优先「等级1失控的雪怪」，参照 bear.py 优先大车头的排序
         result_sorted = sorted(
@@ -181,6 +190,10 @@ class JoinRecoTarget(CustomRecognition):
         for result in result_sorted:
             target_box = result.box
             join_roi = [a + b for a, b in zip(target_box, join_offset)]
+            logger.info(
+                f"加入集结：尝试匹配加入按钮 text={result.text}, "
+                f"target_box={list(target_box)}, join_roi={join_roi}"
+            )
 
             join_detail = context.run_recognition(
                 "加入集结_识别_join",
@@ -196,10 +209,12 @@ class JoinRecoTarget(CustomRecognition):
                 },
             )
             if join_detail and join_detail.hit:
-                logger.debug(f"加入集结：匹配到目标 {result.text}")
+                logger.info(f"加入集结：匹配到目标 {result.text}")
+                screen_shot(context, f"加入集结_匹配成功_{result.text}")
                 return CustomRecognition.AnalyzeResult(box=join_detail.box, detail={})
 
-        logger.debug("加入集结：所有目标均未找到直接加入队伍按钮")
+        logger.info("加入集结：所有目标均未找到直接加入队伍按钮")
+        screen_shot(context, "加入集结_未找到加入按钮")
         self._fallback_back(context)
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 
