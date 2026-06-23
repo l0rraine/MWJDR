@@ -16,6 +16,9 @@ class NewbieWait(CustomAction):
 
     通过 custom_action_param.interval 接收扫描间隔（秒，字符串），
     执行 sleep(interval)。interval 由 interface 的「扫描间隔」input 注入。
+
+    采用分段 sleep(每秒一次)，避免长时间阻塞导致外部 stop 信号无法
+    及时响应(整段 time.sleep 不响应框架 stop flag)。
     """
 
     def run(
@@ -28,7 +31,9 @@ class NewbieWait(CustomAction):
             interval = int(param.get("interval", "60"))
         except Exception:
             interval = 60
-        time.sleep(interval)
+        # 分段 sleep，每秒一次，降低阻塞粒度
+        for _ in range(interval):
+            time.sleep(1)
         return CustomAction.RunResult(success=True)
 
 
