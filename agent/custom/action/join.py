@@ -184,7 +184,7 @@ class JoinRecoTarget(CustomRecognition):
             key=lambda x: 0 if _PRIORITY_TARGET in x.text else 1,
         )
 
-        join_offset = [318, 88, 70, 40]
+        join_offset = [318, -88, -70, 45]
 
         # 3. 逐个尝试匹配「直接加入队伍」按钮
         for result in result_sorted:
