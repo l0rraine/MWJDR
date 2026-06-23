@@ -8,7 +8,6 @@ import re
 from typing import List, Union, Optional
 
 from utils import logger
-from utils.img_util import screen_shot
 
 # 队伍 ROI，与 bear.py / combat.py 中 ChangeTeam 一致
 # 索引 0 为默认队伍，无需点击
@@ -72,11 +71,11 @@ def _target_sort_key(text: str) -> tuple:
 
     返回 (优先级组, 等级)：
     - 雪怪 → (0, 0) 最先
-    - 等级8 → (1, 8)
-    - 等级7 → (1, 7)
+    - 等级8 → (1, -8)
+    - 等级7 → (1, -7)
     - ...
-    - 等级1 → (1, 1)
-    sorted 默认升序，等级大的排前面需取负。
+    - 等级1 → (1, -1)
+    sorted 默认升序，等级取负使高等级排前面。
     """
     if _PRIORITY_TARGET in text:
         return (0, 0)
@@ -115,7 +114,6 @@ class JoinRecoTeam(CustomRecognition):
         # 2. 读取勾选目标
         JOIN_TARGETS = _read_join_targets(context)
         if not JOIN_TARGETS:
-            logger.debug("加入集结：未选择目标，跳过")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         img = context.tasker.controller.post_screencap().wait().get()
@@ -123,13 +121,11 @@ class JoinRecoTeam(CustomRecognition):
         # 3. 队列判断（与挖矿_识别队伍数量一致的 OCR）
         detail = context.run_recognition("加入集结_识别队列数量", img)
         if not detail or not detail.hit:
-            logger.debug("加入集结：无法识别队列数量")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         res = re.match(r"(\d+)\D(\d+)", detail.best_result.text)
         if not res:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         if res.group(1) == res.group(2):
-            logger.debug("加入集结：队列已满，跳过")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 4. 识别「加入集结」按钮
@@ -147,10 +143,8 @@ class JoinRecoTeam(CustomRecognition):
             },
         )
         if not detail or not detail.hit:
-            logger.debug("加入集结：未找到加入集结按钮")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
-        logger.debug(f"加入集结：准备加入，目标={JOIN_TARGETS}，队伍={JOIN_TEAM}")
         return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
 
 
@@ -183,9 +177,6 @@ class JoinDeploy(CustomAction):
         img = context.tasker.controller.post_screencap().wait().get()
 
         # 1. OCR 目标名
-        ocr_roi = [238, 183, 293, 936]
-        logger.info(f"加入集结：OCR目标 roi={ocr_roi}, expected={JOIN_TARGETS}")
-        screen_shot(context, "加入集结_识别目标_OCR前")
         detail = context.run_recognition(
             "加入集结_识别目标_ocr",
             img,
@@ -193,19 +184,13 @@ class JoinDeploy(CustomAction):
                 "加入集结_识别目标_ocr": {
                     "recognition": "OCR",
                     "expected": JOIN_TARGETS,
-                    "roi": ocr_roi,
+                    "roi": [238, 183, 293, 936],
                     "threshold": 0.6,
                 }
             },
         )
         if not detail or not detail.hit:
-            logger.info("加入集结：未识别到目标")
-            screen_shot(context, "加入集结_未识别到目标")
             return CustomAction.RunResult(success=True)
-
-        # 打印所有 OCR 命中结果
-        for r in detail.filtered_results:
-            logger.info(f"加入集结：OCR命中 text={r.text}, box={list(r.box)}")
 
         # 2. 排序：雪怪最优先，等级1-8逆序
         result_sorted = sorted(
@@ -216,10 +201,6 @@ class JoinDeploy(CustomAction):
         for result in result_sorted:
             target_box = result.box
             join_roi = [a + b for a, b in zip(target_box, _JOIN_OFFSET)]
-            logger.info(
-                f"加入集结：尝试匹配加入按钮 text={result.text}, "
-                f"target_box={list(target_box)}, join_roi={join_roi}"
-            )
 
             join_detail = context.run_recognition(
                 "加入集结_识别_join",
@@ -235,8 +216,6 @@ class JoinDeploy(CustomAction):
                 },
             )
             if join_detail and join_detail.hit:
-                logger.info(f"加入集结：匹配到目标 {result.text}")
-                screen_shot(context, f"加入集结_匹配成功_{result.text}")
                 # 点击加入按钮进入队伍选择页
                 context.run_action(
                     "加入集结_点击加入",
@@ -253,9 +232,7 @@ class JoinDeploy(CustomAction):
                         },
                     )
                 context.run_action("加入集结_点击出征")
-                logger.info(f"加入集结：已加入，队伍={JOIN_TEAM}")
+                logger.info(f"加入集结：已加入 {result.text}，队伍={JOIN_TEAM}")
                 return CustomAction.RunResult(success=True)
 
-        logger.info("加入集结：所有目标均未找到直接加入队伍按钮")
-        screen_shot(context, "加入集结_未找到加入按钮")
         return CustomAction.RunResult(success=True)

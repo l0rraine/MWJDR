@@ -28,7 +28,6 @@ class NewbieWait(CustomAction):
             interval = int(param.get("interval", "60"))
         except Exception:
             interval = 60
-        logger.debug(f"新手等待 {interval} 秒")
         time.sleep(interval)
         return CustomAction.RunResult(success=True)
 

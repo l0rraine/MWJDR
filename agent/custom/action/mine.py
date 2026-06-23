@@ -112,13 +112,11 @@ class MineRecoTeam(CustomRecognition):
 
         # 读取用户勾选的矿种 MINES
         _read_mine_config(context)
-        logger.debug(f"挖矿配置: 队伍上限={MAX_MINE_TEAMS}, 矿种={MINES}")
 
         img = context.tasker.controller.post_screencap().wait().get()
 
         detail = context.run_recognition("挖矿_识别队伍数量", img)
         if not detail or not detail.hit:
-            logger.debug("无法识别队伍数量")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         pattern = r"(\d+)\D(\d+)"
         res = re.match(pattern, detail.best_result.text)
@@ -128,7 +126,6 @@ class MineRecoTeam(CustomRecognition):
         num2 = res.group(2)
 
         if num1 == num2:
-            logger.debug("队列已满")
             if not LAST_MINES:
                 LAST_MINES = get_current_mines(context, img)
             return CustomRecognition.AnalyzeResult(box=None, detail={})
@@ -136,10 +133,7 @@ class MineRecoTeam(CustomRecognition):
         CURRENT_MINES.clear()
         CURRENT_MINES = get_current_mines(context, img)
 
-        logger.debug(f"CURRENT_MINES:{CURRENT_MINES}")
-
         if len(CURRENT_MINES) >= MAX_MINE_TEAMS:
-            logger.debug(f"已达到最大挖矿队伍数 {MAX_MINE_TEAMS}")
             if not LAST_MINES:
                 LAST_MINES = CURRENT_MINES
             return CustomRecognition.AnalyzeResult(box=None, detail={})
@@ -155,14 +149,10 @@ class MineRecoTeam(CustomRecognition):
         if not NEXT_MINE and free_mines:
             NEXT_MINE = free_mines[0]
 
-        logger.debug(
-            f"LAST_MINES:{LAST_MINES},CURRENT_MINES:{CURRENT_MINES},NEXT_MINE:{NEXT_MINE}"
-        )
         if NEXT_MINE:
-            logger.info(f"下一个要挖： {NEXT_MINE}")
+            logger.info(f"派出挖矿队伍：{NEXT_MINE}")
             CURRENT_MINES.append(NEXT_MINE)
             LAST_MINES = CURRENT_MINES
-            logger.debug(f"LAST_MINES:{LAST_MINES}")
             return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 
@@ -187,5 +177,4 @@ class MineRecoMine(CustomRecognition):
                 }
             },
         )
-        logger.debug(f"挖矿_识别矿图标: {detail.box}")
         return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
