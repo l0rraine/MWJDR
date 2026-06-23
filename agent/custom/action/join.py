@@ -27,13 +27,17 @@ TEAM_ROI = [
 # 目标选项汇总节点名前缀，去掉前缀即 OCR expected 文本
 _TARGET_PREFIX = "加入集结_目标_"
 
-# 优先加入的目标（等级1失控的雪怪），参照 bear.py 优先大车头的逻辑
+# 优先加入的目标（等级1失控的雪怪），最优先
 _PRIORITY_TARGET = "等级1失控的雪怪"
 
-# 当前选中的目标列表（由 加入集结_识别队伍 读取，供识别目标使用）
+# 当前选中的目标列表（由 加入集结_识别队伍 读取，供执行加入使用）
 JOIN_TARGETS: List[str] = []
 # 当前使用的队伍编号
 JOIN_TEAM = 1
+
+# 「直接加入队伍」按钮相对目标名的 offset
+# join_roi = target_box + offset = [x+318, y-88, w-70, h+45]
+_JOIN_OFFSET = [318, -88, -70, 45]
 
 
 def _read_join_targets(context: Context) -> List[str]:
@@ -61,6 +65,26 @@ def _read_join_targets(context: Context) -> List[str]:
     except Exception:
         pass
     return targets
+
+
+def _target_sort_key(text: str) -> tuple:
+    """目标排序键：等级1失控的雪怪最优先，等级1-8按等级逆序(高等级优先)。
+
+    返回 (优先级组, 等级)：
+    - 雪怪 → (0, 0) 最先
+    - 等级8 → (1, 8)
+    - 等级7 → (1, 7)
+    - ...
+    - 等级1 → (1, 1)
+    sorted 默认升序，等级大的排前面需取负。
+    """
+    if _PRIORITY_TARGET in text:
+        return (0, 0)
+    # 提取"等级X"中的数字
+    m = re.search(r"等级(\d+)", text)
+    level = int(m.group(1)) if m else 0
+    # 等级高的排前面 → 等级取负，使升序排列时大的在前
+    return (1, -level)
 
 
 @AgentServer.custom_recognition("加入集结_识别队伍")
@@ -130,29 +154,35 @@ class JoinRecoTeam(CustomRecognition):
         return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
 
 
-@AgentServer.custom_recognition("加入集结_识别目标")
-class JoinRecoTarget(CustomRecognition):
-    """识别队伍列表中的目标行与「直接加入队伍」按钮。
+@AgentServer.custom_action("加入集结_执行加入")
+class JoinDeploy(CustomAction):
+    """加入集结全流程 action：识别目标 → 匹配加入按钮 → 点击加入 → 选队出征 → 后退。
+
+    由 加入集结_入口 recognition 命中(已Click进入集结列表页)后调用。
+    全流程在 action 内完成识别与加入，后退由 pipeline 的 next 节点
+    (加入集结_后退) 统一处理，避免 action 内与 next 链重复后退。
+    无论成功与否 action 返回 success=True，流程经 加入集结_后退 →
+    新手_等待(sleep扫描间隔) 后回主循环，避免失败时紧循环。
 
     逻辑（参照 bear.py）：
-    1. OCR 目标名（roi [238,183,293,936], expected 为 JOIN_TARGETS），可能识别到多个
-    2. 对每个识别结果，优先「等级1失控的雪怪」（参照 bear 优先大车头排序）
-    3. 逐个根据目标 box + offset [318,88,70,40] 计算「直接加入队伍」按钮 roi
-    4. 模板匹配 熊/直接加入队伍.png（threshold 0.9, method 10001），命中则返回按钮 box
-    若全部未命中，主动后退回到主界面，避免停留在队伍列表。
+    1. OCR 目标名（roi [238,183,293,936], expected 为 JOIN_TARGETS）
+    2. 排序：等级1失控的雪怪最优先，等级1-8逆序(高等级优先)
+    3. 逐个根据目标 box + offset 计算「直接加入队伍」按钮 roi
+    4. 模板匹配 熊/直接加入队伍.png，命中则点击加入 → 选队 → 出征
+    5. 全部未命中或 OCR 未识别到 → 直接返回(由 next 链后退)
     """
 
-    def analyze(
-        self,
-        context: Context,
-        argv: CustomRecognition.AnalyzeArg,
-    ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global JOIN_TEAM
+
         if not JOIN_TARGETS:
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
+            return CustomAction.RunResult(success=True)
 
         img = context.tasker.controller.post_screencap().wait().get()
 
-        # 1. OCR 目标名（可能命中多个）
+        # 1. OCR 目标名
         ocr_roi = [238, 183, 293, 936]
         logger.info(f"加入集结：OCR目标 roi={ocr_roi}, expected={JOIN_TARGETS}")
         screen_shot(context, "加入集结_识别目标_OCR前")
@@ -171,25 +201,21 @@ class JoinRecoTarget(CustomRecognition):
         if not detail or not detail.hit:
             logger.info("加入集结：未识别到目标")
             screen_shot(context, "加入集结_未识别到目标")
-            self._fallback_back(context)
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
+            return CustomAction.RunResult(success=True)
 
         # 打印所有 OCR 命中结果
         for r in detail.filtered_results:
             logger.info(f"加入集结：OCR命中 text={r.text}, box={list(r.box)}")
 
-        # 2. 优先「等级1失控的雪怪」，参照 bear.py 优先大车头的排序
+        # 2. 排序：雪怪最优先，等级1-8逆序
         result_sorted = sorted(
-            detail.filtered_results,
-            key=lambda x: 0 if _PRIORITY_TARGET in x.text else 1,
+            detail.filtered_results, key=lambda x: _target_sort_key(x.text)
         )
-
-        join_offset = [318, -88, -70, 45]
 
         # 3. 逐个尝试匹配「直接加入队伍」按钮
         for result in result_sorted:
             target_box = result.box
-            join_roi = [a + b for a, b in zip(target_box, join_offset)]
+            join_roi = [a + b for a, b in zip(target_box, _JOIN_OFFSET)]
             logger.info(
                 f"加入集结：尝试匹配加入按钮 text={result.text}, "
                 f"target_box={list(target_box)}, join_roi={join_roi}"
@@ -211,39 +237,25 @@ class JoinRecoTarget(CustomRecognition):
             if join_detail and join_detail.hit:
                 logger.info(f"加入集结：匹配到目标 {result.text}")
                 screen_shot(context, f"加入集结_匹配成功_{result.text}")
-                return CustomRecognition.AnalyzeResult(box=join_detail.box, detail={})
+                # 点击加入按钮进入队伍选择页
+                context.run_action(
+                    "加入集结_点击加入",
+                    pipeline_override={
+                        "加入集结_点击加入": {"target": list(join_detail.box)}
+                    },
+                )
+                # 选队并出征
+                if JOIN_TEAM > 0 and JOIN_TEAM < len(TEAM_ROI):
+                    context.run_action(
+                        "加入集结_选择队伍",
+                        pipeline_override={
+                            "加入集结_选择队伍": {"target": TEAM_ROI[JOIN_TEAM]}
+                        },
+                    )
+                context.run_action("加入集结_点击出征")
+                logger.info(f"加入集结：已加入，队伍={JOIN_TEAM}")
+                return CustomAction.RunResult(success=True)
 
         logger.info("加入集结：所有目标均未找到直接加入队伍按钮")
         screen_shot(context, "加入集结_未找到加入按钮")
-        self._fallback_back(context)
-        return CustomRecognition.AnalyzeResult(box=None, detail={})
-
-    def _fallback_back(self, context: Context) -> None:
-        """识别失败时主动后退，避免停留在队伍列表页影响后续 JumpBack。"""
-        try:
-            context.run_action("加入集结_后退")
-        except Exception:
-            pass
-
-
-@AgentServer.custom_action("加入集结_加入")
-class JoinDeploy(CustomAction):
-    """选择队伍（非默认队伍时点击对应 ROI）并点击出征。
-
-    JOIN_TEAM=0 表示默认队伍，不切换。加入操作与 bear.py _select_team_and_deploy 一致，
-    但各动作间隔使用节点默认 pre/post_delay，不做极限压缩。
-    """
-
-    def run(
-        self, context: Context, argv: CustomAction.RunArg
-    ) -> CustomAction.RunResult:
-        global JOIN_TEAM
-        if JOIN_TEAM > 0 and JOIN_TEAM < len(TEAM_ROI):
-            roi = TEAM_ROI[JOIN_TEAM]
-            context.run_action(
-                "加入集结_选择队伍",
-                pipeline_override={"加入集结_选择队伍": {"target": roi}},
-            )
-        context.run_action("加入集结_点击出征")
-        logger.info(f"加入集结：已加入，队伍={JOIN_TEAM}")
         return CustomAction.RunResult(success=True)
