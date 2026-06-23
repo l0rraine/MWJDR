@@ -112,7 +112,7 @@ class MineRecoTeam(CustomRecognition):
 
         # 读取用户勾选的矿种 MINES
         _read_mine_config(context)
-        logger.info(f"挖矿配置: 队伍上限={MAX_MINE_TEAMS}, 矿种={MINES}")
+        logger.debug(f"挖矿配置: 队伍上限={MAX_MINE_TEAMS}, 矿种={MINES}")
 
         img = context.tasker.controller.post_screencap().wait().get()
 

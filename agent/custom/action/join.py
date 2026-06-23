@@ -26,7 +26,7 @@ TEAM_ROI = [
 # 目标选项汇总节点名前缀，去掉前缀即 OCR expected 文本
 _TARGET_PREFIX = "加入集结_目标_"
 
-# 当前选中的目标列表（由 挖矿_识别队伍 读取，供识别目标使用）
+# 当前选中的目标列表（由 加入集结_识别队伍 读取，供识别目标使用）
 JOIN_TARGETS: List[str] = []
 # 当前使用的队伍编号
 JOIN_TEAM = 1
@@ -122,7 +122,7 @@ class JoinRecoTeam(CustomRecognition):
             logger.debug("加入集结：未找到加入集结按钮")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
-        logger.info(f"加入集结：准备加入，目标={JOIN_TARGETS}，队伍={JOIN_TEAM}")
+        logger.debug(f"加入集结：准备加入，目标={JOIN_TARGETS}，队伍={JOIN_TEAM}")
         return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
 
 
@@ -131,11 +131,11 @@ class JoinRecoTarget(CustomRecognition):
     """识别队伍列表中的目标行与「直接加入队伍」按钮。
 
     逻辑（参照 bear.py）：
-    1. OCR 目标名（roi [238,183,293,936], expected 为 JOIN_TARGETS）
-    2. 根据目标名 box + offset [318,88,70,40] 计算「直接加入队伍」按钮 roi
-    3. 模板匹配 熊/直接加入队伍.png（threshold 0.9, method 10001）
-    4. 命中则返回按钮 box，框架 Click 进入队伍选择页
-    若识别失败，主动后退回到主界面，避免停留在队伍列表。
+    1. OCR 目标名（roi [238,183,293,936], expected 为 JOIN_TARGETS），可能识别到多个
+    2. 对每个识别结果，优先「等级1失控的雪怪」（参照 bear 优先大车头排序）
+    3. 逐个根据目标 box + offset [318,88,70,40] 计算「直接加入队伍」按钮 roi
+    4. 模板匹配 熊/直接加入队伍.png（threshold 0.9, method 10001），命中则返回按钮 box
+    若全部未命中，主动后退回到主界面，避免停留在队伍列表。
     """
 
     def analyze(
@@ -148,7 +148,7 @@ class JoinRecoTarget(CustomRecognition):
 
         img = context.tasker.controller.post_screencap().wait().get()
 
-        # 1. OCR 目标名
+        # 1. OCR 目标名（可能命中多个）
         detail = context.run_recognition(
             "加入集结_识别目标_ocr",
             img,
@@ -166,31 +166,39 @@ class JoinRecoTarget(CustomRecognition):
             self._fallback_back(context)
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
-        # 2. 计算「直接加入队伍」按钮 roi = 目标 box + offset
-        target_box = detail.best_result.box
-        join_offset = [318, 88, 70, 40]
-        join_roi = [a + b for a, b in zip(target_box, join_offset)]
-
-        # 3. 模板匹配「直接加入队伍」
-        detail = context.run_recognition(
-            "加入集结_识别_join",
-            img,
-            pipeline_override={
-                "加入集结_识别_join": {
-                    "recognition": "TemplateMatch",
-                    "template": "熊/直接加入队伍.png",
-                    "roi": join_roi,
-                    "threshold": 0.9,
-                    "method": 10001,
-                }
-            },
+        # 2. 优先「等级1失控的雪怪」，参照 bear.py 优先大车头的排序
+        result_sorted = sorted(
+            detail.filtered_results,
+            key=lambda x: 0 if _PRIORITY_TARGET in x.text else 1,
         )
-        if not detail or not detail.hit:
-            logger.debug("加入集结：未找到直接加入队伍按钮")
-            self._fallback_back(context)
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
 
-        return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
+        join_offset = [318, 88, 70, 40]
+
+        # 3. 逐个尝试匹配「直接加入队伍」按钮
+        for result in result_sorted:
+            target_box = result.box
+            join_roi = [a + b for a, b in zip(target_box, join_offset)]
+
+            join_detail = context.run_recognition(
+                "加入集结_识别_join",
+                img,
+                pipeline_override={
+                    "加入集结_识别_join": {
+                        "recognition": "TemplateMatch",
+                        "template": "熊/直接加入队伍.png",
+                        "roi": join_roi,
+                        "threshold": 0.9,
+                        "method": 10001,
+                    }
+                },
+            )
+            if join_detail and join_detail.hit:
+                logger.debug(f"加入集结：匹配到目标 {result.text}")
+                return CustomRecognition.AnalyzeResult(box=join_detail.box, detail={})
+
+        logger.debug("加入集结：所有目标均未找到直接加入队伍按钮")
+        self._fallback_back(context)
+        return CustomRecognition.AnalyzeResult(box=None, detail={})
 
     def _fallback_back(self, context: Context) -> None:
         """识别失败时主动后退，避免停留在队伍列表页影响后续 JumpBack。"""
@@ -204,7 +212,8 @@ class JoinRecoTarget(CustomRecognition):
 class JoinDeploy(CustomAction):
     """选择队伍（非默认队伍时点击对应 ROI）并点击出征。
 
-    JOIN_TEAM=0 表示默认队伍，不切换。与 bear.py _select_team_and_deploy 一致。
+    JOIN_TEAM=0 表示默认队伍，不切换。加入操作与 bear.py _select_team_and_deploy 一致，
+    但各动作间隔使用节点默认 pre/post_delay，不做极限压缩。
     """
 
     def run(
