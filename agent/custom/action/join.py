@@ -26,6 +26,9 @@ TEAM_ROI = [
 # 目标选项汇总节点名前缀，去掉前缀即 OCR expected 文本
 _TARGET_PREFIX = "加入集结_目标_"
 
+# 优先加入的目标（等级1失控的雪怪），参照 bear.py 优先大车头的逻辑
+_PRIORITY_TARGET = "等级1失控的雪怪"
+
 # 当前选中的目标列表（由 加入集结_识别队伍 读取，供识别目标使用）
 JOIN_TARGETS: List[str] = []
 # 当前使用的队伍编号
