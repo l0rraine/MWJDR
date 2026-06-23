@@ -35,6 +35,8 @@ TOTAL_TEAMS = 0
 LAST_STAGE = 0
 RESERVE_TEAM = 1
 FOUND_LEAD_TRUCK = {}
+# 已通知"超过40s没开车"的车头集合（元素为 f"{truck}_{stage}"），避免同轮重复打印
+_OVER_40S_NOTIFIED = set()
 CURRENT_TRUCK = ""
 LEAD_TRUCK_OF_CURRENT_STAGE = 0
 
@@ -146,7 +148,7 @@ class BearComputeTeam(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global TRUCK_1, START_TIME, TEAM_ORDER, FOUND_LEAD_TRUCK, RESERVE_TEAM, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, SEND_TEAMS, LAST_STAGE
+        global TRUCK_1, START_TIME, TEAM_ORDER, FOUND_LEAD_TRUCK, RESERVE_TEAM, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, SEND_TEAMS, LAST_STAGE, _OVER_40S_NOTIFIED
 
         current_stage = get_current_stage(START_TIME)
 
@@ -155,6 +157,7 @@ class BearComputeTeam(CustomAction):
             LAST_STAGE = current_stage
             # SEND_TEAMS = 0
             LEAD_TRUCK_OF_CURRENT_STAGE = 0
+            _OVER_40S_NOTIFIED.clear()
 
         if current_stage > 5:
             logger.info("打熊已结束")
@@ -182,9 +185,12 @@ class BearComputeTeam(CustomAction):
                     last_remain = FOUND_LEAD_TRUCK[f"{truck}_{history[truck]}"]
                     this_remain = next_stage_seconds()
                     if last_remain - this_remain >= min(40, this_remain):
-                        logger.debug(
-                            f"第{current_stage}轮: {truck} 已经超过 40 秒没开车了"
-                        )
+                        notify_key = f"{truck}_{current_stage}"
+                        if notify_key not in _OVER_40S_NOTIFIED:
+                            _OVER_40S_NOTIFIED.add(notify_key)
+                            logger.debug(
+                                f"第{current_stage}轮: {truck} 已经超过 40 秒没开车了"
+                            )
                         found = found + 1
 
             # 之前开过车，这次没开车呢，那就需要保留队伍
