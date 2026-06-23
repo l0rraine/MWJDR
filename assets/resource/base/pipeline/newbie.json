@@ -4,6 +4,7 @@
             "新手_不可能任务",
             "[JumpBack]挖矿_入口",
             "[JumpBack]训练士兵_快捷",
+            "[JumpBack]加入集结_入口",
             "[JumpBack]新手_等待"
         ]
     },
@@ -21,7 +22,10 @@
     },
     "新手_等待": {
         "recognition": "DirectHit",
-        "pre_delay": 60000,
-        "action": "DoNothing"
+        "action": "Custom",
+        "custom_action": "新手_等待",
+        "custom_action_param": {
+            "interval": "60"
+        }
     }
 }

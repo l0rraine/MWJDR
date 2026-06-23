@@ -10,6 +10,29 @@ from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
 from utils.merchant_utils import save_task_date, disable_switch, daily_check
 from utils import timelib
+@AgentServer.custom_action("新手_等待")
+class NewbieWait(CustomAction):
+    """新手循环的扫描等待。
+
+    通过 custom_action_param.interval 接收扫描间隔（秒，字符串），
+    执行 sleep(interval)。interval 由 interface 的「扫描间隔」input 注入。
+    """
+
+    def run(
+        self,
+        context: Context,
+        argv: CustomAction.RunArg,
+    ) -> CustomAction.RunResult:
+        try:
+            param = json.loads(argv.custom_action_param)
+            interval = int(param.get("interval", "60"))
+        except Exception:
+            interval = 60
+        logger.info(f"新手等待 {interval} 秒")
+        time.sleep(interval)
+        return CustomAction.RunResult(success=True)
+
+
 @AgentServer.custom_action("根据需要切换角色")
 class SwitchCharacter(CustomAction):
     def run(

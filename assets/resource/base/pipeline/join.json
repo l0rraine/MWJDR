@@ -1,0 +1,115 @@
+{
+    "加入集结_入口": {
+        "recognition": "Custom",
+        "custom_recognition": "加入集结_识别队伍",
+        "custom_recognition_param": {
+            "team": "1"
+        },
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "加入集结_识别目标"
+        ]
+    },
+    "加入集结_识别目标": {
+        "recognition": "Custom",
+        "custom_recognition": "加入集结_识别目标",
+        "action": "Click",
+        "next": [
+            "加入集结_加入"
+        ]
+    },
+    "加入集结_加入": {
+        "action": "Custom",
+        "custom_action": "加入集结_加入",
+        "next": [
+            "加入集结_后退"
+        ]
+    },
+    "加入集结_后退": {
+        "pre_delay": 1000,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    11,
+                    19,
+                    28,
+                    37
+                ]
+            }
+        },
+        "post_delay": 500
+    },
+    "加入集结_目标选项": {
+        "next": [
+            "加入集结_目标_等级1洞狮",
+            "加入集结_目标_等级2雪猿",
+            "加入集结_目标_等级3板齿犀",
+            "加入集结_目标_等级4剑齿虎",
+            "加入集结_目标_等级5猛犸象",
+            "加入集结_目标_等级6猛犸古猿",
+            "加入集结_目标_等级7霜鳞避役",
+            "加入集结_目标_等级8深渊龙龟",
+            "加入集结_目标_等级1失控的雪怪"
+        ]
+    },
+    "加入集结_目标_等级1洞狮": {
+        "enabled": false
+    },
+    "加入集结_目标_等级2雪猿": {
+        "enabled": false
+    },
+    "加入集结_目标_等级3板齿犀": {
+        "enabled": false
+    },
+    "加入集结_目标_等级4剑齿虎": {
+        "enabled": false
+    },
+    "加入集结_目标_等级5猛犸象": {
+        "enabled": false
+    },
+    "加入集结_目标_等级6猛犸古猿": {
+        "enabled": false
+    },
+    "加入集结_目标_等级7霜鳞避役": {
+        "enabled": false
+    },
+    "加入集结_目标_等级8深渊龙龟": {
+        "enabled": false
+    },
+    "加入集结_目标_等级1失控的雪怪": {
+        "enabled": false
+    },
+    "加入集结_识别队列数量": {
+        "recognition": "OCR",
+        "expected": "\\d+\\D\\d+",
+        "roi": [
+            190,
+            187,
+            57,
+            49
+        ]
+    },
+    "加入集结_选择队伍": {
+        "pre_delay": 200,
+        "post_delay": 0,
+        "action": "Click",
+        "target": true
+    },
+    "加入集结_点击出征": {
+        "pre_delay": 300,
+        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    510,
+                    1185,
+                    91,
+                    51
+                ]
+            }
+        }
+    }
+}
