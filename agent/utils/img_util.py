@@ -26,7 +26,7 @@ def screen_shot(context: Context, text: str):
 
     img = Image.fromarray(rgb_array)
 
-    save_dir = os.path.join(os.path.dirname(__file__), "..", "..", "..", "temp")
+    save_dir = os.path.join(os.path.dirname(__file__), "..", "..", "temp")
     os.makedirs(save_dir, exist_ok=True)
     now = datetime.now()
     text = re.sub(r"[*?]", "", text)
