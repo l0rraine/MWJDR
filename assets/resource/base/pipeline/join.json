@@ -84,7 +84,7 @@
     },
     "加入集结_识别队列数量": {
         "recognition": "OCR",
-        "expected": "\\d+\\D\\d+",
+        "expected": "^\\d\/\\d$",
         "roi": [
             190,
             187,

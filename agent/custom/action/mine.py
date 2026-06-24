@@ -115,23 +115,32 @@ class MineRecoTeam(CustomRecognition):
 
         img = context.tasker.controller.post_screencap().wait().get()
 
-        detail = context.run_recognition("挖矿_识别队伍数量", img)
-        if not detail or not detail.hit:
+        if not LAST_MINES:
+            LAST_MINES = get_current_mines(context, img)
+        from utils.ocr_util import ocr_until_consistent_by_task
+
+        text, detail = ocr_until_consistent_by_task(
+            context, "挖矿_识别队伍数量", expected_pattern=r"^\d/\d$"
+        )
+        if not text:
+            logger.debug("未能识别到队伍数量")
+            context.run_task("后退")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
-        pattern = r"(\d+)\D(\d+)"
-        res = re.match(pattern, detail.best_result.text)
+        pattern = r"(\d)/(\d)"
+        res = re.match(pattern, text)
         if not res:
+            logger.debug(f"{text}")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         num1 = res.group(1)
         num2 = res.group(2)
-
+        # logger.debug(f"识别到队伍{num1}/{num2}")
         if num1 == num2:
-            if not LAST_MINES:
-                LAST_MINES = get_current_mines(context, img)
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         CURRENT_MINES.clear()
         CURRENT_MINES = get_current_mines(context, img)
+
+        logger.debug(f"LAST_MINES:{LAST_MINES},CURRENT_MINES:{CURRENT_MINES}")
 
         if len(CURRENT_MINES) >= MAX_MINE_TEAMS:
             if not LAST_MINES:

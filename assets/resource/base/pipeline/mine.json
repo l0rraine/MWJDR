@@ -31,7 +31,7 @@
     },
     "挖矿_识别队伍数量": {
         "recognition": "OCR",
-        "expected": "\\d+\\D\\d+",
+        "expected": "^\\d\\D\\d$",
         "roi": [
             190,
             187,

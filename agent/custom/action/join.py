@@ -119,8 +119,13 @@ class JoinRecoTeam(CustomRecognition):
         img = context.tasker.controller.post_screencap().wait().get()
 
         # 3. 队列判断（与挖矿_识别队伍数量一致的 OCR）
-        detail = context.run_recognition("加入集结_识别队列数量", img)
-        if not detail or not detail.hit:
+        from utils.ocr_util import ocr_until_consistent_by_task
+
+        text, detail = ocr_until_consistent_by_task(
+            context, "加入集结_识别队列数量", expected_pattern=r"^\d/\d$"
+        )
+        if not text:
+            logger.debug("未能识别到队伍数量")
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         res = re.match(r"(\d+)\D(\d+)", detail.best_result.text)
         if not res:

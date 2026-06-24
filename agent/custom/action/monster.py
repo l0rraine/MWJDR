@@ -23,7 +23,7 @@ class SetMonsterCount(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        text = ocr_until_consistent_by_task(
+        text, _ = ocr_until_consistent_by_task(
             context, "自动集结_识别次数", expected_pattern=r"^\d+$"
         )
         if text is None:
@@ -125,7 +125,7 @@ class BeginCombat(CustomAction):
                     self._end(context)
                     return CustomAction.RunResult(success=False)
 
-                text = ocr_until_consistent_by_task(
+                text, _ = ocr_until_consistent_by_task(
                     context, "识别罐头数量", expected_pattern=r"^\d+$"
                 )
                 if text is None:
@@ -153,7 +153,7 @@ class BeginCombat(CustomAction):
                 and advanced_mode == 1
                 and not CombatRepetitionCount.isReachLimit()
             ):
-                text = ocr_until_consistent_by_task(
+                text, _ = ocr_until_consistent_by_task(
                     context, "识别罐头数量", expected_pattern=r"^\d+$"
                 )
                 if text is None:

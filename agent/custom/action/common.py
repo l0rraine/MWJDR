@@ -10,6 +10,8 @@ from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
 from utils.merchant_utils import save_task_date, disable_switch, daily_check
 from utils import timelib
+
+
 @AgentServer.custom_action("新手_设置扫描间隔")
 class NewbieSetInterval(CustomAction):
     """将用户输入的扫描间隔(秒)转为毫秒，override 到 新手_等待.pre_delay。
@@ -42,12 +44,12 @@ class SwitchCharacter(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         json_data = json.loads(argv.custom_action_param)
-        
-        region = json_data.get('王国编号') or "3194"
-        index = json_data.get('王国内序号')
+
+        region = json_data.get("王国编号") or "3194"
+        index = json_data.get("王国内序号")
         logger.debug(f"王国编号:{region},王国内序号:{index}")
         expected = f"王国\\D+{region}"
-        
+
         cha_detail = None
         region_detail = None
         count = 3
@@ -66,17 +68,33 @@ class SwitchCharacter(CustomAction):
                     cha_detail = context.run_recognition(
                         "选中角色",
                         img,
-                        {"选中角色":{"roi":[region_detail.best_result.box.x+402,region_detail.best_result.box.y+70,119,231]}}
+                        {
+                            "选中角色": {
+                                "roi": [
+                                    region_detail.best_result.box.x + 402,
+                                    region_detail.best_result.box.y + 70,
+                                    119,
+                                    231,
+                                ]
+                            }
+                        },
                     )
                     if cha_detail and cha_detail.hit:
-                        logger.debug(f"是否是第一个角色：{cha_detail.best_result.box.y-region_detail.best_result.box.y<170}")
+                        logger.debug(
+                            f"是否是第一个角色：{cha_detail.best_result.box.y-region_detail.best_result.box.y<170}"
+                        )
             except Exception as e:
                 logger.debug(f"第 {4 - count} 次执行出错: {e}")
-            finally:                
+            finally:
                 count -= 1
                 time.sleep(2)
-        
-        if not cha_detail or not cha_detail.hit or not region_detail or not region_detail.hit:
+
+        if (
+            not cha_detail
+            or not cha_detail.hit
+            or not region_detail
+            or not region_detail.hit
+        ):
             logger.warning("未能识别角色信息，跳过切换")
             return CustomAction.RunResult(success=True)
 
@@ -84,16 +102,32 @@ class SwitchCharacter(CustomAction):
         if index == "1" and offset_y > 170:
             context.run_task(
                 "点击角色",
-                {"点击角色":
-                    {"target":[cha_detail.best_result.box.x,cha_detail.best_result.box.y-170,cha_detail.best_result.box.w,cha_detail.best_result.box.h]}
-                })
+                {
+                    "点击角色": {
+                        "target": [
+                            cha_detail.best_result.box.x,
+                            cha_detail.best_result.box.y - 170,
+                            cha_detail.best_result.box.w,
+                            cha_detail.best_result.box.h,
+                        ]
+                    }
+                },
+            )
             logger.info(f"切换到第一个角色")
         elif index == "2" and offset_y < 170:
             context.run_task(
                 "点击角色",
-                {"点击角色":
-                    {"target":[cha_detail.best_result.box.x,cha_detail.best_result.box.y+170,cha_detail.best_result.box.w,cha_detail.best_result.box.h]}
-                })
+                {
+                    "点击角色": {
+                        "target": [
+                            cha_detail.best_result.box.x,
+                            cha_detail.best_result.box.y + 170,
+                            cha_detail.best_result.box.w,
+                            cha_detail.best_result.box.h,
+                        ]
+                    }
+                },
+            )
             logger.info(f"切换到第二个角色")
         else:
             logger.info(f"当前已是第{index}个角色，无需切换")
@@ -101,6 +135,7 @@ class SwitchCharacter(CustomAction):
         # 在角色管理界面 OCR 角色ID
         from ..reco.record_id import RecordID
         from utils.ocr_util import ocr_until_consistent
+
         account_id = ocr_until_consistent(
             context,
             roi=RecordID._id_roi,
@@ -115,6 +150,7 @@ class SwitchCharacter(CustomAction):
 
         return CustomAction.RunResult(success=True)
 
+
 # 确保所有任务执行前有队列可用，1. 判断是否有战斗任务 2. 关闭自动加入 3.如果有不是挖矿的队伍，等待  4. 如果全部在挖矿，召回最后一队
 @AgentServer.custom_action("确保有队列可用")
 class MakeSureQueueAvailable(CustomAction):
@@ -125,6 +161,7 @@ class MakeSureQueueAvailable(CustomAction):
     ) -> bool:
         # 0. 如果后续没有战斗任务，跳过确保空闲队列
         from utils.mfa_config import has_battle_tasks
+
         battle_status = has_battle_tasks()
         if battle_status is False:
             logger.info("后续无战斗任务，跳过确保空闲队列")
@@ -132,38 +169,39 @@ class MakeSureQueueAvailable(CustomAction):
 
         # 1. 关闭自动加入
         logger.debug("关闭自动加入集结")
-        context.run_task("自动加入集结_关闭_入口")  
-        context.run_task("转到城外") 
+        context.run_task("自动加入集结_关闭_入口")
+        context.run_task("转到城外")
         context.run_task("开始查看队列")
-        text = ocr_until_consistent_by_task(context, "识别当前队列数量", expected_pattern=r'\d+/\d+')
+        text, _ = ocr_until_consistent_by_task(
+            context, "识别当前队列数量", expected_pattern=r"\d+/\d+"
+        )
         if text is None:
             logger.warning("识别队列数量失败")
             return CustomAction.RunResult(success=False)
         logger.debug(f"队列情况：{text}")
-        match = re.search(r'\d+', text)
-        if match and int(match.group())>0:
+        match = re.search(r"\d+", text)
+        if match and int(match.group()) > 0:
             return CustomAction.RunResult(success=True)
 
         context.run_task("后退")
-        _, b = map(int, text.split('/'))
+        _, b = map(int, text.split("/"))
 
         logger.info(f"当前队列已满，队列总数为{b}")
         # 2.如果有不是挖矿的队伍，等待
         img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition("识别队列动作",img)
+        detail = context.run_recognition("识别队列动作", img)
         if detail.hit:
             logger.info("开始等待出征队伍回归")
 
         # 3. 如果全部在挖矿，召回最后一队
         else:
             recall_region = [
-                [200,544,43,56],
-                [200,484,43,56],
-                [200,424,43,56],
-                [200,364,43,56],
-                [200,304,43,56],
-                [200,244,43,56]
-                
+                [200, 544, 43, 56],
+                [200, 484, 43, 56],
+                [200, 424, 43, 56],
+                [200, 364, 43, 56],
+                [200, 304, 43, 56],
+                [200, 244, 43, 56],
             ]
             img = context.tasker.controller.post_screencap().wait().get()
             for region in recall_region[-b:]:
@@ -173,11 +211,7 @@ class MakeSureQueueAvailable(CustomAction):
                     img,
                 )
                 if detail.hit:
-                    context.run_task("点击召回",{
-                        "点击召回": {
-                            "target": region
-                        }
-                    })
+                    context.run_task("点击召回", {"点击召回": {"target": region}})
                     logger.info("已召回队伍，开始等待")
                     break
 
@@ -187,14 +221,15 @@ class MakeSureQueueAvailable(CustomAction):
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("识别当前队列数量", img)
             if detail.hit:
-                match = re.search(r'\d+', detail.best_result.text)
-                if match and int(match.group())>0:
-                    break                
+                match = re.search(r"\d+", detail.best_result.text)
+                if match and int(match.group()) > 0:
+                    break
 
         return CustomAction.RunResult(success=True)
 
+
 @AgentServer.custom_action("NodeParaCombine")
-class NodeParaCombine(CustomAction):   
+class NodeParaCombine(CustomAction):
     """
     在 node 合并不同的参数 。
 
@@ -217,6 +252,8 @@ class NodeParaCombine(CustomAction):
         context.override_pipeline({f"{node_name}": {"enabled": False}})
 
         return CustomAction.RunResult(success=True)
+
+
 @AgentServer.custom_action("DisableNode")
 class DisableNode(CustomAction):
     """
