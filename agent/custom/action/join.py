@@ -36,7 +36,7 @@ JOIN_TEAM = 1
 
 # 「直接加入队伍」按钮相对目标名的 offset
 # join_roi = target_box + offset = [x+318, y-88, w-70, h+45]
-_JOIN_OFFSET = [318, -88, -70, 45]
+_JOIN_OFFSET = [318, -88, 0, 50]
 
 
 def _read_join_targets(context: Context) -> List[str]:
