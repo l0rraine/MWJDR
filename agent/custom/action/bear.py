@@ -245,6 +245,8 @@ class BearRecoTeam(CustomRecognition):
                     "expected": expected,
                     "roi": team_name_roi,
                     "threshold": 0.6,
+                    "pre_delay": 0,
+                    "post_delay": 0,
                 }
             },
         )
@@ -294,6 +296,8 @@ class BearRecoTeam(CustomRecognition):
                         "roi": join_roi,
                         "threshold": 0.9,
                         "method": 10001,
+                        "pre_delay": 0,
+                        "post_delay": 0,
                     }
                 },
             )
@@ -384,10 +388,12 @@ class BearScrollDown(CustomAction):
                 "熊_执行滚动",
                 pipeline_override={
                     "熊_执行滚动": {
+                        "pre_delay": 0,
+                        "post_delay": 0,
                         "action": "Swipe",
                         "begin": [433, 909, 14, 10],
                         "end": [423, 792, 21, 11],
-                        "duration": 100,
+                        "duration": 150,
                     }
                 },
             )
