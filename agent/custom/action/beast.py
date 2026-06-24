@@ -25,9 +25,9 @@ class BeastBeginCombat(CustomAction):
         context.run_task("点击出征")
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        if detail.hit:
-            detail = context.run_recognition("是否有免费体力",img)
-            if detail.hit:
+        if detail is not None and detail.hit:
+            detail = context.run_recognition("是否有免费体力", img)
+            if detail is not None and detail.hit:
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
