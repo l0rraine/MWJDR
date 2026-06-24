@@ -10,15 +10,13 @@ from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
 from utils.merchant_utils import save_task_date, disable_switch, daily_check
 from utils import timelib
-@AgentServer.custom_action("新手_等待")
-class NewbieWait(CustomAction):
-    """新手循环的扫描等待。
+@AgentServer.custom_action("新手_设置扫描间隔")
+class NewbieSetInterval(CustomAction):
+    """将用户输入的扫描间隔(秒)转为毫秒，override 到 新手_等待.pre_delay。
 
-    通过 custom_action_param.interval 接收扫描间隔（秒，字符串），
-    执行 sleep(interval)。interval 由 interface 的「扫描间隔」input 注入。
-
-    采用分段 sleep(每秒一次)，避免长时间阻塞导致外部 stop 信号无法
-    及时响应(整段 time.sleep 不响应框架 stop flag)。
+    新手_等待 本身用 pre_delay + DoNothing(框架管理延迟，不阻塞 Python 层)。
+    本 action 瞬间完成(不 sleep)，仅做单位转换与 override。
+    interval 由 interface 的「扫描间隔」input(秒)注入。
     """
 
     def run(
@@ -31,9 +29,8 @@ class NewbieWait(CustomAction):
             interval = int(param.get("interval", "60"))
         except Exception:
             interval = 60
-        # 分段 sleep，每秒一次，降低阻塞粒度
-        for _ in range(interval):
-            time.sleep(1)
+        # 秒转毫秒，override 新手_等待.pre_delay
+        context.override_pipeline({"新手_等待": {"pre_delay": interval * 1000}})
         return CustomAction.RunResult(success=True)
 
 

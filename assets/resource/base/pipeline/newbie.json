@@ -1,12 +1,20 @@
 {
     "新手_入口": {
         "next": [
+            "新手_设置扫描间隔",
             "新手_不可能任务",
             "[JumpBack]挖矿_入口",
             "[JumpBack]加入集结_入口",
             "[JumpBack]训练士兵_快捷",
             "[JumpBack]新手_等待"
         ]
+    },
+    "新手_设置扫描间隔": {
+        "action": "Custom",
+        "custom_action": "新手_设置扫描间隔",
+        "custom_action_param": {
+            "interval": "60"
+        }
     },
     "新手_不可能任务": {
         "recognition": "OCR",
@@ -22,10 +30,7 @@
     },
     "新手_等待": {
         "recognition": "DirectHit",
-        "action": "Custom",
-        "custom_action": "新手_等待",
-        "custom_action_param": {
-            "interval": "60"
-        }
+        "pre_delay": 60000,
+        "action": "DoNothing"
     }
 }

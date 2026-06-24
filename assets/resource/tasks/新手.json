@@ -25,7 +25,7 @@
                 }
             ],
             "pipeline_override": {
-                "新手_等待": {
+                "新手_设置扫描间隔": {
                     "custom_action_param": {
                         "interval": "{扫描间隔}"
                     }
