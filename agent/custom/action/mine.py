@@ -144,7 +144,7 @@ class MineRecoTeam(CustomRecognition):
 
         if len(CURRENT_MINES) >= MAX_MINE_TEAMS:
             if not LAST_MINES:
-                LAST_MINES = CURRENT_MINES
+                LAST_MINES = list(CURRENT_MINES)
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         NEXT_MINE = None
@@ -161,7 +161,7 @@ class MineRecoTeam(CustomRecognition):
         if NEXT_MINE:
             logger.info(f"派出挖矿队伍：{NEXT_MINE}")
             CURRENT_MINES.append(NEXT_MINE)
-            LAST_MINES = CURRENT_MINES
+            LAST_MINES = list(CURRENT_MINES)
             return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 
