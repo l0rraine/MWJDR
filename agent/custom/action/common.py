@@ -1,15 +1,39 @@
 import re
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
+from maa.custom_recognition import CustomRecognition
 from maa.context import Context
 from maa.pipeline import JRecognitionType, JTemplateMatch
+from maa.define import RectType
 import json
 import random
 import time
+from typing import Union, Optional
 from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
 from utils.merchant_utils import save_task_date, disable_switch, daily_check
 from utils import timelib
+
+
+@AgentServer.custom_recognition("新手_不可能任务")
+class NewbieImpossibleTask(CustomRecognition):
+    """始终识别失败的占位节点。
+
+    在主循环每轮被尝试识别，analyze 内部调用 QueueStatus.update 更新队列
+    数量缓存，然后始终返回未命中（box=None），不干扰主循环流程。
+    mine/join 的 recognition 通过 QueueStatus 缓存判断队列是否已满，
+    不再各自 OCR。
+    """
+
+    def analyze(
+        self,
+        context: Context,
+        argv: CustomRecognition.AnalyzeArg,
+    ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
+        from utils.queue_status import QueueStatus
+
+        QueueStatus.update(context)
+        return CustomRecognition.AnalyzeResult(box=None, detail={})
 
 
 @AgentServer.custom_action("新手_设置扫描间隔")

@@ -25,3 +25,9 @@ try:
 
 except ImportError:
     logger.warning("img_util module import failed")
+
+try:
+    from .queue_status import *
+
+except ImportError:
+    logger.warning("queue_status module import failed")

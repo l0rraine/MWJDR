@@ -118,19 +118,10 @@ class JoinRecoTeam(CustomRecognition):
 
         img = context.tasker.controller.post_screencap().wait().get()
 
-        # 3. 队列判断（与挖矿_识别队伍数量一致的 OCR）
-        from utils.ocr_util import ocr_until_consistent_by_task
+        # 3. 队列判断：直接读 QueueStatus 缓存（由 新手_不可能任务 定期更新）
+        from utils.queue_status import QueueStatus
 
-        text, detail = ocr_until_consistent_by_task(
-            context, "加入集结_识别队列数量", expected_pattern=r"^\d/\d$"
-        )
-        if not text:
-            logger.debug("未能识别到队伍数量")
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-        res = re.match(r"(\d+)\D(\d+)", detail.best_result.text)
-        if not res:
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-        if res.group(1) == res.group(2):
+        if QueueStatus.is_full():
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 4. 识别「加入集结」按钮

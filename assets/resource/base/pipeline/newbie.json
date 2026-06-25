@@ -19,16 +19,8 @@
         ]
     },
     "新手_不可能任务": {
-        "recognition": "OCR",
-        "expected": [
-            "这是不可能出现的字符"
-        ],
-        "roi": [
-            1,
-            1,
-            1,
-            1
-        ]
+        "recognition": "Custom",
+        "custom_recognition": "新手_不可能任务"
     },
     "新手_等待": {
         "recognition": "DirectHit",
