@@ -117,24 +117,11 @@ class MineRecoTeam(CustomRecognition):
 
         if not LAST_MINES:
             LAST_MINES = get_current_mines(context, img)
-        from utils.ocr_util import ocr_until_consistent_by_task
 
-        text, detail = ocr_until_consistent_by_task(
-            context, "挖矿_识别队伍数量", expected_pattern=r"^\d/\d$"
-        )
-        if not text:
-            logger.debug("未能识别到队伍数量")
-            context.run_task("后退")
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-        pattern = r"(\d)/(\d)"
-        res = re.match(pattern, text)
-        if not res:
-            logger.debug(f"{text}")
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
-        num1 = res.group(1)
-        num2 = res.group(2)
-        # logger.debug(f"识别到队伍{num1}/{num2}")
-        if num1 == num2:
+        # 队列判断：直接读 QueueStatus 缓存（由 新手_不可能任务 定期更新）
+        from utils.queue_status import QueueStatus
+
+        if QueueStatus.is_full():
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         CURRENT_MINES.clear()
@@ -162,7 +149,9 @@ class MineRecoTeam(CustomRecognition):
             logger.info(f"派出挖矿队伍：{NEXT_MINE}")
             CURRENT_MINES.append(NEXT_MINE)
             LAST_MINES = list(CURRENT_MINES)
-            return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
+            # 返回任意非 None box 表示命中（挖矿_入口 无 Click action，
+            # 命中后走 next 挖矿_点击放大镜）
+            return CustomRecognition.AnalyzeResult(box=[0, 0, 1, 1], detail={})
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 
 
