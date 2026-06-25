@@ -150,6 +150,9 @@ class BearComputeTeam(CustomAction):
     ) -> CustomAction.RunResult:
         global TRUCK_1, START_TIME, TEAM_ORDER, FOUND_LEAD_TRUCK, RESERVE_TEAM, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, SEND_TEAMS, LAST_STAGE, _OVER_40S_NOTIFIED
 
+        img = context.tasker.controller.post_screencap().wait().get()
+        _check_return_notification(context, img)
+
         current_stage = get_current_stage(START_TIME)
 
         if current_stage > LAST_STAGE:
@@ -228,9 +231,6 @@ class BearRecoTeam(CustomRecognition):
         if not expected:
             return CustomRecognition.AnalyzeResult(box=None, detail={})
         img = context.tasker.controller.post_screencap().wait().get()
-
-        # 顺便检测通知区域“返回城镇”，发现则 SEND_TEAMS -1
-        _check_return_notification(context, img)
 
         team_name_roi = [273, 170, 252, 956]
         join_offset = [310, 87, 0, 58]
@@ -339,9 +339,6 @@ class BearCombat(CustomAction):
 
         time.sleep(0.3)
         img = context.tasker.controller.post_screencap().wait().get()
-
-        # 顺便检测通知区域“返回城镇"
-        _check_return_notification(context, img)
 
         # from utils.img_util import screen_shot
 
