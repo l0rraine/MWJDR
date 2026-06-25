@@ -194,6 +194,15 @@
                             "enabled": true
                         }
                     }
+                },
+                {
+                    "name": "等级1收割者",
+                    "label": "等级1收割者",
+                    "pipeline_override": {
+                        "加入集结_目标_等级1收割者": {
+                            "enabled": true
+                        }
+                    }
                 }
             ]
         },
@@ -265,7 +274,12 @@
         "挖矿-矿种": {
             "type": "checkbox",
             "label": "矿",
-            "default_case": ["肉", "木", "煤", "铁"],
+            "default_case": [
+                "肉",
+                "木",
+                "煤",
+                "铁"
+            ],
             "cases": [
                 {
                     "name": "肉",
