@@ -177,6 +177,7 @@ class JoinDeploy(CustomAction):
         global JOIN_TEAM
 
         if not JOIN_TARGETS:
+            context.run_action("加入集结_后退")
             return CustomAction.RunResult(success=True)
 
         img = context.tasker.controller.post_screencap().wait().get()
@@ -195,6 +196,7 @@ class JoinDeploy(CustomAction):
             },
         )
         if not detail or not detail.hit:
+            context.run_action("加入集结_后退")
             return CustomAction.RunResult(success=True)
 
         # 2. 排序：雪怪最优先，等级1-8逆序
@@ -236,8 +238,8 @@ class JoinDeploy(CustomAction):
                             "加入集结_选择队伍": {"target": TEAM_ROI[JOIN_TEAM]}
                         },
                     )
-                context.run_action("加入集结_点击出征")
+                context.run_task("加入集结_点击出征")
                 logger.info(f"加入集结：已加入 {result.text}，队伍={JOIN_TEAM}")
                 return CustomAction.RunResult(success=True)
-
+        context.run_action("加入集结_后退")
         return CustomAction.RunResult(success=True)
