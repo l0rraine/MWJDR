@@ -63,6 +63,10 @@ class QueueStatus:
         """恢复逻辑：转到城外 → 开始查看队列 → 识别当前队列数量 → 后退。
 
         去掉了原「确保有队列可用」中的关闭自动加入步骤。
+
+        注意：城外队列面板的格式是「空闲/总数」（如 4/5 表示 4 个空闲），
+        与主界面指示器「已用/总数」语义相反。这里统一转换为「已用/总数」
+        存储，使 is_full 判断一致。
         """
         try:
             context.run_task("转到城外")
@@ -73,10 +77,15 @@ class QueueStatus:
             if text:
                 match = re.search(r"(\d+)\D+(\d+)", text)
                 if match:
-                    cls._num1 = int(match.group(1))
-                    cls._num2 = int(match.group(2))
+                    free = int(match.group(1))  # 空闲队列
+                    total = int(match.group(2))  # 总队列
+                    # 转换为已用/总数，与主界面语义统一
+                    cls._num1 = total - free
+                    cls._num2 = total
                     cls._fail_count = 0
-                    logger.info(f"恢复识别成功：{cls._num1}/{cls._num2}")
+                    logger.info(
+                        f"恢复识别成功：空闲{free}/{total}，已用{cls._num1}/{cls._num2}"
+                    )
                     context.run_task("后退")
                     return
             logger.warning("恢复逻辑未能识别队列数量")
