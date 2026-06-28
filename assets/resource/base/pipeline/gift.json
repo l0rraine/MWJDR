@@ -1,36 +1,60 @@
 {
-    "福袋_识别": {
+    "红包_识别": {
         "recognition": "TemplateMatch",
         "threshold": 0.9,
         "template": [
             "福袋.png"
         ],
-        "action": "Click",
-        "next": [
-            "福袋-领取"
-        ],
         "roi": [
-            421,
-            168,
-            298,
-            995
+            564,
+            1035,
+            98,
+            98
+        ],
+        "action": "Click",
+        "target": [
+            606,
+            1081,
+            13,
+            12
+        ],
+        "next": [
+            "红包-点击"
         ]
     },
-    "福袋-领取": {
-        "recognition": "OCR",
-        "expected": [
-            "打开"
+    "红包-点击": {
+        "action": "Click",
+        "target": [
+            653,
+            996,
+            40,
+            39
         ],
+        "next": [
+            "红包-打开"
+        ]
+    },
+    "红包-打开": {
+        "recognition": "ColorMatch",
         "roi": [
-            421,
-            168,
-            298,
-            995
+            533,
+            255,
+            21,
+            29
         ],
-        "focus": "打开一个红包！",
+        "upper": [
+            42,
+            186,
+            86
+        ],
+        "lower": [
+            37,
+            183,
+            86
+        ],
         "action": "Click",
         "next": [
-            "福袋_识别"
+            "后退"
         ]
     }
 }

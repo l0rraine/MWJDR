@@ -127,7 +127,7 @@ class MineRecoTeam(CustomRecognition):
         CURRENT_MINES.clear()
         CURRENT_MINES = get_current_mines(context, img)
 
-        logger.debug(f"LAST_MINES:{LAST_MINES},CURRENT_MINES:{CURRENT_MINES}")
+        # logger.debug(f"LAST_MINES:{LAST_MINES},CURRENT_MINES:{CURRENT_MINES}")
 
         if len(CURRENT_MINES) >= MAX_MINE_TEAMS:
             if not LAST_MINES:

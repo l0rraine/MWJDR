@@ -165,7 +165,7 @@ class JoinDeploy(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global JOIN_TEAM
+        global JOIN_TEAM, JOIN_TARGETS, _JOIN_OFFSET, TEAM_ROI
 
         if not JOIN_TARGETS:
             context.run_action("加入集结_后退")
@@ -182,11 +182,11 @@ class JoinDeploy(CustomAction):
                     "recognition": "OCR",
                     "expected": JOIN_TARGETS,
                     "roi": [238, 183, 293, 936],
-                    "threshold": 0.6,
                 }
             },
         )
         if not detail or not detail.hit:
+            logger.debug(f"无目标:{detail.all_results}")
             context.run_action("加入集结_后退")
             return CustomAction.RunResult(success=True)
 
@@ -194,7 +194,6 @@ class JoinDeploy(CustomAction):
         result_sorted = sorted(
             detail.filtered_results, key=lambda x: _target_sort_key(x.text)
         )
-
         # 3. 逐个尝试匹配「直接加入队伍」按钮
         for result in result_sorted:
             target_box = result.box

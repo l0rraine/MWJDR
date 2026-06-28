@@ -29,7 +29,10 @@
     },
     "训练士兵-未完成": {
         "recognition": "OCR",
-        "expected": "\\d+\\D\\d+\\D\\d+",
+        "expected": [
+            "\\d+\\D\\d+\\D\\d+",
+            "升级中"
+        ],
         "roi": [
             140,
             554,

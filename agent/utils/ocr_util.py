@@ -148,9 +148,9 @@ def ocr_until_consistent_by_task(
                 #     f"OCR第{attempt}次[{task_name}]：'{text}'一致（{same_count}/{consistent_count}）"
                 # )
                 if same_count >= consistent_count:
-                    logger.debug(
-                        f"OCR成功[{task_name}]：'{text}'（{consistent_count}次一致）"
-                    )
+                    # logger.debug(
+                    #     f"OCR成功[{task_name}]：'{text}'（{consistent_count}次一致）"
+                    # )
                     return text, detail
             else:
                 last_result = text

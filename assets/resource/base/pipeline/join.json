@@ -6,7 +6,7 @@
             "team": "1"
         },
         "action": "Click",
-        "post_delay": 500,
+        "post_delay": 1000,
         "next": [
             "加入集结_执行加入"
         ]
