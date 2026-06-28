@@ -44,7 +44,8 @@ def _read_join_targets(context: Context) -> List[str]:
 
     遍历 加入集结_目标选项 的 next，逐个检查
     加入集结_目标_等级X... 节点的 enabled 状态（由「目标选择」checkbox 覆盖）。
-    返回去掉节点前缀后的目标名列表（直接作为 OCR expected）。
+    返回去掉节点前缀后的目标名列表，并在"等级X"与名字之间插入 \\s*，
+    作为 OCR expected 正则，允许 OCR 识别时中间有空格。
     """
     targets: List[str] = []
     try:
@@ -60,7 +61,10 @@ def _read_join_targets(context: Context) -> List[str]:
                 continue
             node_data = context.get_node_data(name)
             if node_data and node_data.get("enabled", False):
-                targets.append(name.removeprefix(_TARGET_PREFIX))
+                target = name.removeprefix(_TARGET_PREFIX)
+                # "等级8深渊龙龟" → "等级8\\s*深渊龙龟"，允许中间有空格
+                target = re.sub(r"(等级\d+)\s*(.+)", r"\1\\s*\2", target)
+                targets.append(target)
     except Exception:
         pass
     return targets
@@ -76,11 +80,15 @@ def _target_sort_key(text: str) -> tuple:
     - ...
     - 等级1 → (1, -1)
     sorted 默认升序，等级取负使高等级排前面。
+
+    注：OCR 文本可能含空格，比较时去除所有空白再匹配。
     """
-    if _PRIORITY_TARGET in text:
+    # 去除所有空白后比较，容错 OCR 中间空格
+    text_compact = re.sub(r"\s+", "", text)
+    if _PRIORITY_TARGET in text_compact:
         return (0, 0)
     # 提取"等级X"中的数字
-    m = re.search(r"等级(\d+)", text)
+    m = re.search(r"等级(\d+)", text_compact)
     level = int(m.group(1)) if m else 0
     # 等级高的排前面 → 等级取负，使升序排列时大的在前
     return (1, -level)
