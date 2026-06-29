@@ -101,6 +101,10 @@
             28
         ]
     },
+    "挖矿_点击等级": {
+        "action": "Click",
+        "target": true
+    },
     "挖矿_滑动到右边": {
         "action": {
             "type": "Swipe",
