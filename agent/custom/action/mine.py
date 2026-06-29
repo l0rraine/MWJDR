@@ -85,7 +85,7 @@ def get_current_mines(context: Context, img):
                 "挖矿_识别在挖矿": {
                     "recognition": "TemplateMatch",
                     "template": f"{mine}.png",
-                    "roi": [11, 241, 47, 226],
+                    "roi": [12, 248, 45, 361],
                     "threshold": 0.8,
                 }
             },
