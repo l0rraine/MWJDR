@@ -32,7 +32,10 @@ class NewbieImpossibleTask(CustomRecognition):
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
         from utils.queue_status import QueueStatus
 
-        QueueStatus.update(context)
+        mine = context.get_node_data("挖矿_入口").get("enabled", False)
+        join = context.get_node_data("加入集结_入口").get("enabled", False)
+        if mine and join:
+            QueueStatus.update(context)
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 
 
