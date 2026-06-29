@@ -203,7 +203,16 @@
                             "enabled": true
                         }
                     }
-                }
+                },
+                {
+                    "name": "法厄同斥候",
+                    "label": "法厄同斥候",
+                    "pipeline_override": {
+                        "加入集结_目标_法厄同斥候": {
+                            "enabled": true
+                        }
+                    }
+                },
             ]
         },
         "加入集结-队伍选择": {

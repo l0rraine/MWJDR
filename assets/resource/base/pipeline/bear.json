@@ -283,15 +283,15 @@
     "熊_士兵超出上限": {
         "pre_delay": 0,
         "post_delay": 0,
-        "recognition": "OCR",
-        "expected": [
-            "确认"
+        "recognition": "TemplateMatch",
+        "template": [
+            "确定.png"
         ],
         "roi": [
-            291,
-            417,
-            137,
-            60
+            296,
+            692,
+            131,
+            177
         ]
     },
     "熊_后退": {
