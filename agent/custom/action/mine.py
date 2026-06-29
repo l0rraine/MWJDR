@@ -178,7 +178,22 @@ class MineRecoMine(CustomRecognition):
         global NEXT_MINE, MINE_LEVEL, MINE_LEVEL_BOX
         img = context.tasker.controller.post_screencap().wait().get()
 
-        # OCR 当前矿等级（roi [584,1029,44,48]）
+        # 1. 先模板匹配矿图标（找到要挖的矿）
+        detail = context.run_recognition(
+            "识别要挖的矿",
+            img,
+            {
+                "识别要挖的矿": {
+                    "recognition": "TemplateMatch",
+                    "roi": [86, 820, 634, 176],
+                    "template": f"{NEXT_MINE}矿.png",
+                }
+            },
+        )
+        if not detail or not detail.box:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+        # 2. 找到矿后，OCR 当前矿等级（roi [584,1029,44,48]）
         level_detail = context.run_recognition(
             "挖矿_识别矿等级",
             img,
@@ -202,20 +217,6 @@ class MineRecoMine(CustomRecognition):
             MINE_LEVEL_BOX = None
             logger.debug("OCR矿等级: 未识别到")
 
-        # 模板匹配矿图标（确认在矿搜索界面）
-        detail = context.run_recognition(
-            "识别要挖的矿",
-            img,
-            {
-                "识别要挖的矿": {
-                    "recognition": "TemplateMatch",
-                    "roi": [86, 820, 634, 176],
-                    "template": f"{NEXT_MINE}矿.png",
-                }
-            },
-        )
-        if not detail or not detail.box:
-            return CustomRecognition.AnalyzeResult(box=None, detail={})
         # 返回等级 box，框架 Click 弹出等级输入框
         if MINE_LEVEL_BOX:
             return CustomRecognition.AnalyzeResult(box=MINE_LEVEL_BOX, detail={})
@@ -225,10 +226,10 @@ class MineRecoMine(CustomRecognition):
 
 @AgentServer.custom_action("挖矿_设置等级")
 class MineSetLevel(CustomAction):
-    """点击矿图标后弹出等级输入框，调整等级至默认值并搜索。
+    """点击等级 box 后弹出等级输入框，调整等级至默认值并搜索。
 
     读 MINE_LEVEL（OCR 识别的当前等级）与 level 参数（默认采矿等级），
-    不相同则输入等级回车，之后点击搜索按钮。
+    不相同则清除输入框原数字→输入等级→回车，之后点击搜索按钮。
     """
 
     def run(
@@ -253,6 +254,10 @@ class MineSetLevel(CustomAction):
                     },
                 )
                 time.sleep(0.5)
+            # 清除输入框原数字（发退格键，等级最多2位数）
+            for _ in range(3):
+                context.tasker.controller.post_press_key("Backspace").wait()
+                time.sleep(0.1)
             # 输入等级
             context.tasker.controller.post_input_text(str(default_level)).wait()
             time.sleep(0.3)
