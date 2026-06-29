@@ -29,8 +29,6 @@ MINES = list(ALL_MINES)
 
 # 识别到的矿等级（OCR [584,1029,44,48]），由 挖矿_识别矿图标 写入
 MINE_LEVEL = 0
-# 识别到的矿等级 box，点击它弹出等级输入框
-MINE_LEVEL_BOX = None
 
 # 节点名 → 矿名的映射
 _MINE_NODE_MAP = {
@@ -164,10 +162,10 @@ class MineRecoTeam(CustomRecognition):
 
 @AgentServer.custom_recognition("挖矿_识别矿图标")
 class MineRecoMine(CustomRecognition):
-    """识别矿图标，并 OCR 当前矿的等级存入全局 MINE_LEVEL 与 MINE_LEVEL_BOX。
+    """识别矿图标，并 OCR 当前矿的等级存入全局 MINE_LEVEL。
 
-    custom_recognition_param.level 为默认采矿等级（由 select 注入）。
-    返回等级 box，框架 Click 后弹出等级输入框。
+    先模板匹配矿图标(找到要挖的矿)，再 OCR 当前矿等级。
+    返回矿图标 box，框架 Click 选中该矿。
     """
 
     def analyze(
@@ -175,7 +173,7 @@ class MineRecoMine(CustomRecognition):
         context: Context,
         argv: CustomRecognition.AnalyzeArg,
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
-        global NEXT_MINE, MINE_LEVEL, MINE_LEVEL_BOX
+        global NEXT_MINE, MINE_LEVEL
         img = context.tasker.controller.post_screencap().wait().get()
 
         # 1. 先模板匹配矿图标（找到要挖的矿）
@@ -210,60 +208,59 @@ class MineRecoMine(CustomRecognition):
                 MINE_LEVEL = int(re.search(r"\d+", level_detail.best_result.text).group())
             except Exception:
                 MINE_LEVEL = 0
-            MINE_LEVEL_BOX = list(level_detail.best_result.box)
-            logger.debug(f"OCR矿等级: {level_detail.best_result.text} -> {MINE_LEVEL}, box={MINE_LEVEL_BOX}")
+            logger.debug(f"OCR矿等级: {level_detail.best_result.text} -> {MINE_LEVEL}")
         else:
             MINE_LEVEL = 0
-            MINE_LEVEL_BOX = None
             logger.debug("OCR矿等级: 未识别到")
 
-        # 返回等级 box，框架 Click 弹出等级输入框
-        if MINE_LEVEL_BOX:
-            return CustomRecognition.AnalyzeResult(box=MINE_LEVEL_BOX, detail={})
-        # 等级 box 未识别到时回退到矿图标 box
+        # 返回矿图标 box，框架 Click 选中该矿
         return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
 
 
 @AgentServer.custom_action("挖矿_设置等级")
 class MineSetLevel(CustomAction):
-    """点击等级 box 后弹出等级输入框，调整等级至默认值并搜索。
+    """调整矿等级至默认值并搜索。
 
     读 MINE_LEVEL（OCR 识别的当前等级）与 level 参数（默认采矿等级），
-    不相同则清除输入框原数字→输入等级→回车，之后点击搜索按钮。
+    不相同则点击减少/增加按钮调整，每50ms点击一次，直至相等。
+    之后点击搜索按钮。
     """
+
+    # 减少按钮 roi
+    _DECREASE_ROI = [53, 1042, 33, 28]
+    # 增加按钮 roi
+    _INCREASE_ROI = [477, 1046, 16, 15]
 
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global MINE_LEVEL, MINE_LEVEL_BOX
+        global MINE_LEVEL
         try:
             param = json.loads(argv.custom_action_param)
             default_level = int(param.get("level", 8))
         except Exception:
             default_level = 8
-        logger.debug(f"挖矿_设置等级: argv={argv.custom_action_param}, default_level={default_level}, MINE_LEVEL={MINE_LEVEL}")
+        logger.debug(f"挖矿_设置等级: default_level={default_level}, MINE_LEVEL={MINE_LEVEL}")
 
-        if MINE_LEVEL != default_level:
-            logger.info(f"矿等级 {MINE_LEVEL} != 默认 {default_level}，调整等级")
-            # 点击等级 box 弹出输入框
-            if MINE_LEVEL_BOX:
+        if MINE_LEVEL != default_level and MINE_LEVEL > 0:
+            if MINE_LEVEL > default_level:
+                # 需要降级，点击减少按钮
+                diff = MINE_LEVEL - default_level
+                roi = self._DECREASE_ROI
+                action_name = "挖矿_减少等级"
+                logger.info(f"矿等级 {MINE_LEVEL} -> {default_level}，减少 {diff} 次")
+            else:
+                # 需要升级，点击增加按钮
+                diff = default_level - MINE_LEVEL
+                roi = self._INCREASE_ROI
+                action_name = "挖矿_增加等级"
+                logger.info(f"矿等级 {MINE_LEVEL} -> {default_level}，增加 {diff} 次")
+            for _ in range(diff):
                 context.run_action(
-                    "挖矿_点击等级",
-                    pipeline_override={
-                        "挖矿_点击等级": {"action": "Click", "target": MINE_LEVEL_BOX}
-                    },
+                    action_name,
+                    pipeline_override={action_name: {"action": "Click", "target": roi}},
                 )
-                time.sleep(0.5)
-            # 清除输入框原数字（发退格键，等级最多2位数）
-            for _ in range(3):
-                context.tasker.controller.post_press_key("Backspace").wait()
-                time.sleep(0.1)
-            # 输入等级
-            context.tasker.controller.post_input_text(str(default_level)).wait()
-            time.sleep(0.3)
-            # 回车确认
-            context.tasker.controller.post_press_key("Enter").wait()
-            time.sleep(0.5)
+                time.sleep(0.05)
         else:
             logger.debug(f"矿等级 {MINE_LEVEL} == 默认 {default_level}，无需调整")
 
@@ -292,7 +289,6 @@ class MineDowngradeSearch(CustomAction):
         global MINE_LEVEL
         # 先识别一次"采集"（设置等级后已点搜索）
         if self._try_collect(context):
-            context.run_action("挖矿_出征")
             return CustomAction.RunResult(success=True)
 
         # 降级循环，最大次数为当前矿等级（MINE_LEVEL 为 0 时至少降 8 次）
@@ -309,7 +305,6 @@ class MineDowngradeSearch(CustomAction):
             context.run_action("挖矿_点击搜索")
             time.sleep(1)
             if self._try_collect(context):
-                context.run_action("挖矿_出征")
                 return CustomAction.RunResult(success=True)
 
         logger.warning("降级搜索超过最大次数仍未识别到采集")
