@@ -1,7 +1,9 @@
 from maa.agent.agent_server import AgentServer
 from maa.context import Context
+from maa.custom_action import CustomAction
 import json
 import re
+import time
 
 from maa.custom_recognition import CustomRecognition
 from typing import List, Union, Optional
@@ -24,6 +26,9 @@ NEXT_MINE = ""
 MAX_MINE_TEAMS = 4
 ALL_MINES = ["肉", "木", "煤", "铁"]
 MINES = list(ALL_MINES)
+
+# 识别到的矿等级（OCR [584,1029,44,48]），由 挖矿_识别矿图标 写入
+MINE_LEVEL = 0
 
 # 节点名 → 矿名的映射
 _MINE_NODE_MAP = {
@@ -157,13 +162,41 @@ class MineRecoTeam(CustomRecognition):
 
 @AgentServer.custom_recognition("挖矿_识别矿图标")
 class MineRecoMine(CustomRecognition):
+    """识别矿图标，并 OCR 当前矿的等级存入全局 MINE_LEVEL。
+
+    custom_recognition_param.level 为默认采矿等级（由 select 注入）。
+    返回矿图标 box，框架 Click 后弹出等级输入框。
+    """
+
     def analyze(
         self,
         context: Context,
         argv: CustomRecognition.AnalyzeArg,
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
+        global NEXT_MINE, MINE_LEVEL
         img = context.tasker.controller.post_screencap().wait().get()
-        global NEXT_MINE
+
+        # OCR 当前矿等级（roi [584,1029,44,48]）
+        level_detail = context.run_recognition(
+            "挖矿_识别矿等级",
+            img,
+            {
+                "挖矿_识别矿等级": {
+                    "recognition": "OCR",
+                    "expected": "\\d+",
+                    "roi": [584, 1029, 44, 48],
+                }
+            },
+        )
+        if level_detail and level_detail.hit:
+            try:
+                MINE_LEVEL = int(re.search(r"\d+", level_detail.best_result.text).group())
+            except Exception:
+                MINE_LEVEL = 0
+        else:
+            MINE_LEVEL = 0
+
+        # 模板匹配矿图标
         detail = context.run_recognition(
             "识别要挖的矿",
             img,
@@ -175,4 +208,104 @@ class MineRecoMine(CustomRecognition):
                 }
             },
         )
+        if not detail or not detail.box:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
         return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
+
+
+@AgentServer.custom_action("挖矿_设置等级")
+class MineSetLevel(CustomAction):
+    """点击矿图标后弹出等级输入框，调整等级至默认值并搜索。
+
+    读 MINE_LEVEL（OCR 识别的当前等级）与 level 参数（默认采矿等级），
+    不相同则输入等级回车，之后点击搜索按钮。
+    """
+
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        global MINE_LEVEL
+        try:
+            param = json.loads(argv.custom_recognition_param)
+            default_level = int(param.get("level", 8))
+        except Exception:
+            default_level = 8
+
+        if MINE_LEVEL != default_level:
+            logger.info(f"矿等级 {MINE_LEVEL} != 默认 {default_level}，调整等级")
+            # 输入等级
+            context.tasker.controller.post_input_text(str(default_level)).wait()
+            time.sleep(0.3)
+            # 回车确认
+            context.tasker.controller.post_press_key("Enter").wait()
+            time.sleep(0.5)
+        else:
+            logger.debug(f"矿等级 {MINE_LEVEL} == 默认 {default_level}，无需调整")
+
+        # 点击搜索按钮
+        context.run_action("挖矿_点击搜索")
+        time.sleep(1)
+        return CustomAction.RunResult(success=True)
+
+
+@AgentServer.custom_action("挖矿_降级搜索")
+class MineDowngradeSearch(CustomAction):
+    """点搜索后若未识别到"采集"，循环降级搜索直到识别到。
+
+    点击 [53,1042,33,28] 降一级 → 点搜索 → 等待 → 识别"采集"，
+    直到识别到则点击采集并出征。
+    """
+
+    # 降级按钮 roi
+    _DOWNGRADE_ROI = [53, 1042, 33, 28]
+    # 采集按钮 OCR roi
+    _COLLECT_ROI = [284, 602, 152, 58]
+
+    def run(
+        self, context: Context, argv: CustomAction.RunArg
+    ) -> CustomAction.RunResult:
+        # 先识别一次"采集"（设置等级后已点搜索）
+        if self._try_collect(context):
+            context.run_action("挖矿_出征")
+            return CustomAction.RunResult(success=True)
+
+        # 降级循环
+        for _ in range(20):  # 最多降级 20 次防止死循环
+            logger.debug("未识别到采集，降级搜索")
+            context.run_action(
+                "挖矿_降级点击",
+                pipeline_override={
+                    "挖矿_降级点击": {"action": "Click", "target": self._DOWNGRADE_ROI}
+                },
+            )
+            time.sleep(0.5)
+            context.run_action("挖矿_点击搜索")
+            time.sleep(1)
+            if self._try_collect(context):
+                context.run_action("挖矿_出征")
+                return CustomAction.RunResult(success=True)
+
+        logger.warning("降级搜索超过最大次数仍未识别到采集")
+        return CustomAction.RunResult(success=True)
+
+    def _try_collect(self, context: Context) -> bool:
+        """识别"采集"并点击，返回是否识别到。"""
+        img = context.tasker.controller.post_screencap().wait().get()
+        detail = context.run_recognition(
+            "挖矿_点击采集",
+            img,
+            pipeline_override={
+                "挖矿_点击采集": {
+                    "recognition": "OCR",
+                    "expected": "采集",
+                    "roi": self._COLLECT_ROI,
+                }
+            },
+        )
+        if detail and detail.hit:
+            context.run_action(
+                "挖矿_点击采集",
+                pipeline_override={"挖矿_点击采集": {"target": list(detail.box)}},
+            )
+            return True
+        return False

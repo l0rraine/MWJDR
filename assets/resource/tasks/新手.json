@@ -46,7 +46,8 @@
                     },
                     "option": [
                         "新手-挖矿配置",
-                        "挖矿-矿种"
+                        "挖矿-矿种",
+                        "挖矿-默认采矿等级"
                     ]
                 },
                 {
@@ -323,6 +324,133 @@
                     "pipeline_override": {
                         "挖矿_矿_铁": {
                             "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "挖矿-默认采矿等级": {
+            "type": "select",
+            "label": "默认采矿等级",
+            "default_case": "8",
+            "cases": [
+                {
+                    "name": "8",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "8"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "8"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "7",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "7"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "7"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "6",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "6"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "6"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "5"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "5"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "4",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "4"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "4"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "3",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "3"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "2",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "2"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "1"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "1"
+                            }
                         }
                     }
                 }

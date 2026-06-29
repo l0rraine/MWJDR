@@ -67,9 +67,38 @@
         "pre_delay": 500,
         "recognition": "Custom",
         "custom_recognition": "挖矿_识别矿图标",
+        "custom_recognition_param": {
+            "level": "8"
+        },
         "action": "Click",
         "next": [
-            "挖矿_点击搜索"
+            "挖矿_设置等级"
+        ]
+    },
+    "挖矿_设置等级": {
+        "action": "Custom",
+        "custom_action": "挖矿_设置等级",
+        "custom_action_param": {
+            "level": "8"
+        },
+        "next": [
+            "挖矿_降级搜索"
+        ]
+    },
+    "挖矿_降级搜索": {
+        "action": "Custom",
+        "custom_action": "挖矿_降级搜索",
+        "next": [
+            "挖矿_出征"
+        ]
+    },
+    "挖矿_降级点击": {
+        "action": "Click",
+        "target": [
+            53,
+            1042,
+            33,
+            28
         ]
     },
     "挖矿_滑动到右边": {
