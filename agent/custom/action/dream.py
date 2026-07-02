@@ -125,10 +125,10 @@ class Memories(CustomAction):
                 else:
                     t = max(d.filtered_results, key=lambda r: r.score)
                     t = t.text.strip().capitalize()
-                    # 未在 item_dict 中找到匹配的 key，记录缺失并打印（每个只打印一次）
-                    if t not in miss_dict:
-                        logger.info(f"缺失:{t}")
-                    miss_dict[t] = miss_dict.get(t, 0) + 1
+                    if any(key in done_dict for key in t):
+                        if t not in miss_dict:
+                            logger.info(f"缺失:{t}")
+                        miss_dict[t] = 1
                 time.sleep(0.5)
 
             img = context.tasker.controller.post_screencap().wait().get()
@@ -198,10 +198,10 @@ class Memories(CustomAction):
                 else:
                     t = max(d.filtered_results, key=lambda r: r.score)
                     t = t.text.strip().capitalize()
-                    # 未在 item_dict 中找到匹配的 key，记录缺失并打印（每个只打印一次）
-                    if t not in miss_dict:
-                        logger.info(f"缺失:{t}")
-                    miss_dict[t] = miss_dict.get(t, 0) + 1
+                    if any(key in done_dict for key in t):
+                        if t not in miss_dict:
+                            logger.info(f"缺失:{t}")
+                        miss_dict[t] = 1
                 time.sleep(0.5)
 
             img = context.tasker.controller.post_screencap().wait().get()
