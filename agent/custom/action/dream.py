@@ -106,27 +106,27 @@ class Memories(CustomAction):
                 if not d.filtered_results:
                     continue
 
+                # 三段式匹配：先完全匹配，再包含匹配，最后缺失打印
+                texts = [r.text.strip().capitalize() for r in d.filtered_results]
+                # 1. 完全匹配（abc == key）
                 match = next(
-                    (
-                        key
-                        for key in item_dict
-                        if any(
-                            r.text.strip().capitalize() == key
-                            or key in r.text.strip().capitalize()
-                            for r in d.filtered_results
-                        )
-                    ),
+                    (key for key in item_dict if any(t == key for t in texts)),
                     None,
                 )
+                # 2. 包含匹配（key in abc）
+                if not match:
+                    match = next(
+                        (key for key in item_dict if any(key in t for t in texts)),
+                        None,
+                    )
                 if match:
                     logger.debug(f"找到:{match}")
                     click_rect(context, item_dict[match])
                     done_dict[match] = item_dict.pop(match)
                 else:
+                    # 3. 缺失打印：取 score 最高的 t，检查是否之前已匹配过
                     t = max(d.filtered_results, key=lambda r: r.score)
                     t = t.text.strip().capitalize()
-                    # 检查 t 是否之前已匹配过（t 包含 done_dict 中的某个 key）
-                    # 只有确实没找到过的才打印缺失（每个只打印一次）
                     already_found = any(key in t for key in done_dict)
                     if not already_found:
                         if t not in miss_dict:
@@ -182,27 +182,27 @@ class Memories(CustomAction):
                 )
                 if not d.filtered_results:
                     continue
+                # 三段式匹配：先完全匹配，再包含匹配，最后缺失打印
+                texts = [r.text.strip().capitalize() for r in d.filtered_results]
+                # 1. 完全匹配（abc == key）
                 match = next(
-                    (
-                        key
-                        for key in item_dict
-                        if any(
-                            r.text.strip().capitalize() == key
-                            or key in r.text.strip().capitalize()
-                            for r in d.filtered_results
-                        )
-                    ),
+                    (key for key in item_dict if any(t == key for t in texts)),
                     None,
                 )
+                # 2. 包含匹配（key in abc）
+                if not match:
+                    match = next(
+                        (key for key in item_dict if any(key in t for t in texts)),
+                        None,
+                    )
                 if match:
                     logger.debug(f"找到:{match}")
                     click_rect(context, item_dict[match])
                     done_dict[match] = item_dict.pop(match)
                 else:
+                    # 3. 缺失打印：取 score 最高的 t，检查是否之前已匹配过
                     t = max(d.filtered_results, key=lambda r: r.score)
                     t = t.text.strip().capitalize()
-                    # 检查 t 是否之前已匹配过（t 包含 done_dict 中的某个 key）
-                    # 只有确实没找到过的才打印缺失（每个只打印一次）
                     already_found = any(key in t for key in done_dict)
                     if not already_found:
                         if t not in miss_dict:
