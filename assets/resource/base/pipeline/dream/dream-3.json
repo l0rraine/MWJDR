@@ -1,0 +1,331 @@
+{
+  "梦境寻忆_3_闯关": {
+    "focus": "第三阶段闯关",
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/铃铛.png"
+    ],
+    "threshold": 0.8,
+    "roi": [
+      499,
+      0,
+      106,
+      106
+    ],
+    "next": [
+      "梦境寻忆_3_花园关",
+      "梦境寻忆_3_楼梯关",
+      "梦境寻忆_3_教室关",
+      "梦境寻忆_3_庭院关",
+      "梦境寻忆_3_工具间关",
+      "梦境寻忆_3_阁楼关",
+      "梦境寻忆_3_餐厅关",
+      "梦境寻忆_3_海洋馆关",
+      "梦境寻忆_3_船关",
+      "梦境寻忆_3_海洋馆外关"
+    ]
+  },
+  "梦境寻忆_3_花园关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/花园.png"
+    ],
+    "roi": [
+      588,
+      192,
+      120,
+      140
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:花园",
+    "next": "梦境寻忆_3_开始_花园关"
+  },
+  "梦境寻忆_3_开始_花园关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "花园"
+    }
+  },
+  "梦境寻忆_3_楼梯关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/楼梯.png"
+    ],
+    "roi": [
+      18,
+      277,
+      128,
+      157
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:楼梯",
+    "next": "梦境寻忆_3_开始_楼梯关"
+  },
+  "梦境寻忆_3_开始_楼梯关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "楼梯"
+    }
+  },
+  "梦境寻忆_3_教室关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/教室.png"
+    ],
+    "roi": [
+      576,
+      49,
+      115,
+      146
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:教室",
+    "next": "梦境寻忆_3_开始_教室关"
+  },
+  "梦境寻忆_3_开始_教室关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "教室"
+    }
+  },
+  "梦境寻忆_3_庭院关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/庭院.png"
+    ],
+    "roi": [
+      261,
+      101,
+      106,
+      112
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:庭院",
+    "next": "梦境寻忆_3_开始_庭院关"
+  },
+  "梦境寻忆_3_开始_庭院关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "庭院"
+    }
+  },
+  "梦境寻忆_3_海洋馆外关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/海洋馆外.png"
+    ],
+    "roi": [
+      61,
+      944,
+      60,
+      68
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:海洋馆外",
+    "next": "梦境寻忆_3_开始_海洋馆外关"
+  },
+  "梦境寻忆_3_开始_海洋馆外关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "海洋馆外"
+    }
+  },
+  "梦境寻忆_3_工具间关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/工具间.png"
+    ],
+    "roi": [
+      402,
+      485,
+      102,
+      152
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:工具间",
+    "next": "梦境寻忆_3_开始_工具间关"
+  },
+  "梦境寻忆_3_开始_工具间关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "工具间"
+    }
+  },
+  "梦境寻忆_3_阁楼关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/阁楼.png"
+    ],
+    "roi": [
+      162,
+      930,
+      136,
+      152
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:阁楼",
+    "next": "梦境寻忆_3_开始_阁楼关"
+  },
+  "梦境寻忆_3_开始_阁楼关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "阁楼"
+    }
+  },
+  "梦境寻忆_3_餐厅关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/餐厅.png"
+    ],
+    "roi": [
+      537,
+      65,
+      138,
+      129
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:餐厅",
+    "next": "梦境寻忆_3_开始_餐厅关"
+  },
+  "梦境寻忆_3_开始_餐厅关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "餐厅"
+    }
+  },
+  "梦境寻忆_3_海洋馆关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/海洋馆.png"
+    ],
+    "roi": [
+      37,
+      315,
+      69,
+      160
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:海洋馆",
+    "next": "梦境寻忆_3_开始_海洋馆关"
+  },
+  "梦境寻忆_3_开始_海洋馆关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "海洋馆"
+    }
+  },
+  "梦境寻忆_3_船关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/3/船.png"
+    ],
+    "roi": [
+      35,
+      161,
+      97,
+      187
+    ],
+    "threshold": 0.9,
+    "focus": "关卡:船",
+    "next": "梦境寻忆_3_开始_船关"
+  },
+  "梦境寻忆_3_开始_船关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "船"
+    }
+  },
+  "梦境寻忆_3_组队": {
+    "next": [
+      "梦境寻忆_3_组队_钓鱼小屋",
+      "梦境寻忆_3_组队_温暖大棚",
+      "梦境寻忆_3_组队_生命之树"
+    ]
+  },
+  "梦境寻忆_3_组队_钓鱼小屋": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "钓鱼小屋",
+    "next": [
+      "梦境寻忆_3_组队_开始_钓鱼小屋"
+    ]
+  },
+  "梦境寻忆_3_组队_开始_钓鱼小屋": {
+    "focus": "关卡:钓鱼小屋",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "钓鱼小屋"
+    }
+  },
+  "梦境寻忆_3_组队_温暖大棚": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "温暖大棚",
+    "next": [
+      "梦境寻忆_3_组队_开始_温暖大棚"
+    ]
+  },
+  "梦境寻忆_3_组队_开始_温暖大棚": {
+    "focus": "关卡:温暖大棚",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "温暖大棚"
+    }
+  },
+  "梦境寻忆_3_组队_生命之树": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "生命之树",
+    "next": [
+      "梦境寻忆_3_组队_开始_生命之树"
+    ]
+  },
+  "梦境寻忆_3_组队_开始_生命之树": {
+    "focus": "关卡:生命之树",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "生命之树"
+    }
+  }
+}
