@@ -27,10 +27,11 @@ class QueueStatus:
     _CITY_OCR_TASK = "识别当前队列数量"
 
     # 缓存
-    _num1: int = 0  # 已用队列
-    _num2: int = 0  # 总队列
+    _sent: int = 0  # 已用队列
+    _total: int = 0  # 总队列
     _fail_count: int = 0  # 连续识别失败次数
     _MAX_FAIL = 3  # 超过此次数执行恢复逻辑
+    _if_fail: int = 0
 
     @classmethod
     def update(cls, context: Context) -> None:
@@ -42,20 +43,21 @@ class QueueStatus:
         text, _ = ocr_until_consistent_by_task(
             context, cls._MAIN_OCR_TASK, expected_pattern=r"^\d\D\d$"
         )
+        cls._if_fail = 0
         if text:
             match = re.match(r"(\d)\D(\d)", text)
             if match:
-                cls._num1 = int(match.group(1))
-                cls._num2 = int(match.group(2))
+                cls._sent = int(match.group(1))
+                cls._total = int(match.group(2))
                 cls._fail_count = 0
+                cls._if_fail = 0
                 return
         # 识别失败
         cls._fail_count += 1
+        cls._if_fail = 1
         logger.debug(f"队列数量识别失败({cls._fail_count}/{cls._MAX_FAIL})")
         if cls._fail_count >= cls._MAX_FAIL:
-            logger.warning(
-                f"队列数量连续{cls._fail_count}次识别失败，执行恢复逻辑"
-            )
+            logger.warning(f"队列数量连续{cls._fail_count}次识别失败，执行恢复逻辑")
             cls._recover(context)
 
     @classmethod
@@ -80,11 +82,12 @@ class QueueStatus:
                     free = int(match.group(1))  # 空闲队列
                     total = int(match.group(2))  # 总队列
                     # 转换为已用/总数，与主界面语义统一
-                    cls._num1 = total - free
-                    cls._num2 = total
+                    cls._sent = total - free
+                    cls._total = total
                     cls._fail_count = 0
+                    cls._if_fail = 0
                     logger.info(
-                        f"恢复识别成功：空闲{free}/{total}，已用{cls._num1}/{cls._num2}"
+                        f"恢复识别成功：空闲{free}/{total}，已用{cls._sent}/{cls._total}"
                     )
                     context.run_task("后退")
                     return
@@ -97,16 +100,16 @@ class QueueStatus:
     @classmethod
     def is_full(cls) -> bool:
         """队列是否已满（num1 == num2）。"""
-        return cls._num1 >= cls._num2
+        return cls._sent >= cls._total
 
     @classmethod
     def get_nums(cls) -> Tuple[int, int]:
         """返回 (已用队列, 总队列)。"""
-        return cls._num1, cls._num2
+        return cls._sent, cls._total
 
     @classmethod
     def reset(cls) -> None:
         """重置缓存（测试/初始化用）。"""
-        cls._num1 = 0
-        cls._num2 = 0
+        cls._sent = 0
+        cls._total = 0
         cls._fail_count = 0

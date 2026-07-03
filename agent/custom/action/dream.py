@@ -70,7 +70,7 @@ class Memories(CustomAction):
             self.stage_mode(context, level)
         else:
             self.team_mode(context, level)
-        return CustomAction.RunResult(success=True)
+        return CustomAction.RunResult(success=False)
 
     def stage_mode(self, context: Context, level):
         global EPISODE
@@ -137,13 +137,9 @@ class Memories(CustomAction):
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
-        # 梦境寻忆_找到所有物品 是 Or 类型，detail.best_result 是 OrRecognitionResult
-        # 无 box 属性，直接用 detail.box
-        box = detail.box
-        click_target = [box.x, box.y, box.w, box.h] if hasattr(box, "x") else list(box)
         context.run_action_direct(
             JActionType.Click,
-            JClick(target=click_target),
+            JClick(target=[336, 900, 52, 33]),
         )
 
     def team_mode(self, context: Context, level):
@@ -217,6 +213,10 @@ class Memories(CustomAction):
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
+        context.run_action_direct(
+            JActionType.Click,
+            JClick(target=[317, 1216, 46, 19]),
+        )
 
     def screen_shot(self, context: Context, text: str):
         screen_array = context.tasker.controller.post_screencap().wait().get()
