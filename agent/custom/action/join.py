@@ -203,6 +203,10 @@ class JoinDeploy(CustomAction):
             detail.filtered_results, key=lambda x: _target_sort_key(x.text)
         )
         # 3. 逐个尝试匹配「直接加入队伍」按钮
+        from utils.queue_status import QueueStatus
+
+        n = QueueStatus._total - QueueStatus._sent
+
         for result in result_sorted:
             target_box = result.box
             join_roi = [a + b for a, b in zip(target_box, _JOIN_OFFSET)]
@@ -236,8 +240,11 @@ class JoinDeploy(CustomAction):
                             "加入集结_选择队伍": {"target": TEAM_ROI[JOIN_TEAM]}
                         },
                     )
-                context.run_task("加入集结_点击出征")
+                context.run_action("加入集结_点击出征")
                 logger.info(f"加入集结：已加入 {result.text}，队伍={JOIN_TEAM}")
-                return CustomAction.RunResult(success=True)
-        context.run_action("加入集结_后退")
+                logger.debug(f"n={n},n-1={n-1}")
+                n = n - 1
+                if n == 0:
+                    break
+        context.run_task("后退")
         return CustomAction.RunResult(success=True)

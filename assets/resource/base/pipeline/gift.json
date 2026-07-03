@@ -23,6 +23,16 @@
         ]
     },
     "红包-点击": {
+        "recognition": "TemplateMatch",
+        "template": [
+            "福袋2.png"
+        ],
+        "roi": [
+            574,
+            522,
+            146,
+            703
+        ],
         "action": "Click",
         "target": [
             653,
@@ -31,7 +41,8 @@
             39
         ],
         "next": [
-            "红包-打开"
+            "红包-打开",
+            "后退"
         ]
     },
     "红包-打开": {
@@ -52,9 +63,6 @@
             183,
             86
         ],
-        "action": "Click",
-        "next": [
-            "后退"
-        ]
+        "action": "Click"
     }
 }

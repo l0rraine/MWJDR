@@ -127,6 +127,10 @@ class MineRecoTeam(CustomRecognition):
         if QueueStatus.is_full():
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
+        # 队列未识别成功
+        if QueueStatus._if_fail == 1:
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
         CURRENT_MINES.clear()
         CURRENT_MINES = get_current_mines(context, img)
 
@@ -149,6 +153,7 @@ class MineRecoTeam(CustomRecognition):
             NEXT_MINE = free_mines[0]
 
         if NEXT_MINE:
+            logger.debug(f"LAST_MINES={LAST_MINES},CURRENT_MINES={CURRENT_MINES}")
             logger.info(f"派出挖矿队伍：{NEXT_MINE}")
             CURRENT_MINES.append(NEXT_MINE)
             LAST_MINES = list(CURRENT_MINES)
