@@ -137,9 +137,12 @@ class Memories(CustomAction):
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
+        # detail.best_result.box 是 Rect 对象，转为 list 供 JClick 使用
+        box = detail.best_result.box
+        click_target = [box.x, box.y, box.w, box.h] if hasattr(box, "x") else list(box)
         context.run_action_direct(
             JActionType.Click,
-            JClick(target=detail.best_result.box),
+            JClick(target=click_target),
         )
 
     def team_mode(self, context: Context, level):
