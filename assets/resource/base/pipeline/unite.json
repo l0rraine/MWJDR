@@ -252,57 +252,68 @@
     },
     "联盟总动员_点击详情": {
         "next": [
-            "[JumpBack]联盟总动员_任务_训练士兵-12w",
-            "[JumpBack]联盟总动员_任务_专精石-35",
-            "[JumpBack]联盟总动员_任务_648礼包",
-            "[JumpBack]联盟总动员_任务_328礼包",
-            "[JumpBack]联盟总动员_任务_领主装备-8900",
-            "[JumpBack]联盟总动员_任务_50000钻石",
-            "[JumpBack]联盟总动员_任务_68碎片",
-            "[JumpBack]联盟总动员_任务_150火晶"
+            "联盟总动员_任务_训练士兵-12w",
+            "联盟总动员_任务_专精石-35",
+            "联盟总动员_任务_648礼包",
+            "联盟总动员_任务_328礼包",
+            "联盟总动员_任务_领主装备-8900",
+            "联盟总动员_任务_50000钻石",
+            "联盟总动员_任务_68碎片",
+            "联盟总动员_任务_150火晶"
         ],
         "action": "DoNothing"
     },
     "联盟总动员_参数_是否单角色": {
-        "action": "DoNothing"
+        "action": "DoNothing",
+        "enabled": false
     },
     "联盟总动员_参数_是否启用第一栏位": {
-        "action": "DoNothing"
+        "action": "DoNothing",
+        "enabled": false
     },
     "联盟总动员_参数_是否启用第二栏位": {
-        "action": "DoNothing"
+        "action": "DoNothing",
+        "enabled": false
     },
     "联盟总动员_任务_训练士兵-12w": {
         "recognition": "OCR",
-        "expected": "120[\\D+]?000"
+        "expected": "120[\\D+]?000",
+        "enabled": false
     },
     "联盟总动员_任务_专精石-35": {
         "recognition": "OCR",
-        "expected": "35个"
+        "expected": "35个",
+        "enabled": false
     },
     "联盟总动员_任务_领主装备-8900": {
         "recognition": "OCR",
-        "expected": "领主.*8[\\D+]?900"
+        "expected": "领主.*8[\\D+]?900",
+        "enabled": false
     },
     "联盟总动员_任务_648礼包": {
         "recognition": "OCR",
-        "expected": "648"
+        "expected": "648",
+        "enabled": false
     },
     "联盟总动员_任务_328礼包": {
         "recognition": "OCR",
-        "expected": "328"
+        "expected": "328",
+        "enabled": false
     },
     "联盟总动员_任务_50000钻石": {
         "recognition": "OCR",
-        "expected": "50[\\D+]?000.*钻石"
+        "expected": "50[\\D+]?000.*钻石",
+        "enabled": false
     },
     "联盟总动员_任务_68碎片": {
         "recognition": "OCR",
-        "expected": "68个传说"
+        "expected": "68个传说",
+        "enabled": false
     },
     "联盟总动员_任务_150火晶": {
         "recognition": "OCR",
-        "expected": "150个火晶"
+        "expected": "150个火晶",
+        "enabled": false
     },
     "联盟总动员_识别描述": {
         "recognition": "OCR",
@@ -312,6 +323,7 @@
             486,
             463,
             220
-        ]
+        ],
+        "enabled": false
     }
 }

@@ -9,7 +9,7 @@ from datetime import datetime
 from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
-from maa.pipeline import JRecognitionType, JOCR
+from maa.pipeline import JActionType, JClick, JRecognitionType, JOCR
 from utils import logger
 from utils.click_util import click_rect
 from PIL import Image
@@ -17,6 +17,8 @@ from utils.merchant_utils import disable_switch
 import importlib
 
 EPISODE = "1"
+
+
 @AgentServer.custom_action("梦境寻忆_判断生效")
 class DreamEffective(CustomAction):
     def run(
@@ -27,7 +29,7 @@ class DreamEffective(CustomAction):
         global EPISODE
         json_data = json.loads(argv.custom_action_param)
         EPISODE = json_data.get("episode")
-        is_stage = context.get_node_data("梦境寻忆_闯关").get("enabled",False)
+        is_stage = context.get_node_data("梦境寻忆_闯关").get("enabled", False)
 
         if is_stage:
             all = context.get_node_data("梦境寻忆_开始闯关")["next"]
@@ -41,14 +43,15 @@ class DreamEffective(CustomAction):
             logger.debug(f"当前最新阶段: {EPISODE}")
             for item in name_list:
                 if max_str != item:
-                    disable_switch(context,item)
+                    disable_switch(context, item)
         else:
             logger.debug(f"当前选择阶段: {EPISODE}")
             for item in name_list:
                 if f"梦境寻忆_{EPISODE}_" not in item:
-                    disable_switch(context,item)
+                    disable_switch(context, item)
 
         return CustomAction.RunResult(success=True)
+
 
 @AgentServer.custom_action("梦境寻忆")
 class Memories(CustomAction):
@@ -58,23 +61,21 @@ class Memories(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         json_data = json.loads(argv.custom_action_param)
-        mode = json_data.get('mode')
-        level = json_data.get('level')
-        logger.debug(f'当前模式:{mode},当前关卡:{level}')
+        mode = json_data.get("mode")
+        level = json_data.get("level")
+        logger.debug(f"当前模式:{mode},当前关卡:{level}")
+        self.screen_shot(context, level)
         #  闯关模式
-        if mode=='闯关':
-            self.stage_mode(context,level)
+        if mode == "闯关":
+            self.stage_mode(context, level)
         else:
-            self.team_mode(context,level)
-        return CustomAction.RunResult(success=True)
+            self.team_mode(context, level)
+        return CustomAction.RunResult(success=False)
 
-    def stage_mode(
-        self,
-        context: Context,
-        level):
+    def stage_mode(self, context: Context, level):
         global EPISODE
         module_name = f"custom.action.dream_stages.dream_{EPISODE}"
-        item_dict={}
+        item_dict = {}
         try:
             # 动态导入模块
             mod = importlib.import_module(module_name)
@@ -88,16 +89,12 @@ class Memories(CustomAction):
         except AttributeError:
             raise ValueError(f"dream_{EPISODE}.py 中无 {func_name} 函数")
 
-        areas = [
-            [40, 1135, 214, 72],
-            [252, 1133, 215, 69],
-            [467, 1133, 217, 71]
-            ]
+        areas = [[40, 1135, 214, 72], [252, 1133, 215, 69], [467, 1133, 217, 71]]
 
         detail = None
-        expected=list(item_dict)
-        done_dict={}
-        miss_dict={}
+        expected = list(item_dict)
+        done_dict = {}
+        miss_dict = {}
         while detail is None or not detail.hit:
             for area in areas:
                 img = context.tasker.controller.post_screencap().wait().get()
@@ -109,42 +106,43 @@ class Memories(CustomAction):
                 if not d.filtered_results:
                     continue
 
+                # 三段式匹配：先完全匹配，再包含匹配，最后缺失打印
+                texts = [r.text.strip().capitalize() for r in d.filtered_results]
+                # 1. 完全匹配（abc == key）
                 match = next(
-                    (
-                        key
-                        for key in item_dict
-                        if any(
-                            r.text.strip().capitalize() == key
-                            or key in r.text.strip().capitalize()
-                            for r in d.filtered_results
-                        )
-                    ),
+                    (key for key in item_dict if any(t == key for t in texts)),
                     None,
                 )
+                # 2. 包含匹配（key in abc）
+                if not match:
+                    match = next(
+                        (key for key in item_dict if any(key in t for t in texts)),
+                        None,
+                    )
                 if match:
-                    logger.debug(f"物品:{match}")
+                    logger.debug(f"找到:{match}")
                     click_rect(context, item_dict[match])
                     done_dict[match] = item_dict.pop(match)
-                    time.sleep(0.5)
-                    continue
-                t = max(d.filtered_results, key=lambda r: r.score)
-                t = t.text.strip().capitalize()
-                if t not in done_dict:
-                    if t not in miss_dict:
-                        logger.info(f"缺失:{t}")
-                        self.screen_shot(context,t)
-                    miss_dict[t] = 1
+                else:
+                    # 3. 缺失打印：取 score 最高的 t，检查是否之前已匹配过
+                    t = max(d.filtered_results, key=lambda r: r.score)
+                    t = t.text.strip().capitalize()
+                    already_found = any(key in t for key in done_dict)
+                    if not already_found:
+                        if t not in miss_dict:
+                            logger.info(f"缺失:{t}")
+                        miss_dict[t] = miss_dict.get(t, 0) + 1
+                time.sleep(0.5)
 
-            time.sleep(0.3)
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
-        return CustomAction.RunResult(success=True)
+        context.run_action_direct(
+            JActionType.Click,
+            JClick(target=[336, 900, 52, 33]),
+        )
 
-    def team_mode(
-        self,
-        context: Context,
-        level):
+    def team_mode(self, context: Context, level):
         global EPISODE
         module_name = f"custom.action.dream_stages.dream_{EPISODE}"
         item_dict = {}
@@ -167,12 +165,12 @@ class Memories(CustomAction):
             [508, 1121, 172, 61],
             [71, 1196, 124, 59],
             [297, 1200, 132, 53],
-            [529, 1193, 133, 62]
-            ]
+            [529, 1193, 133, 62],
+        ]
 
         detail = None
-        expected=list(item_dict)
-        done_dict={}
+        expected = list(item_dict)
+        done_dict = {}
         miss_dict = {}
         while detail is None or not detail.hit:
             for area in areas:
@@ -184,42 +182,43 @@ class Memories(CustomAction):
                 )
                 if not d.filtered_results:
                     continue
+                # 三段式匹配：先完全匹配，再包含匹配，最后缺失打印
+                texts = [r.text.strip().capitalize() for r in d.filtered_results]
+                # 1. 完全匹配（abc == key）
                 match = next(
-                    (
-                        key
-                        for key in item_dict
-                        if any(
-                            r.text.strip().capitalize() == key
-                            or key in r.text.strip().capitalize()
-                            for r in d.filtered_results
-                        )
-                    ),
+                    (key for key in item_dict if any(t == key for t in texts)),
                     None,
                 )
+                # 2. 包含匹配（key in abc）
+                if not match:
+                    match = next(
+                        (key for key in item_dict if any(key in t for t in texts)),
+                        None,
+                    )
                 if match:
-                    logger.debug(f"物品:{match}")
+                    logger.debug(f"找到:{match}")
                     click_rect(context, item_dict[match])
                     done_dict[match] = item_dict.pop(match)
-                    time.sleep(0.5)
-                    continue
-                t = max(d.filtered_results, key=lambda r: r.score)
-                t = t.text.strip().capitalize()
-                if t not in done_dict:
-                    if t not in miss_dict:
-                        logger.info(f"缺失:{t}")
-                        self.screen_shot(context, t)
-                    miss_dict[t] = 1
+                else:
+                    # 3. 缺失打印：取 score 最高的 t，检查是否之前已匹配过
+                    t = max(d.filtered_results, key=lambda r: r.score)
+                    t = t.text.strip().capitalize()
+                    already_found = any(key in t for key in done_dict)
+                    if not already_found:
+                        if t not in miss_dict:
+                            logger.info(f"缺失:{t}")
+                        miss_dict[t] = miss_dict.get(t, 0) + 1
+                time.sleep(0.5)
 
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition("梦境寻忆_找到所有物品", img)
         logger.info(f"共点击{len(done_dict)}个物品")
-        return CustomAction.RunResult(success=True)
+        context.run_action_direct(
+            JActionType.Click,
+            JClick(target=[317, 1216, 46, 19]),
+        )
 
-    def screen_shot(
-        self,
-        context: Context,
-        text:str
-        ):
+    def screen_shot(self, context: Context, text: str):
         screen_array = context.tasker.controller.post_screencap().wait().get()
 
         # Check resolution aspect ratio
@@ -243,6 +242,10 @@ class Memories(CustomAction):
         os.makedirs(save_dir, exist_ok=True)
         now = datetime.now()
         text = re.sub(r"[*?]", "", text)
-        name =f"{text}_" + now.strftime("%Y%m%d%H%M%S.") + f"{now.microsecond // 1000:03d}.png"
+        name = (
+            f"{text}_"
+            + now.strftime("%Y%m%d%H%M%S.")
+            + f"{now.microsecond // 1000:03d}.png"
+        )
         img.save(os.path.join(save_dir, name))
         logger.debug(f"截图保存至 temp/{name}")

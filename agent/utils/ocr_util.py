@@ -8,7 +8,7 @@ import re
 import time
 from typing import Dict
 
-from maa.context import Context
+from maa.context import Context, RecognitionDetail
 from maa.pipeline import JRecognitionType, JOCR
 
 from .logger import logger
@@ -59,16 +59,22 @@ def ocr_until_consistent(
 
             # 正则过滤
             if expected_pattern and not re.match(expected_pattern, text):
-                logger.debug(f"OCR第{attempt}次：结果'{text}'不匹配正则'{expected_pattern}'，丢弃")
+                logger.debug(
+                    f"OCR第{attempt}次：结果'{text}'不匹配正则'{expected_pattern}'，丢弃"
+                )
                 same_count = 0
                 continue
 
             # 一致性校验
             if text == last_result:
                 same_count += 1
-                logger.debug(f"OCR第{attempt}次：'{text}'一致（{same_count}/{consistent_count}）")
+                logger.debug(
+                    f"OCR第{attempt}次：'{text}'一致（{same_count}/{consistent_count}）"
+                )
                 if same_count >= consistent_count:
-                    logger.debug(f"OCR一致性校验通过：'{text}'（{consistent_count}次一致）")
+                    logger.debug(
+                        f"OCR一致性校验通过：'{text}'（{consistent_count}次一致）"
+                    )
                     return text
             else:
                 last_result = text
@@ -81,7 +87,9 @@ def ocr_until_consistent(
 
         time.sleep(0.3)
 
-    logger.warning(f"OCR一致性校验失败：超过最大尝试次数{max_attempts}，最后结果'{last_result}'")
+    logger.warning(
+        f"OCR一致性校验失败：超过最大尝试次数{max_attempts}，最后结果'{last_result}'"
+    )
     return None
 
 
@@ -92,7 +100,7 @@ def ocr_until_consistent_by_task(
     expected_pattern: str = None,
     consistent_count: int = 3,
     max_attempts: int = 30,
-) -> str | None:
+) -> tuple[str, RecognitionDetail] | None:
     """
     OCR 读取直到获得多次完全一致的结果（通过 pipeline 节点名）
 
@@ -119,7 +127,7 @@ def ocr_until_consistent_by_task(
             detail = context.run_recognition(task_name, img, pipeline_override)
 
             if not detail or not detail.hit:
-                logger.debug(f"OCR第{attempt}次[{task_name}]：未识别到内容")
+                # logger.debug(f"OCR第{attempt}次[{task_name}]：未识别到内容")
                 same_count = 0
                 continue
 
@@ -127,27 +135,37 @@ def ocr_until_consistent_by_task(
 
             # 正则过滤
             if expected_pattern and not re.match(expected_pattern, text):
-                logger.debug(f"OCR第{attempt}次[{task_name}]：结果'{text}'不匹配正则'{expected_pattern}'，丢弃")
+                # logger.debug(
+                #     f"OCR第{attempt}次[{task_name}]：结果'{text}'不匹配正则'{expected_pattern}'，丢弃"
+                # )
                 same_count = 0
                 continue
 
             # 一致性校验
             if text == last_result:
                 same_count += 1
-                logger.debug(f"OCR第{attempt}次[{task_name}]：'{text}'一致（{same_count}/{consistent_count}）")
+                # logger.debug(
+                #     f"OCR第{attempt}次[{task_name}]：'{text}'一致（{same_count}/{consistent_count}）"
+                # )
                 if same_count >= consistent_count:
-                    logger.debug(f"OCR一致性校验通过[{task_name}]：'{text}'（{consistent_count}次一致）")
-                    return text
+                    logger.debug(
+                        f"OCR成功[{task_name}]：'{text}'（{consistent_count}次一致）"
+                    )
+                    return text, detail
             else:
                 last_result = text
                 same_count = 1
-                logger.debug(f"OCR第{attempt}次[{task_name}]：'{text}'（1/{consistent_count}）")
+                # logger.debug(
+                #     f"OCR第{attempt}次[{task_name}]：'{text}'（1/{consistent_count}）"
+                # )
 
         except Exception as e:
-            logger.debug(f"OCR第{attempt}次[{task_name}]异常：{e}")
+            # logger.debug(f"OCR第{attempt}次[{task_name}]异常：{e}")
             same_count = 0
 
         time.sleep(0.3)
 
-    logger.warning(f"OCR一致性校验失败[{task_name}]：超过最大尝试次数{max_attempts}，最后结果'{last_result}'")
-    return None
+    logger.warning(
+        f"OCR失败[{task_name}]：超过最大尝试次数{max_attempts}，最后结果'{last_result}'"
+    )
+    return None, None

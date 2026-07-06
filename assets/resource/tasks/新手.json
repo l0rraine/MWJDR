@@ -1,0 +1,460 @@
+{
+    "task": [
+        {
+            "name": "快乐新手期",
+            "entry": "新手_入口",
+            "option": [
+                "扫描间隔",
+                "挖矿",
+                "训练士兵",
+                "加入集结"
+            ]
+        }
+    ],
+    "option": {
+        "扫描间隔": {
+            "type": "input",
+            "label": "扫描间隔(秒)",
+            "inputs": [
+                {
+                    "name": "扫描间隔",
+                    "pipeline_type": "string",
+                    "default": "60",
+                    "verify": "^\\d+$",
+                    "description": "新手循环的扫描间隔时间，单位秒"
+                }
+            ],
+            "pipeline_override": {
+                "新手_设置扫描间隔": {
+                    "custom_action_param": {
+                        "interval": "{扫描间隔}"
+                    }
+                }
+            }
+        },
+        "挖矿": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "挖矿",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "新手-挖矿配置",
+                        "挖矿-矿种",
+                        "挖矿-默认采矿等级"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "训练士兵": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "训练士兵",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "训练士兵_快捷": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "训练士兵_快捷": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "加入集结": {
+            "type": "switch",
+            "default_case": "Yes",
+            "label": "加入集结",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "加入集结_入口": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "加入集结-目标选择",
+                        "加入集结-队伍选择"
+                    ]
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "加入集结_入口": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "加入集结-目标选择": {
+            "type": "checkbox",
+            "label": "目标选择",
+            "default_case": [],
+            "cases": [
+                {
+                    "name": "等级1洞狮",
+                    "label": "等级1洞狮",
+                    "pipeline_override": {
+                        "加入集结_目标_等级1洞狮": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级2雪猿",
+                    "label": "等级2雪猿",
+                    "pipeline_override": {
+                        "加入集结_目标_等级2雪猿": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级3板齿犀",
+                    "label": "等级3板齿犀",
+                    "pipeline_override": {
+                        "加入集结_目标_等级3板齿犀": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级4剑齿虎",
+                    "label": "等级4剑齿虎",
+                    "pipeline_override": {
+                        "加入集结_目标_等级4剑齿虎": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级5猛犸象",
+                    "label": "等级5猛犸象",
+                    "pipeline_override": {
+                        "加入集结_目标_等级5猛犸象": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级6猛犸古猿",
+                    "label": "等级6猛犸古猿",
+                    "pipeline_override": {
+                        "加入集结_目标_等级6猛犸古猿": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级7霜鳞避役",
+                    "label": "等级7霜鳞避役",
+                    "pipeline_override": {
+                        "加入集结_目标_等级7霜鳞避役": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级8深渊龙龟",
+                    "label": "等级8深渊龙龟",
+                    "pipeline_override": {
+                        "加入集结_目标_等级8深渊龙龟": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级1失控的雪怪",
+                    "label": "等级1失控的雪怪",
+                    "pipeline_override": {
+                        "加入集结_目标_等级1失控的雪怪": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "等级1收割者",
+                    "label": "等级1收割者",
+                    "pipeline_override": {
+                        "加入集结_目标_等级1收割者": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "法厄同斥候",
+                    "label": "法厄同斥候",
+                    "pipeline_override": {
+                        "加入集结_目标_法厄同": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "加入集结-队伍选择": {
+            "type": "input",
+            "label": "队伍选择",
+            "inputs": [
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "1",
+                    "verify": "^[0-8]$",
+                    "description": "加入集结使用的队伍编号(0-8)，0为默认队伍不切换"
+                }
+            ],
+            "pipeline_override": {
+                "加入集结_入口": {
+                    "custom_recognition_param": {
+                        "team": "{队伍}"
+                    }
+                }
+            }
+        },
+        "新手-挖矿配置": {
+            "type": "select",
+            "cases": [
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "2",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "3",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "4",
+                    "pipeline_override": {
+                        "挖矿_入口": {
+                            "custom_recognition_param": {
+                                "max_teams": "4"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "挖矿-矿种": {
+            "type": "checkbox",
+            "label": "矿",
+            "default_case": [
+                "肉",
+                "木",
+                "煤",
+                "铁"
+            ],
+            "cases": [
+                {
+                    "name": "肉",
+                    "label": "肉",
+                    "pipeline_override": {
+                        "挖矿_矿_肉": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "木",
+                    "label": "木",
+                    "pipeline_override": {
+                        "挖矿_矿_木": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "煤",
+                    "label": "煤",
+                    "pipeline_override": {
+                        "挖矿_矿_煤": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "铁",
+                    "label": "铁",
+                    "pipeline_override": {
+                        "挖矿_矿_铁": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "挖矿-默认采矿等级": {
+            "type": "select",
+            "label": "默认采矿等级",
+            "default_case": "8",
+            "cases": [
+                {
+                    "name": "8",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "8"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "8"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "7",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "7"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "7"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "6",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "6"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "6"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "5",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "5"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "5"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "4",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "4"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "4"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "3",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "3"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "2",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "2"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "1",
+                    "pipeline_override": {
+                        "挖矿_识别矿图标": {
+                            "custom_recognition_param": {
+                                "level": "1"
+                            }
+                        },
+                        "挖矿_设置等级": {
+                            "custom_action_param": {
+                                "level": "1"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

@@ -40,6 +40,7 @@
         "resource/tasks/海岛协助打理.json",
         "resource/tasks/联盟总动员.json",
         "resource/tasks/梦境寻忆.json",
-        "resource/tasks/打熊.json"
+        "resource/tasks/打熊.json",
+        "resource/tasks/新手.json"
     ]
 }

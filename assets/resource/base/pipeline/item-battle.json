@@ -14,22 +14,22 @@
             "param": {
                 "template": "灯塔.png",
                 "roi": [
-                    584,
-                    783,
-                    136,
-                    163
+                    598,
+                    775,
+                    122,
+                    315
                 ],
                 "threshold": 0.9
             }
         },
         "action": "Click",
-        "target": [
-            644,
-            843,
-            39,
-            38
+        "target_offset": [
+            15,
+            15,
+            -10,
+            -10
         ],
-        "post_delay": 600,
+        "post_delay": 1000,
         "next": [
             "集结物品_识别体力"
         ]

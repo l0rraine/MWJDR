@@ -18,14 +18,11 @@
   "梦境寻忆_组队": {
     "next": [
       "梦境寻忆_1_组队",
-      "梦境寻忆_2_组队"
+      "梦境寻忆_2_组队",
+      "梦境寻忆_3_组队"
     ]
   },
   "梦境寻忆_闯关": {
-    "recognition": "TemplateMatch",
-    "template": "梦境寻忆/闯关模式.png",
-    "action": "Click",
-    "green_mask": true,
     "next": [
       "梦境寻忆_开始闯关",
       "梦境寻忆_已在闯关界面",
@@ -74,23 +71,21 @@
       142,
       53
     ],
+    "post_delay": 1000,
     "next": [
-      "梦境寻忆_开始闯关",
-      "[JumpBack]梦境寻忆_关闭关卡信息"
+      "梦境寻忆_关闭关卡信息"
     ]
   },
   "梦境寻忆_关闭关卡信息": {
-    "recognition": "OCR",
-    "roi": [
-      194,
-      758,
-      313,
-      104
-    ],
-    "expected": [
-      ".*任意.*"
-    ],
+    "pre_delay": 0,
+    "post_delay": 0,
     "action": "Click",
+    "target": [
+      291,
+      37,
+      57,
+      28
+    ],
     "next": [
       "梦境寻忆_开始闯关"
     ]
@@ -109,24 +104,39 @@
     ],
     "next": [
       "梦境寻忆_1_闯关",
-      "梦境寻忆_2_闯关"
+      "梦境寻忆_2_闯关",
+      "梦境寻忆_3_闯关"
     ]
   },
   "梦境寻忆_找到所有物品": {
-    "recognition": "OCR",
-    "roi": [
-      75,
-      125,
-      567,
-      715
+    "recognition": "Or",
+    "any_of": [
+      {
+        "recognition": "TemplateMatch",
+        "roi": [
+          271,
+          872,
+          192,
+          103
+        ],
+        "template": [
+          "梦境寻忆/继续.png"
+        ]
+      },
+      {
+        "recognition": "TemplateMatch",
+        "roi": [
+          203,
+          109,
+          216,
+          101
+        ],
+        "template": [
+          "梦境寻忆/协同完成.png"
+        ]
+      }
     ],
-    "expected": [
-      "已找到.*",
-      "继续",
-      ".*完成.*",
-      ".*增加了.*"
-    ],
-    "pre_delay": 1500,
+    "pre_delay": 300,
     "action": "Click"
   }
 }

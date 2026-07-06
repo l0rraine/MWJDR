@@ -23,14 +23,17 @@ class BeastBeginCombat(CustomAction):
 
         # 开始出征
         context.run_task("点击出征")
+        time.sleep(0.5)
         img = context.tasker.controller.post_screencap().wait().get()
         detail = context.run_recognition("体力不足", img)
-        if detail.hit:
-            detail = context.run_recognition("是否有免费体力",img)
-            if detail.hit:
+        if detail is not None and detail.hit:
+            logger.debug(f"野兽体力不足，尝试领取免费体力：{detail.best_result.text}")
+            detail = context.run_recognition("是否有免费体力", img)
+            if detail is not None and detail.hit:
                 context.run_task("免费体力")
                 context.run_task("点击出征")
             else:
+                logger.debug("野兽无免费体力，停止出征")
                 disable_battle_tasks(context, "自动野兽_入口")
                 return CustomAction.RunResult(success=False)
 

@@ -43,6 +43,7 @@ class StartRecordIDOrNot(CustomAction):
 
         return CustomAction.RunResult(success=True)
 
+
 @AgentServer.custom_action("识别角色ID")
 class RecordID(CustomAction):
     # 类变量：存储当前角色的 ID，供其他 Custom Action 读取
@@ -52,7 +53,7 @@ class RecordID(CustomAction):
     _id_roi: list = [347, 946, 138, 34]
 
     # 角色 ID 格式：9位纯数字
-    _id_pattern: str = r"^\d{9}$"
+    _id_pattern: str = r"^\d+$"
 
     @classmethod
     def current_account_id(cls) -> str:

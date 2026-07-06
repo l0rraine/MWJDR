@@ -4,6 +4,7 @@ import re
 from utils import logger
 from utils.ocr_util import ocr_until_consistent_by_task
 
+
 def ms_timestamp_diff_to_dhm(timestamp1_ms, timestamp2_ms):
     """
     将两个毫秒级时间戳的差值转换为天-时-分格式
@@ -31,12 +32,13 @@ def ms_timestamp_diff_to_dhm(timestamp1_ms, timestamp2_ms):
     # 返回中文格式的结果
     return f"{days}天-{hours}时-{minutes}分"
 
+
 # 将 \\d+\\D+\\d+\\D+\\d+ 切分为 hours minutes seconds
 def split_time_str(time_str):
-    parts = re.split(r'\D+', time_str)
+    parts = re.split(r"\D+", time_str)
     numeric_parts = [int(part) for part in parts if part]
     hours, minutes, seconds = (numeric_parts + [0, 0, 0])[:3]
-    return hours,minutes,seconds
+    return hours, minutes, seconds
 
 
 def get_time_from_ocr(context, task_name, max_time=300):
@@ -53,16 +55,17 @@ def get_time_from_ocr(context, task_name, max_time=300):
     Returns:
         tuple: (hours, minutes, seconds)，识别失败返回 (0, 0, 0)
     """
-    text = ocr_until_consistent_by_task(
+    text, _ = ocr_until_consistent_by_task(
         context,
         task_name,
-        expected_pattern=r'\d+\D+\d+',
+        expected_pattern=r"\d+\D+\d+",
     )
     if text is None:
         logger.warning(f"OCR识别时间失败: {task_name}")
         return 0, 0, 0
     return split_time_str(text)
-                
+
+
 def is_today(timestamp_ms, timezone="Asia/Shanghai"):
     """
     判断毫秒级时间戳是否在今天（以0点为分界，游戏重置时间）

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1600">
+<title>打熊 - 游戏自动化流水线</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8FAFC;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    color: #243447;
+    padding: 48px 60px;
+    width: 1600px;
+  }
+
+  /* ── Title ── */
+  .title-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .title-bar .icon {
+    width: 48px; height: 48px;
+    background: #4C6EF5;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: #fff; font-weight: 700;
+  }
+  .title-bar h1 { font-size: 28px; font-weight: 700; letter-spacing: 1px; }
+  .title-bar .sub { font-size: 14px; color: #8896A6; margin-top: 2px; }
+
+  /* ── Phase Card ── */
+  .phase-card {
+    background: #fff;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 14px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(36,52,71,.06);
+  }
+  .phase-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 22px;
+    background: linear-gradient(135deg, #E9EEF3 0%, #F1F5F9 100%);
+    border-bottom: 1px solid #E2E8F0;
+  }
+  .phase-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #4C6EF5; color: #fff;
+    font-size: 14px; font-weight: 700;
+  }
+  .phase-header .phase-title { font-size: 16px; font-weight: 700; }
+  .phase-header .phase-tag {
+    margin-left: auto;
+    font-size: 11px; padding: 3px 10px;
+    border-radius: 99px; font-weight: 600;
+  }
+  .tag-entry { background: #DBEAFE; color: #1D4ED8; }
+  .tag-monitor { background: #D1FAE5; color: #065F46; }
+  .tag-core { background: #FEE2E2; color: #991B1B; }
+  .tag-parallel { background: #FEF3C7; color: #92400E; }
+
+  .phase-body { padding: 24px 28px; }
+
+  /* ── Nodes ── */
+  .node {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 500;
+    white-space: nowrap;
+    border: 1.5px solid #CBD5E1;
+    background: #F8FAFC;
+    transition: box-shadow .15s;
+  }
+  .node:hover { box-shadow: 0 0 0 3px rgba(76,110,245,.15); }
+
+  .node-hub {
+    background: #4C6EF5; color: #fff; border-color: #4C6EF5;
+    font-weight: 700; padding: 11px 22px; font-size: 14px;
+    border-radius: 10px;
+  }
+  .node-custom {
+    background: #FFF7ED; border-color: #FDBA74; color: #9A3412;
+  }
+  .node-ocr {
+    background: #F0FDF4; border-color: #86EFAC; color: #166534;
+  }
+  .node-tmpl {
+    background: #EFF6FF; border-color: #93C5FD; color: #1E40AF;
+  }
+  .node-check {
+    background: #FEFCE8; border-color: #FDE047; color: #854D0E;
+  }
+  .node-fail {
+    background: #FEF2F2; border-color: #FCA5A5; color: #DC2626;
+  }
+  .node-success {
+    background: #F0FDF4; border-color: #86EFAC; color: #166534;
+  }
+
+  .node .type-badge {
+    font-size: 10px; padding: 1px 7px; border-radius: 4px;
+    font-weight: 600; opacity: .85;
+  }
+  .badge-jumpback {
+    background: rgba(255,255,255,.25); color: #C2410C;
+  }
+  .badge-and {
+    background: rgba(255,255,255,.25); color: #1D4ED8;
+  }
+
+  /* ── Flow Rows ── */
+  .flow-row {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: nowrap;
+    margin-bottom: 12px;
+  }
+  .flow-row:last-child { margin-bottom: 0; }
+
+  /* ── Arrow ── */
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: #94A3B8; font-size: 18px;
+    width: 32px; height: 32px;
+  }
+  .arrow-down {
+    display: flex; align-items: center; justify-content: center;
+    color: #94A3B8; font-size: 18px;
+    padding: 6px 0;
+  }
+
+  /* ── Branch ── */
+  .branch-group {
+    border-left: 3px solid #CBD5E1;
+    padding-left: 20px;
+    margin-left: 16px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .branch-group::before {
+    content: '';
+    position: absolute;
+    left: -8px; top: 0;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #CBD5E1;
+    border: 2px solid #F8FAFC;
+  }
+  .branch-label {
+    font-size: 11px; color: #8896A6; font-weight: 600;
+    margin-bottom: 6px; padding-left: 2px;
+  }
+  .branch-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #E2E8F0; color: #64748B;
+    font-size: 11px; font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* ── Sub-flow ── */
+  .subflow-box {
+    background: #FFFBEB;
+    border: 1.5px dashed #FBBF24;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-top: 14px;
+  }
+  .subflow-title {
+    font-size: 13px; font-weight: 700; color: #92400E;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .subflow-title::before {
+    content: ''; display: block;
+    width: 10px; height: 10px; border-radius: 3px;
+    background: #F59E0B;
+  }
+
+  /* ── Step List ── */
+  .step-list { display: flex; flex-direction: column; gap: 8px; }
+  .step-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 12.5px; line-height: 1.6;
+  }
+  .step-num {
+    flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px;
+    background: #FEF3C7; color: #92400E;
+    border-radius: 6px; font-size: 11px; font-weight: 700;
+    padding: 0 6px;
+  }
+
+  /* ── Loop Back Arrow ── */
+  .loop-back {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 14px;
+    padding: 10px 16px;
+    background: linear-gradient(90deg, #FEE2E2, #F8FAFC);
+    border: 1.5px dashed #FCA5A5;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 600; color: #DC2626;
+  }
+  .loop-back .loop-icon {
+    font-size: 18px; animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  /* ── Parallel Thread ── */
+  .parallel-card {
+    background: #FFFBEB;
+    border: 1.5px solid #FDE68A;
+    border-radius: 14px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 4px rgba(36,52,71,.06);
+  }
+  .parallel-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 22px;
+    background: linear-gradient(135deg, #FEF3C7 0%, #FFFBEB 100%);
+    border-bottom: 1px solid #FDE68A;
+  }
+  .parallel-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #F59E0B; color: #fff;
+    font-size: 14px;
+  }
+  .parallel-body {
+    padding: 20px 28px;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .thread-flow {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+
+  /* ── Phase connector ── */
+  .phase-connector {
+    display: flex; align-items: center; justify-content: center;
+    padding: 4px 0;
+    margin-bottom: 4px;
+  }
+  .phase-connector .conn-line {
+    width: 2px; height: 32px; background: #CBD5E1;
+    border-radius: 1px;
+    position: relative;
+  }
+  .phase-connector .conn-line::after {
+    content: '▼';
+    position: absolute;
+    bottom: -12px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px; color: #94A3B8;
+  }
+
+  /* ── Condition Label ── */
+  .cond-label {
+    font-size: 11px; color: #64748B; font-style: italic;
+    white-space: nowrap;
+  }
+  .cond-yes { color: #16A34A; font-weight: 600; font-style: normal; }
+  .cond-no { color: #DC2626; font-weight: 600; font-style: normal; }
+
+  /* ── Inline condition block ── */
+  .cond-block {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: #F1F5F9;
+    border: 1px dashed #CBD5E1;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  /* footer */
+  .footer-note {
+    text-align: center; padding: 20px 0;
+    font-size: 11px; color: #94A3B8;
+    border-top: 1px solid #E2E8F0;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ TITLE ═══════════════ -->
+<div class="title-bar">
+  <div class="icon">🐻</div>
+  <div>
+    <h1>打熊 — 游戏自动化流水线</h1>
+    <div class="sub">Game Automation Pipeline &nbsp;|&nbsp; Bear Fighting Alliance War Flow</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PHASE 1: Entry Navigation ═══════════════ -->
+<div class="phase-card">
+  <div class="phase-header">
+    <span class="phase-badge">1</span>
+    <span class="phase-title">入场导航</span>
+    <span class="phase-tag tag-entry">ENTRY</span>
+  </div>
+  <div class="phase-body">
+    <!-- Entry Hub -->
+    <div class="flow-row">
+      <div class="node node-hub">熊_入口</div>
+      <div class="arrow">→</div>
+      <span class="cond-label">按顺序尝试以下分支</span>
+    </div>
+
+    <!-- Branch 1 -->
+    <div class="branch-group">
+      <div class="branch-label"><span class="branch-num">1</span>快速路径</div>
+      <div class="flow-row">
+        <div class="node node-ocr">熊_已在入口 <span class="type-badge" style="background:#DCFCE7;color:#166534;">OCR: "联盟战争"</span></div>
+        <div class="arrow">→</div>
+        <div class="node node-success">✓ 进入 Phase 2</div>
+      </div>
+    </div>
+
+    <!-- Branch 2 -->
+    <div class="branch-group">
+      <div class="branch-label"><span class="branch-num">2</span> <span class="type-badge badge-jumpback">JumpBack</span></div>
+      <div class="flow-row">
+        <div class="node node-tmpl">熊_点击加入集结 <span class="type-badge" style="background:#DBEAFE;color:#1E40AF;">TemplateMatch</span></div>
+        <div class="arrow">→</div>
+        <div class="node node-success">✓ 进入 Phase 2</div>
+      </div>
+    </div>
+
+    <!-- Branch 3 -->
+    <div class="branch-group">
+      <div class="branch-label"><span class="branch-num">3</span> <span class="type-badge badge-jumpback">JumpBack</span> 完整导航</div>
+      <div class="flow-row">
+        <div class="node node-ocr">熊_点击联盟 <span class="type-badge" style="background:#DCFCE7;color:#166534;">OCR</span></div>
+        <div class="arrow">→</div>
+        <div class="node">熊_点击联盟战争</div>
+        <div class="arrow">→</div>
+        <div class="node">熊_点击集结</div>
+        <div class="arrow">→</div>
+        <div class="node node-success">✓ 进入 Phase 2</div>
+      </div>
+    </div>
+
+    <!-- Branch 4 -->
+    <div class="branch-group">
+      <div class="branch-label"><span class="branch-num">4</span> <span class="type-badge badge-jumpback">JumpBack</span> 回退</div>
+      <div class="flow-row">
+        <div class="node node-fail">关闭礼包 / 后退</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 1 → 2 connector -->
+<div class="phase-connector"><div class="conn-line"></div></div>
+
+<!-- ═══════════════ PHASE 2: Start Monitor ═══════════════ -->
+<div class="phase-card">
+  <div class="phase-header">
+    <span class="phase-badge">2</span>
+    <span class="phase-title">启动监控</span>
+    <span class="phase-tag tag-monitor">MONITOR</span>
+  </div>
+  <div class="phase-body">
+    <div class="flow-row">
+      <div class="node node-custom">熊_启动返回监控 <span class="type-badge" style="background:#FFEDD5;color:#9A3412;">Custom Action</span></div>
+      <div class="arrow">→</div>
+      <span class="cond-label">启动 RapidOCR 后台线程监控 "部队返回城镇" 通知</span>
+    </div>
+    <div class="flow-row" style="margin-top:8px;">
+      <div class="arrow">↓</div>
+      <div class="node">熊_开始战斗</div>
+      <div class="arrow">→</div>
+      <span class="cond-label">进入 Phase 3 核心循环</span>
+    </div>
+  </div>
+</div>
+
+<!-- Phase 2 → 3 connector -->
+<div class="phase-connector"><div class="conn-line"></div></div>
+
+<!-- ═══════════════ PHASE 3: Battle Main Loop ═══════════════ -->
+<div class="phase-card" style="border-color:#FCA5A5; border-width: 2px;">
+  <div class="phase-header" style="background: linear-gradient(135deg, #FEE2E2 0%, #FFF1F2 100%); border-bottom-color: #FECACA;">
+    <span class="phase-badge" style="background:#DC2626;">3</span>
+    <span class="phase-title" style="color:#991B1B;">战斗主循环</span>
+    <span class="phase-tag tag-core">CORE LOOP</span>
+  </div>
+  <div class="phase-body">
+    <!-- Hub Node -->
+    <div class="flow-row">
+      <div class="node node-hub" style="background:#DC2626;">熊_开始战斗 <span class="type-badge" style="background:rgba(255,255,255,.2);color:#fff;">HUB</span></div>
+      <div class="arrow" style="color:#FCA5A5;">→</div>
+      <span class="cond-label">按优先级尝试 3 个分支</span>
+    </div>
+
+    <!-- Branch A: 识别队伍 -->
+    <div class="branch-group" style="border-left-color:#4C6EF5;">
+      <div class="branch-label"><span class="branch-num" style="background:#4C6EF5;color:#fff;">A</span> 主路径 — 识别并加入</div>
+      <div class="flow-row">
+        <div class="node node-ocr" style="border-color:#4C6EF5; background:#EEF2FF; color:#3730A3;">
+          熊_识别队伍 <span class="type-badge badge-and">And</span>
+        </div>
+        <div class="arrow">→</div>
+        <span class="cond-label">OCR 队伍名 + TemplateMatch 加入按钮 → Click</span>
+      </div>
+
+      <!-- Sub-branches of A -->
+      <div style="margin-left:20px; margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+
+        <div class="flow-row">
+          <span class="cond-label" style="min-width:100px;">在队伍选择页</span>
+          <div class="node node-tmpl">熊_在队伍选择页面 <span class="type-badge" style="background:#DBEAFE;color:#1E40AF;">TemplateMatch</span></div>
+          <div class="arrow">→</div>
+          <div class="node node-custom">熊_开始加入集结 <span class="type-badge" style="background:#FFEDD5;color:#9A3412;">Custom</span></div>
+        </div>
+
+        <div class="flow-row">
+          <span class="cond-label" style="min-width:100px;">队列不足</span>
+          <div class="node node-check">熊_队列不足 <span class="type-badge" style="background:#FEF9C3;color:#854D0E;">OCR: "行军队列"</span></div>
+          <div class="arrow">→</div>
+          <span class="cond-label">Click → 回到 <strong>熊_开始战斗</strong></span>
+        </div>
+
+        <div class="flow-row">
+          <span class="cond-label" style="min-width:100px;">误入详情页</span>
+          <div class="node" style="border-color:#A78BFA; background:#F5F3FF; color:#5B21B6;">熊_在集结详情页面 <span class="type-badge" style="background:#EDE9FE;color:#6D28D9;">ColorMatch</span></div>
+          <div class="arrow">→</div>
+          <span class="cond-label">Click back → 回到 <strong>熊_开始战斗</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branch B: 详情页回退 -->
+    <div class="branch-group" style="border-left-color:#F59E0B;">
+      <div class="branch-label"><span class="branch-num" style="background:#F59E0B;color:#fff;">B</span> <span class="type-badge badge-jumpback">JumpBack</span> 集结详情回退</div>
+      <div class="flow-row">
+        <div class="node" style="border-color:#A78BFA; background:#F5F3FF; color:#5B21B6;">熊_在集结详情页面 <span class="type-badge" style="background:#EDE9FE;color:#6D28D9;">ColorMatch</span></div>
+        <div class="arrow">→</div>
+        <span class="cond-label">Click back</span>
+        <div class="arrow">→</div>
+        <span class="cond-label">回到 <strong>熊_开始战斗</strong></span>
+      </div>
+    </div>
+
+    <!-- Branch C: 计算队伍 -->
+    <div class="branch-group" style="border-left-color:#10B981;">
+      <div class="branch-label"><span class="branch-num" style="background:#10B981;color:#fff;">C</span> <span class="type-badge badge-jumpback">JumpBack</span> 计算队伍参数</div>
+      <div class="flow-row">
+        <div class="node node-custom" style="border-color:#10B981; background:#ECFDF5; color:#065F46;">
+          熊_计算队伍 <span class="type-badge" style="background:#D1FAE5;color:#065F46;">Custom Action</span>
+        </div>
+        <div class="arrow">→</div>
+        <span class="cond-label">计算阶段/队伍/参数，override pipeline</span>
+        <div class="arrow">→</div>
+        <div class="node">熊_向下滚动</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SUB-FLOW: 开始加入集结 ═══════════════ -->
+<div class="phase-card" style="border-color:#FBBF24; border-width: 2px; border-style: dashed;">
+  <div class="phase-header" style="background: linear-gradient(135deg, #FEF3C7 0%, #FFFBEB 100%); border-bottom-color: #FDE68A;">
+    <span class="phase-badge" style="background:#F59E0B;">⟳</span>
+    <span class="phase-title" style="color:#92400E;">Phase 3 子流程 — 熊_开始加入集结</span>
+    <span class="phase-tag" style="background:#FEF3C7;color:#92400E;">SUB-FLOW</span>
+  </div>
+  <div class="phase-body">
+    <div class="subflow-box">
+      <div class="subflow-title">熊_加入集结 (Custom Action) 执行流程</div>
+      <div class="step-list">
+        <div class="step-item">
+          <span class="step-num">1</span>
+          <span>按 ROI 选择队伍 → <strong>熊_点击出征</strong> (Click)</span>
+        </div>
+        <div class="step-item">
+          <span class="step-num">2</span>
+          <span>截图 → 检测 <strong class="cond-no">熊_士兵超出上限</strong> → 命中: 后退 × 2 → <strong class="cond-no">FAIL</strong></span>
+        </div>
+        <div class="step-item">
+          <span class="step-num">3</span>
+          <span>截图 → 检测 <strong class="cond-no">熊_超出容量</strong> → 命中: <strong class="cond-no">FAIL</strong></span>
+        </div>
+        <div class="step-item">
+          <span class="step-num">4</span>
+          <span>截图 → 检测 <strong class="cond-yes">熊_在集结列表</strong> → 命中: <code style="background:#DCFCE7;padding:1px 6px;border-radius:4px;font-size:11px;">SEND_TEAMS++</code> → <strong class="cond-yes">SUCCESS</strong></span>
+        </div>
+        <div class="step-item">
+          <span class="step-num">5</span>
+          <span>
+            <span class="cond-label">若</span>
+            <code style="background:#F1F5F9;padding:1px 6px;border-radius:4px;font-size:11px;">SEND_TEAMS == TOTAL_TEAMS</code>
+            <span class="cond-label">→ 休眠等待下一阶段 → 重置计数器</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Loop back -->
+      <div class="loop-back">
+        <span class="loop-icon">↺</span>
+        循环返回 → 熊_开始战斗（Phase 3 核心循环入口）
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ BACKGROUND THREAD ═══════════════ -->
+<div class="parallel-card">
+  <div class="parallel-header">
+    <span class="parallel-badge">⚡</span>
+    <span class="phase-title" style="color:#92400E;">后台监控线程（并行运行）</span>
+    <span class="phase-tag tag-parallel">PARALLEL</span>
+  </div>
+  <div class="parallel-body">
+    <div style="display:flex; flex-direction:column; gap:12px; flex:1;">
+      <div class="flow-row">
+        <div class="node node-custom" style="border-color:#F59E0B; background:#FFFBEB; color:#92400E;">
+          RapidOCR 后台线程
+        </div>
+        <div class="arrow">→</div>
+        <span class="cond-label">读取共享截图</span>
+        <div class="arrow">→</div>
+        <div class="node node-ocr">RapidOCR 识别</div>
+        <div class="arrow">→</div>
+      </div>
+      <div class="cond-block" style="margin-left:8px;">
+        <span class="cond-label">检测到 "返回城镇"</span>
+        <div class="arrow">→</div>
+        <code style="background:#FEE2E2;padding:2px 8px;border-radius:4px;font-size:11px;color:#DC2626;font-weight:700;">SEND_TEAMS - 1</code>
+      </div>
+      <div class="flow-row" style="margin-top:4px; margin-left:8px;">
+        <span class="cond-label" style="font-weight:600;">停止条件:</span>
+        <code style="background:#F1F5F9;padding:2px 8px;border-radius:4px;font-size:11px;">stage &gt; 5</code>
+        <span class="cond-label">（打熊已结束）</span>
+        <span style="color:#94A3B8;">或</span>
+        <code style="background:#F1F5F9;padding:2px 8px;border-radius:4px;font-size:11px;">_monitor_stop.set()</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div class="footer-note">
+  打熊自动化流水线 Flowchart &nbsp;·&nbsp; Generated for MWJDR Project
+</div>
+
+</body>
+</html>

@@ -23,7 +23,9 @@ class SetMonsterCount(CustomAction):
         context: Context,
         argv: CustomAction.RunArg,
     ) -> bool:
-        text = ocr_until_consistent_by_task(context, "自动集结_识别次数", expected_pattern=r'^\d+$')
+        text, _ = ocr_until_consistent_by_task(
+            context, "自动集结_识别次数", expected_pattern=r"^\d+$"
+        )
         if text is None:
             logger.warning("识别怪兽次数失败")
             return CustomAction.RunResult(success=False)
@@ -36,18 +38,10 @@ class SetMonsterCount(CustomAction):
             time.sleep(0.5)
             click_rect(context, [628, 727, 15, 18])
             return CustomAction.RunResult(success=False)
-
+        CombatRepetitionCount.reset()
         CombatRepetitionCount.init(remaining)
-        logger.info(
-            f"已识别当前怪兽还剩余{remaining}次"
-        )
-        context.override_pipeline(
-            {
-                "自动集结_查看次数":{
-                    "enabled": False
-                }
-            }
-        )
+        logger.info(f"已识别当前怪兽还剩余{remaining}次")
+        context.override_pipeline({"自动集结_查看次数": {"enabled": False}})
         context.run_task("后退")
         time.sleep(0.5)
 
@@ -69,21 +63,23 @@ class BeginCombat(CustomAction):
 
         repeat_limit = int(param.get("出征次数"))
         can_limit = int(param.get("罐头数量"))
-        advanced_mode = int(param.get("高级模式",0))
-        use_19_can = int(context.get_node_data("自动集结_使用19点罐头").get("enabled",False))
+        advanced_mode = int(param.get("高级模式", 0))
+        use_19_can = int(
+            context.get_node_data("自动集结_使用19点罐头").get("enabled", False)
+        )
 
         # debug
         # repeat_limit=7
         # CombatRepetitionCount.setCount(7)
         # CombatRepetitionCount.init(7)
 
-        if repeat_limit != 0: 
+        if repeat_limit != 0:
             CombatRepetitionCount.init(repeat_limit)
 
         if can_limit != 0:
             CombatRepetitionCount.init(can_limit)
 
-        _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)                
+        _, minutes, seconds = timelib.get_time_from_ocr(context, "识别集结时间", 200)
         return_time = minutes * 60 + seconds
 
         logger.debug(f"单次行军耗时：{return_time}")
@@ -96,7 +92,7 @@ class BeginCombat(CustomAction):
         # logger.debug(f"{repeat_limit > 0} {advanced_mode == 1} {not CombatRepetitionCount.isReachLimit()}")
         if detail is not None and detail.hit:
             logger.debug(f"体力不足，尝试领取免费体力：{detail.best_result.text}")
-            detail = context.run_recognition("是否有免费体力",img)
+            detail = context.run_recognition("是否有免费体力", img)
             if detail is not None and detail.hit:
                 current_hour = time.localtime().tm_hour
                 can_use_free = False
@@ -118,10 +114,10 @@ class BeginCombat(CustomAction):
                     return CustomAction.RunResult(success=False)
                 else:
                     logger.debug("领取免费体力")
-                    context.run_task("免费体力")                
+                    context.run_task("免费体力")
                     context.run_task("点击出征")
-                
-            elif can_limit != 0:        
+
+            elif can_limit != 0:
                 logger.debug("无免费体力，尝试使用罐头")
                 # 判断罐头次数是否达到上限
                 if can_limit > 0 and CombatRepetitionCount.isReachLimit():
@@ -129,42 +125,52 @@ class BeginCombat(CustomAction):
                     self._end(context)
                     return CustomAction.RunResult(success=False)
 
-                text = ocr_until_consistent_by_task(context, "识别罐头数量", expected_pattern=r'^\d+$')
+                text, _ = ocr_until_consistent_by_task(
+                    context, "识别罐头数量", expected_pattern=r"^\d+$"
+                )
                 if text is None:
                     logger.warning("识别罐头数量失败")
                     return CustomAction.RunResult(success=False)
                 max_can = int(text)
-                if max_can<2:
+                if max_can < 2:
                     logger.info("罐头已用完")
                     self._end(context)
                     return CustomAction.RunResult(success=False)
 
-                c = min(20,CombatRepetitionCount.limit-CombatRepetitionCount.count,max_can)
-                context.run_task("使用罐头",{
-                    "使用罐头":{
-                        "repeat": c
-                    }
-                })
+                c = min(
+                    20,
+                    CombatRepetitionCount.limit - CombatRepetitionCount.count,
+                    max_can,
+                )
+                context.run_task("使用罐头", {"使用罐头": {"repeat": c}})
                 CombatRepetitionCount.addCount(c)
-                logger.info(f"使用罐头 {c} 次，当前次数限制为 {CombatRepetitionCount.count} 次")
+                logger.info(
+                    f"使用罐头 {c} 次，当前次数限制为 {CombatRepetitionCount.count} 次"
+                )
                 context.run_task("点击出征")
-            elif repeat_limit > 0 and advanced_mode == 1 and not CombatRepetitionCount.isReachLimit():
-                text = ocr_until_consistent_by_task(context, "识别罐头数量", expected_pattern=r'^\d+$')
+            elif (
+                repeat_limit > 0
+                and advanced_mode == 1
+                and not CombatRepetitionCount.isReachLimit()
+            ):
+                text, _ = ocr_until_consistent_by_task(
+                    context, "识别罐头数量", expected_pattern=r"^\d+$"
+                )
                 if text is None:
                     logger.warning("识别罐头数量失败")
                     return CustomAction.RunResult(success=False)
                 max_can = int(text)
                 logger.debug(f"罐头数量：{max_can}")
-                if max_can<2:
+                if max_can < 2:
                     logger.info("罐头已用完")
                     self._end(context)
                     return CustomAction.RunResult(success=False)
-                c = min(20,(CombatRepetitionCount.limit-CombatRepetitionCount.count)*2,max_can)
-                context.run_task("使用罐头",{
-                    "使用罐头":{
-                        "repeat": c
-                    }
-                })
+                c = min(
+                    20,
+                    (CombatRepetitionCount.limit - CombatRepetitionCount.count) * 2,
+                    max_can,
+                )
+                context.run_task("使用罐头", {"使用罐头": {"repeat": c}})
                 logger.info(f"使用罐头 {c} 次")
                 context.run_task("点击出征")
             else:
@@ -178,7 +184,7 @@ class BeginCombat(CustomAction):
             click_rect(context, detail.box)
             return CustomAction.RunResult(success=True)
 
-        if repeat_limit!= 0:
+        if repeat_limit != 0:
             CombatRepetitionCount.addCount()
             logger.info(f"已出征 {CombatRepetitionCount.count} 次")
 
@@ -194,14 +200,16 @@ class BeginCombat(CustomAction):
                 break
             time.sleep(1)
             img = context.tasker.controller.post_screencap().wait().get()
-            detail = context.run_recognition("自动集结_行军中",img)
+            detail = context.run_recognition("自动集结_行军中", img)
         logger.info(f"开始行军，等待 {return_time*2} 秒")
-        time.sleep(return_time*2 + 0.5)
+        time.sleep(return_time * 2 + 0.5)
 
         # 判断作战次数是否达到上限
-        if repeat_limit!= 0 and CombatRepetitionCount.isReachLimit():
+        if repeat_limit != 0 and CombatRepetitionCount.isReachLimit():
             if advanced_mode == 1:
-                logger.info(f"已达到出征次数上限：{CombatRepetitionCount.limit}次，停止出征")
+                logger.info(
+                    f"已达到出征次数上限：{CombatRepetitionCount.limit}次，停止出征"
+                )
                 CombatRepetitionCount.reset()
                 return CustomAction.RunResult(success=False)
             else:
@@ -211,6 +219,7 @@ class BeginCombat(CustomAction):
                 return CustomAction.RunResult(success=True)
 
         return CustomAction.RunResult(success=True)
+
     def _end(self, context: Context):
         disable_battle_tasks(context, "自动集结_巨兽入口")
         CombatRepetitionCount.reset()
