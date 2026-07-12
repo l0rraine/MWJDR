@@ -311,17 +311,7 @@ class MineDowngradeSearch(CustomAction):
     def _try_collect(self, context: Context) -> bool:
         """识别"采集"并点击，返回是否识别到。"""
         img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition(
-            "挖矿_点击采集",
-            img,
-            pipeline_override={
-                "挖矿_点击采集": {
-                    "recognition": "OCR",
-                    "expected": "采集",
-                    "roi": self._COLLECT_ROI,
-                }
-            },
-        )
+        detail = context.run_recognition("挖矿_点击采集", img)
         if detail and detail.hit:
             context.run_action(
                 "挖矿_点击采集",

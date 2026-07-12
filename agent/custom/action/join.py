@@ -1,3 +1,5 @@
+import time
+
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 from maa.custom_recognition import CustomRecognition
@@ -113,11 +115,8 @@ class JoinRecoTeam(CustomRecognition):
         global JOIN_TEAM, JOIN_TARGETS
 
         # 1. 读取队伍编号
-        try:
-            param = json.loads(argv.custom_recognition_param)
-            JOIN_TEAM = int(param.get("team", "1"))
-        except Exception:
-            JOIN_TEAM = 1
+        param = json.loads(argv.custom_recognition_param)
+        JOIN_TEAM = int(param.get("team", "0"))
 
         # 2. 读取勾选目标
         JOIN_TARGETS = _read_join_targets(context)
@@ -194,7 +193,7 @@ class JoinDeploy(CustomAction):
             },
         )
         if not detail or not detail.hit:
-            logger.debug(f"无目标:{detail.all_results}")
+            # logger.debug(f"无目标:{detail.all_results}")
             context.run_action("加入集结_后退")
             return CustomAction.RunResult(success=True)
 
@@ -202,6 +201,7 @@ class JoinDeploy(CustomAction):
         result_sorted = sorted(
             detail.filtered_results, key=lambda x: _target_sort_key(x.text)
         )
+
         # 3. 逐个尝试匹配「直接加入队伍」按钮
         from utils.queue_status import QueueStatus
 
@@ -241,10 +241,10 @@ class JoinDeploy(CustomAction):
                         },
                     )
                 context.run_action("加入集结_点击出征")
-                logger.info(f"加入集结：已加入 {result.text}，队伍={JOIN_TEAM}")
-                logger.debug(f"n={n},n-1={n-1}")
+                logger.info(f"加入集结：已加入 {result.text}")
                 n = n - 1
                 if n == 0:
                     break
+                time.sleep(0.3)
         context.run_task("后退")
         return CustomAction.RunResult(success=True)
