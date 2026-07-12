@@ -337,25 +337,15 @@
     },
     "灯塔升级": {
         "recognition": {
-            "type": "ColorMatch",
+            "type": "OCR",
             "param": {
-                "upper": [
-                    255,
-                    219,
-                    85
-                ],
-                "lower": [
-                    192,
-                    81,
-                    6
-                ],
+                "expected": "点击任意位置继续",
                 "roi": [
-                    590,
-                    211,
-                    40,
-                    66
-                ],
-                "method": 4
+                    212,
+                    1131,
+                    276,
+                    90
+                ]
             }
         },
         "action": "Click",

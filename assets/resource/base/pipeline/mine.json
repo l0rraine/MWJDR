@@ -162,10 +162,10 @@
         "recognition": "OCR",
         "expected": "采集",
         "roi": [
-            284,
-            602,
-            152,
-            58
+            276,
+            560,
+            184,
+            111
         ],
         "action": "Click",
         "post_delay": 500,
