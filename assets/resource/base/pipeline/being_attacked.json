@@ -32,6 +32,9 @@
                 "target": [359, 606, 10, 10]
             }
         },
+        "on_error": [
+            "新手_开始工作"
+        ],
         "next": [
             "being_attacked_召回"
         ]
