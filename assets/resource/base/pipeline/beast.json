@@ -38,11 +38,12 @@
             "param": {
                 "template": "野兽.png",
                 "roi": [
-                    4,
-                    849,
-                    711,
-                    148
-                ]
+                    28,
+                    847,
+                    115,
+                    136
+                ],
+                "threshold": 0.9
             }
         },
         "action": "Click",
