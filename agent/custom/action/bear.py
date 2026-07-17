@@ -117,7 +117,6 @@ class BearInitPara(CustomAction):
                         "recognition": "OCR",
                         "roi": [273, 170, 252, 956],
                         "expected": expected,
-                        "threshold": 0.6,
                     },
                     {
                         "sub_name": "join",
@@ -143,7 +142,6 @@ class BearInitPara(CustomAction):
                         "recognition": "OCR",
                         "roi": [273, 170, 252, 956],
                         "expected": expected,
-                        "threshold": 0.6,
                     },
                     {
                         "sub_name": "join",
@@ -186,39 +184,40 @@ class BearComputeTeam(CustomAction):
             logger.info("打熊已结束")
             return CustomAction.RunResult(success=False)
 
-        history = {}
-        found = 0
-        for truck in TRUCK_1:
-            for i in range(current_stage):
-                if f"{truck}_{i+1}" in FOUND_LEAD_TRUCK:
-                    history[truck] = i + 1  # 车头是不是之前识别到过
+        # history = {}
+        # found = 0
+        # for truck in TRUCK_1:
+        #     for i in range(current_stage):
+        #         if f"{truck}_{i+1}" in FOUND_LEAD_TRUCK:
+        #             history[truck] = i + 1  # 车头是不是之前识别到过
 
-            # 如果当前不是第一阶段并且这个大车头没有开过车，那么不为这个车头保留队伍
-            if history.get(truck, 0) == 0:
-                if current_stage > 1:
-                    # logger.debug(f"第{current_stage}轮: {truck} 之前没开过车")
-                    found = found + 1
-            else:
-                # 之前开过车，并且这个阶段已经检测到这个大车头，不为这个车头保留队伍
-                k = f"{truck}_{current_stage}"
-                if k in FOUND_LEAD_TRUCK:
-                    found = found + 1
-                    # logger.debug(f"第{current_stage}轮: {truck} 已开车")
-                else:  # 之前开过车，但是这个阶段超过40s还不开，那就不保留队伍
-                    last_remain = FOUND_LEAD_TRUCK[f"{truck}_{history[truck]}"]
-                    this_remain = next_stage_seconds()
-                    if last_remain - this_remain >= min(40, this_remain):
-                        notify_key = f"{truck}_{current_stage}"
-                        if notify_key not in _OVER_40S_NOTIFIED:
-                            _OVER_40S_NOTIFIED.add(notify_key)
-                            logger.debug(
-                                f"第{current_stage}轮: {truck} 已经超过 40 秒没开车了"
-                            )
-                        found = found + 1
+        #     # 如果当前不是第一阶段并且这个大车头没有开过车，那么不为这个车头保留队伍
+        #     if history.get(truck, 0) == 0:
+        #         if current_stage > 1:
+        #             # logger.debug(f"第{current_stage}轮: {truck} 之前没开过车")
+        #             found = found + 1
+        #     else:
+        #         # 之前开过车，并且这个阶段已经检测到这个大车头，不为这个车头保留队伍
+        #         k = f"{truck}_{current_stage}"
+        #         if k in FOUND_LEAD_TRUCK:
+        #             found = found + 1
+        #             # logger.debug(f"第{current_stage}轮: {truck} 已开车")
+        #         else:  # 之前开过车，但是这个阶段超过40s还不开，那就不保留队伍
+        #             last_remain = FOUND_LEAD_TRUCK[f"{truck}_{history[truck]}"]
+        #             this_remain = next_stage_seconds()
+        #             if last_remain - this_remain >= min(40, this_remain):
+        #                 notify_key = f"{truck}_{current_stage}"
+        #                 if notify_key not in _OVER_40S_NOTIFIED:
+        #                     _OVER_40S_NOTIFIED.add(notify_key)
+        #                     logger.debug(
+        #                         f"第{current_stage}轮: {truck} 已经超过 40 秒没开车了"
+        #                     )
+        #                 found = found + 1
 
-            # 之前开过车，这次没开车呢，那就需要保留队伍
+        # 之前开过车，这次没开车呢，那就需要保留队伍
 
-        RESERVE_TEAM = len(TRUCK_1) - found
+        # RESERVE_TEAM = len(TRUCK_1) - found
+        RESERVE_TEAM = 0
         TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
         return CustomAction.RunResult(success=True)
@@ -229,7 +228,7 @@ class BearCombat(CustomAction):
     def run(
         self, context: Context, argv: CustomAction.RunArg
     ) -> CustomAction.RunResult:
-        global CURRENT_TRUCK, SEND_TEAMS, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, FOUND_LEAD_TRUCK, START_TIME
+        global CURRENT_TRUCK, SEND_TEAMS, TOTAL_TEAMS, LEAD_TRUCK_OF_CURRENT_STAGE, FOUND_LEAD_TRUCK, START_TIME, TRUCK_1, TRUCK_2
         detail = argv.reco_detail
         # logger.debug(f"熊_记录队伍 reco_detail: {detail}")
         start = time.time()
@@ -245,7 +244,9 @@ class BearCombat(CustomAction):
 
         current_stage = get_current_stage(START_TIME)
 
-        truck = next((s for s in TRUCK_1 if s in team_result.best_result.text), "")
+        truck = next(
+            (s for s in TRUCK_1 + TRUCK_2 if s in team_result.best_result.text), ""
+        )
         CURRENT_TRUCK = truck
         k = f"{truck}_{current_stage}"
         if truck and k not in FOUND_LEAD_TRUCK:
@@ -256,23 +257,23 @@ class BearCombat(CustomAction):
             )
         teams_exhausted = SEND_TEAMS >= TOTAL_TEAMS
         if not teams_exhausted:
-            pipeline = {
-                "熊_识别队伍_大车头": {
-                    "next": ["熊_在队伍选择页面", "熊_士兵超出上限", "熊_队列不足"]
-                }
+            n = {
+                "next": [
+                    "熊_在队伍选择页面",
+                    "熊_在集结详情页面",
+                    "熊_士兵超出上限",
+                    "熊_队列不足",
+                    "熊_超出容量",
+                ]
             }
-            context.override_pipeline(pipeline)
-            pipeline = {
-                "熊_识别队伍_普通车头": {
-                    "next": ["熊_在队伍选择页面", "熊_士兵超出上限", "熊_队列不足"]
-                }
-            }
-            context.override_pipeline(pipeline)
+            context.override_pipeline({"熊_识别队伍_大车头": n})
+            context.override_pipeline({"熊_识别队伍_普通车头": n})
             click_rect(context, box)
         else:
-            pipeline = {"熊_识别队伍_大车头": {"next": ["熊_开始战斗"]}}
+            n = {"next": ["熊_开始战斗"]}
+            pipeline = {"熊_识别队伍_大车头": n}
             context.override_pipeline(pipeline)
-            pipeline = {"熊_识别队伍_普通车头": {"next": ["熊_开始战斗"]}}
+            pipeline = {"熊_识别队伍_普通车头": n}
             context.override_pipeline(pipeline)
         end = time.time()
         logger.debug(f"熊_记录队伍 click_rect 耗时: {end - start:.2f} 秒")

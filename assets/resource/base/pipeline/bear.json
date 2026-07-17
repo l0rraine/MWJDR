@@ -128,7 +128,7 @@
     },
     "熊_识别队伍_大车头": {
         "pre_delay": 0,
-        "post_delay": 100,
+        "post_delay": 200,
         "recognition": "And",
         "rate_limit": 50,
         "all_of": [
@@ -166,12 +166,13 @@
             "熊_在队伍选择页面",
             "熊_在集结详情页面",
             "熊_士兵超出上限",
-            "熊_队列不足"
+            "熊_队列不足",
+            "熊_超出容量"
         ]
     },
     "熊_识别队伍_普通车头": {
         "pre_delay": 0,
-        "post_delay": 100,
+        "post_delay": 200,
         "recognition": "And",
         "rate_limit": 50,
         "all_of": [
@@ -209,7 +210,8 @@
             "熊_在队伍选择页面",
             "熊_在集结详情页面",
             "熊_士兵超出上限",
-            "熊_队列不足"
+            "熊_队列不足",
+            "熊_超出容量"
         ]
     },
     "熊_计算队伍": {
@@ -241,7 +243,7 @@
     },
     "熊_队列不足": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "recognition": "OCR",
         "expected": [
             "行军队列"
@@ -290,7 +292,7 @@
     },
     "熊_在集结详情页面": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "recognition": "TemplateMatch",
         "template": "熊/集结详情.png",
         "roi": [
@@ -354,16 +356,20 @@
     },
     "熊_超出容量": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "recognition": "OCR",
         "expected": [
-            ".*超出集结容量.*"
+            ".*超出集结容量.*",
+            ".*达到上限.*"
         ],
         "roi": [
             162,
             392,
             360,
             200
+        ],
+        "next": [
+            "熊_开始战斗"
         ]
     },
     "熊_士兵超出上限": {
@@ -380,7 +386,7 @@
             177
         ],
         "next": [
-            "熊_后退"
+            "熊_执行后退_两次"
         ]
     },
     "熊_后退": {
@@ -398,6 +404,22 @@
             34,
             32,
             8
+        ]
+    },
+    "熊_执行后退_两次": {
+        "pre_delay": 0,
+        "post_delay": 200,
+        "action": "Click",
+        "target": [
+            30,
+            34,
+            32,
+            8
+        ],
+        "repeat": 2,
+        "repeat_delay": 100,
+        "next": [
+            "熊_开始战斗"
         ]
     }
 }
