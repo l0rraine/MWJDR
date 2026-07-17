@@ -1,0 +1,94 @@
+{
+    "being_attacked": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "being_attacked.png",
+                "roi": [
+                    601,
+                    487,
+                    112,
+                    376
+                ],
+                "threshold": 0.8
+            }
+        },
+        "action": "Click",
+        "next": [
+            "being_attacked_点击军情",
+            "后退"
+        ]
+    },
+    "being_attacked_点击军情": {
+        "recognition": "OCR",
+        "expected": "出征中",
+        "roi": [
+            174,
+            231,
+            100,
+            36
+        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    493,
+                    242,
+                    115,
+                    5
+                ]
+            }
+        },
+        "post_delay": 500,
+        "next": [
+            "being_attacked_点击坐标"
+        ]
+    },
+    "being_attacked_点击坐标": {
+        "pre_delay": 3000,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    359,
+                    606,
+                    10,
+                    10
+                ]
+            }
+        },
+        "on_error": [
+            "新手_开始工作"
+        ],
+        "next": [
+            "being_attacked_召回"
+        ]
+    },
+    "being_attacked_召回": {
+        "recognition": "OCR",
+        "expected": "召回",
+        "roi": [
+            224,
+            1046,
+            80,
+            58
+        ],
+        "action": "Click",
+        "next": [
+            "being_attacked_确定",
+            "后退"
+        ]
+    },
+    "being_attacked_确定": {
+        "recognition": "OCR",
+        "expected": "确定",
+        "roi": [
+            436,
+            741,
+            150,
+            82
+        ],
+        "post_delay": 1000,
+        "action": "Click"
+    }
+}

@@ -329,33 +329,24 @@
         "action": "Click",
         "repeat": 2,
         "repeat_delay": 500,
-        "post_delay": 300,
+        "post_delay": 500,
         "next": [
+            "灯塔升级",
             "灯塔准备",
             "灯塔获得奖励"
         ]
     },
     "灯塔升级": {
         "recognition": {
-            "type": "ColorMatch",
+            "type": "OCR",
             "param": {
-                "upper": [
-                    255,
-                    219,
-                    85
-                ],
-                "lower": [
-                    192,
-                    81,
-                    6
-                ],
+                "expected": "点击任意位置继续",
                 "roi": [
-                    590,
-                    211,
-                    40,
-                    66
-                ],
-                "method": 4
+                    212,
+                    1131,
+                    276,
+                    90
+                ]
             }
         },
         "action": "Click",

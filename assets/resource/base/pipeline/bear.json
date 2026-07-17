@@ -120,28 +120,98 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "熊_识别队伍",
+            "熊_识别队伍_大车头",
+            "熊_识别队伍_普通车头",
             "熊_在集结详情页面",
             "[JumpBack]熊_计算队伍"
         ]
     },
-    "熊_识别队伍": {
+    "熊_识别队伍_大车头": {
         "pre_delay": 0,
-        "post_delay": 0,
-        "recognition": "Custom",
-        "custom_recognition": "熊_识别队伍",
+        "post_delay": 200,
+        "recognition": "And",
         "rate_limit": 50,
-        "action": "Click",
-        "target_offset": [
-            5,
-            5,
-            -10,
-            -10
+        "all_of": [
+            {
+                "sub_name": "team_name",
+                "recognition": "OCR",
+                "expected": [
+                    "edit in code"
+                ],
+                "roi": [
+                    273,
+                    170,
+                    252,
+                    956
+                ]
+            },
+            {
+                "sub_name": "join",
+                "recognition": "TemplateMatch",
+                "template": "熊/直接加入队伍.png",
+                "roi": "team_name",
+                "roi_offset": [
+                    310,
+                    87,
+                    0,
+                    58
+                ],
+                "threshold": 0.9,
+                "method": 10001
+            }
         ],
+        "action": "Custom",
+        "custom_action": "熊_记录队伍",
         "next": [
             "熊_在队伍选择页面",
+            "熊_在集结详情页面",
+            "熊_士兵超出上限",
             "熊_队列不足",
-            "熊_在集结详情页面"
+            "熊_超出容量"
+        ]
+    },
+    "熊_识别队伍_普通车头": {
+        "pre_delay": 0,
+        "post_delay": 200,
+        "recognition": "And",
+        "rate_limit": 50,
+        "all_of": [
+            {
+                "sub_name": "team_name",
+                "recognition": "OCR",
+                "expected": [
+                    "edit in code"
+                ],
+                "roi": [
+                    273,
+                    170,
+                    252,
+                    956
+                ]
+            },
+            {
+                "sub_name": "join",
+                "recognition": "TemplateMatch",
+                "template": "熊/直接加入队伍.png",
+                "roi": "team_name",
+                "roi_offset": [
+                    310,
+                    87,
+                    0,
+                    58
+                ],
+                "threshold": 0.9,
+                "method": 10001
+            }
+        ],
+        "action": "Custom",
+        "custom_action": "熊_记录队伍",
+        "next": [
+            "熊_在队伍选择页面",
+            "熊_在集结详情页面",
+            "熊_士兵超出上限",
+            "熊_队列不足",
+            "熊_超出容量"
         ]
     },
     "熊_计算队伍": {
@@ -150,18 +220,30 @@
         "action": "Custom",
         "custom_action": "熊_计算队伍",
         "next": [
-            "熊_向下滚动"
+            "熊_执行滚动"
         ]
     },
-    "熊_向下滚动": {
+    "熊_执行滚动": {
         "pre_delay": 0,
         "post_delay": 0,
-        "action": "Custom",
-        "custom_action": "熊_向下滚动"
+        "action": "Swipe",
+        "begin": [
+            433,
+            909,
+            14,
+            10
+        ],
+        "end": [
+            413,
+            792,
+            21,
+            11
+        ],
+        "duration": 150
     },
     "熊_队列不足": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "recognition": "OCR",
         "expected": [
             "行军队列"
@@ -180,7 +262,7 @@
             30
         ],
         "next": [
-            "熊_剩余队列为0"
+            "熊_开始战斗"
         ]
     },
     "熊_剩余队列为0": {
@@ -198,26 +280,28 @@
         "recognition": "TemplateMatch",
         "template": "熊/在队伍界面.png",
         "roi": [
-            55,
-            0,
-            154,
-            99
+            477,
+            1160,
+            158,
+            108
         ],
+        "threshold": 0.9,
         "next": [
             "熊_开始加入集结"
         ]
     },
     "熊_在集结详情页面": {
-        "pre_delay": 100,
-        "post_delay": 100,
+        "pre_delay": 0,
+        "post_delay": 200,
         "recognition": "TemplateMatch",
         "template": "熊/集结详情.png",
         "roi": [
-            321,
-            463,
-            103,
-            99
+            590,
+            447,
+            130,
+            118
         ],
+        "threshold": 0.9,
         "action": "Click",
         "target": [
             30,
@@ -231,10 +315,11 @@
     },
     "熊_开始加入集结": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "action": "Custom",
         "custom_action": "熊_加入集结",
         "next": [
+            "熊_士兵超出上限",
             "熊_开始战斗"
         ]
     },
@@ -242,12 +327,15 @@
         "recognition": "TemplateMatch",
         "template": "熊/在集结列表.png",
         "roi": [
-            611,
-            0,
-            109,
-            120
+            59,
+            64,
+            151,
+            122
         ],
-        "threshold": 0.8
+        "threshold": 0.9,
+        "next": [
+            "熊_开始战斗"
+        ]
     },
     "熊_选择队伍": {
         "pre_delay": 200,
@@ -268,16 +356,20 @@
     },
     "熊_超出容量": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "recognition": "OCR",
         "expected": [
-            ".*超出集结容量.*"
+            ".*超出集结容量.*",
+            ".*达到上限.*"
         ],
         "roi": [
             162,
             392,
             360,
             200
+        ],
+        "next": [
+            "熊_开始战斗"
         ]
     },
     "熊_士兵超出上限": {
@@ -292,9 +384,18 @@
             692,
             131,
             177
+        ],
+        "next": [
+            "熊_执行后退_两次"
         ]
     },
     "熊_后退": {
+        "next": [
+            "熊_在集结列表",
+            "[JumpBack]熊_执行后退"
+        ]
+    },
+    "熊_执行后退": {
         "pre_delay": 0,
         "post_delay": 0,
         "action": "Click",
@@ -303,6 +404,22 @@
             34,
             32,
             8
+        ]
+    },
+    "熊_执行后退_两次": {
+        "pre_delay": 0,
+        "post_delay": 200,
+        "action": "Click",
+        "target": [
+            30,
+            34,
+            32,
+            8
+        ],
+        "repeat": 2,
+        "repeat_delay": 100,
+        "next": [
+            "熊_开始战斗"
         ]
     }
 }

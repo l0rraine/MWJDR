@@ -27,6 +27,7 @@ NEXT_MINE = ""
 MAX_MINE_TEAMS = 4
 ALL_MINES = ["肉", "木", "煤", "铁"]
 MINES = list(ALL_MINES)
+LAST_WRONG_HERO_TIME = 0
 
 # 节点名 → 矿名的映射
 _MINE_NODE_MAP = {
@@ -93,6 +94,39 @@ def get_current_mines(context: Context, img):
     return m
 
 
+@AgentServer.custom_recognition("挖矿_去掉英雄识别")
+class MineRemoveHeroReco(CustomRecognition):
+    """识别是否有英雄，无英雄时记录时间到 LAST_WRONG_HERO_TIME。"""
+
+    def analyze(
+        self,
+        context: Context,
+        argv: CustomRecognition.AnalyzeArg,
+    ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
+        global LAST_WRONG_HERO_TIME
+        img = context.tasker.controller.post_screencap().wait().get()
+
+        detail = context.run_recognition(
+            "挖矿_英雄颜色",
+            img,
+            {
+                "挖矿_英雄颜色": {
+                    "recognition": "ColorMatch",
+                    "roi": [99, 352, 14, 14],
+                    "upper": [96, 160, 223],
+                    "lower": [87, 152, 219],
+                }
+            },
+        )
+
+        if detail and detail.hit:
+            return CustomRecognition.AnalyzeResult(box=detail.box, detail={})
+        else:
+            LAST_WRONG_HERO_TIME = time.time()
+            logger.debug(f"未识别到英雄颜色，记录时间 {LAST_WRONG_HERO_TIME}")
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
+
+
 @AgentServer.custom_recognition("挖矿_识别队伍")
 class MineRecoTeam(CustomRecognition):
     def analyze(
@@ -100,7 +134,12 @@ class MineRecoTeam(CustomRecognition):
         context: Context,
         argv: CustomRecognition.AnalyzeArg,
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
-        global CURRENT_MINES, LAST_MINES, NEXT_MINE, MINES, MAX_MINE_TEAMS
+        global CURRENT_MINES, LAST_MINES, NEXT_MINE, MINES, MAX_MINE_TEAMS, LAST_WRONG_HERO_TIME
+
+        # 如果距离上次识别失败不足1分钟，直接返回失败
+        if LAST_WRONG_HERO_TIME > 0 and (time.time() - LAST_WRONG_HERO_TIME) < 60:
+            logger.debug(f"距离上次英雄识别失败仅 {time.time() - LAST_WRONG_HERO_TIME:.1f}s，跳过挖矿")
+            return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 读取队伍上限 max_teams：由"新手-挖矿配置" select 选项通过
         # pipeline_override 注入 挖矿_入口.custom_recognition_param，
@@ -311,17 +350,7 @@ class MineDowngradeSearch(CustomAction):
     def _try_collect(self, context: Context) -> bool:
         """识别"采集"并点击，返回是否识别到。"""
         img = context.tasker.controller.post_screencap().wait().get()
-        detail = context.run_recognition(
-            "挖矿_点击采集",
-            img,
-            pipeline_override={
-                "挖矿_点击采集": {
-                    "recognition": "OCR",
-                    "expected": "采集",
-                    "roi": self._COLLECT_ROI,
-                }
-            },
-        )
+        detail = context.run_recognition("挖矿_点击采集", img)
         if detail and detail.hit:
             context.run_action(
                 "挖矿_点击采集",
