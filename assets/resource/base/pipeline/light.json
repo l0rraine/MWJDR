@@ -329,8 +329,9 @@
         "action": "Click",
         "repeat": 2,
         "repeat_delay": 500,
-        "post_delay": 300,
+        "post_delay": 500,
         "next": [
+            "灯塔升级",
             "灯塔准备",
             "灯塔获得奖励"
         ]

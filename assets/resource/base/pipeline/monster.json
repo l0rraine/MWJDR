@@ -161,7 +161,7 @@
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "\\d+",
+                "expected": "^\\d+",
                 "roi": [
                     462,
                     1132,

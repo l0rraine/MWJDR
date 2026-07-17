@@ -26,7 +26,8 @@
             "max_teams": "4"
         },
         "next": [
-            "挖矿_点击放大镜"
+            "挖矿_点击放大镜",
+            "后退"
         ]
     },
     "挖矿_识别队伍数量": {
@@ -184,23 +185,8 @@
         ]
     },
     "挖矿_出征_去掉英雄1": {
-        "recognition": "ColorMatch",
-        "roi": [
-            99,
-            352,
-            14,
-            14
-        ],
-        "upper": [
-            96,
-            160,
-            223
-        ],
-        "lower": [
-            87,
-            152,
-            219
-        ],
+        "recognition": "Custom",
+        "custom_recognition": "挖矿_去掉英雄识别",
         "action": "Click",
         "target": [
             418,
