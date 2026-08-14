@@ -220,6 +220,13 @@ class BearComputeTeam(CustomAction):
         RESERVE_TEAM = 0
         TOTAL_TEAMS = len(TEAM_ORDER) - RESERVE_TEAM
 
+        if SEND_TEAMS == TOTAL_TEAMS:
+            context.override_pipeline({"熊_识别队伍_大车头": {"enabled": False}})
+            context.override_pipeline({"熊_识别队伍_普通车头": {"enabled": False}})
+        else:
+            context.override_pipeline({"熊_识别队伍_大车头": {"enabled": True}})
+            context.override_pipeline({"熊_识别队伍_普通车头": {"enabled": True}})
+
         return CustomAction.RunResult(success=True)
 
 

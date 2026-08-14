@@ -160,8 +160,8 @@
                 "method": 10001
             }
         ],
-        "action": "Custom",
-        "custom_action": "熊_记录队伍",
+        "action": "Click",
+        "box_index": 1,
         "next": [
             "熊_在队伍选择页面",
             "熊_在集结详情页面",
@@ -204,8 +204,8 @@
                 "method": 10001
             }
         ],
-        "action": "Custom",
-        "custom_action": "熊_记录队伍",
+        "action": "Click",
+        "box_index": 1,
         "next": [
             "熊_在队伍选择页面",
             "熊_在集结详情页面",
