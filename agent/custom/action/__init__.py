@@ -13,3 +13,4 @@ from .dream import *
 from .wandering_merchant import *
 from .mystery_merchant import *
 from .union_shop import *
+from .garrison import *

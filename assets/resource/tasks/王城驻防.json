@@ -1,0 +1,59 @@
+{
+    "task": [
+        {
+            "name": "王城驻防",
+            "entry": "王城驻防_入口",
+            "option": [
+                "驻防队伍",
+                "检查间隔"
+            ]
+        }
+    ],
+    "option": {
+        "驻防队伍": {
+            "type": "input",
+            "label": "驻防队伍",
+            "inputs": [
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "1",
+                    "verify": "^[0-8]$",
+                    "description": "王城驻防使用的队伍编号(0-8)，0为默认队伍不切换"
+                }
+            ],
+            "pipeline_override": {
+                "王城驻防_检测": {
+                    "custom_recognition_param": {
+                        "team": "{队伍}"
+                    }
+                },
+                "王城驻防_选队出征": {
+                    "custom_action_param": {
+                        "team": "{队伍}"
+                    }
+                }
+            }
+        },
+        "检查间隔": {
+            "type": "input",
+            "label": "检查间隔(秒)",
+            "inputs": [
+                {
+                    "name": "检查间隔",
+                    "pipeline_type": "string",
+                    "default": "60",
+                    "verify": "^\\d+$",
+                    "description": "王城驻防循环的检查间隔时间，单位秒"
+                }
+            ],
+            "pipeline_override": {
+                "王城驻防_设置间隔": {
+                    "custom_action_param": {
+                        "interval": "{检查间隔}"
+                    }
+                }
+            }
+        }
+    }
+}
