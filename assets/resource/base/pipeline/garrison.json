@@ -1,14 +1,9 @@
 {
     "王城驻防_入口": {
-        "next": [
-            "王城驻防_设置间隔"
-        ]
-    },
-    "王城驻防_设置间隔": {
         "action": "Custom",
         "custom_action": "王城驻防_设置间隔",
         "custom_action_param": {
-            "interval": "60"
+            "interval": "20"
         },
         "next": [
             "王城驻防_开始工作"
@@ -17,6 +12,7 @@
     "王城驻防_开始工作": {
         "next": [
             "王城驻防_不可能任务",
+            "[JumpBack]王城驻防_正在治疗",
             "[JumpBack]王城驻防_检测",
             "[JumpBack]王城驻防_等待"
         ]
@@ -25,12 +21,22 @@
         "recognition": "Custom",
         "custom_recognition": "新手_不可能任务"
     },
+    "王城驻防_正在治疗": {
+        "recognition": "OCR",
+        "roi": [
+            252,
+            225,
+            185,
+            67
+        ],
+        "expected": ".*伤兵",
+        "next": [
+            "王城驻防_等待"
+        ]
+    },
     "王城驻防_检测": {
         "recognition": "Custom",
         "custom_recognition": "王城驻防_检测",
-        "custom_recognition_param": {
-            "team": "1"
-        },
         "action": "Click",
         "post_delay": 500,
         "next": [
@@ -40,8 +46,14 @@
     "王城驻防_识别驻防": {
         "recognition": "OCR",
         "expected": "驻防",
-        "roi": [423, 993, 76, 47],
+        "roi": [
+            144,
+            702,
+            417,
+            337
+        ],
         "action": "Click",
+        "post_delay": 1000,
         "on_error": [
             "王城驻防_开始工作"
         ],
@@ -52,7 +64,12 @@
     "王城驻防_识别派遣": {
         "recognition": "OCR",
         "expected": "派遣部队",
-        "roi": [268, 1183, 196, 66],
+        "roi": [
+            268,
+            1183,
+            196,
+            66
+        ],
         "action": "Click",
         "on_error": [
             "王城驻防_开始工作"
@@ -65,10 +82,10 @@
         "action": "Custom",
         "custom_action": "王城驻防_选队出征",
         "custom_action_param": {
-            "team": "1"
+            "team": "0"
         },
         "next": [
-            "王城驻防_后退"
+            "王城驻防_等待"
         ]
     },
     "王城驻防_后退": {
@@ -76,18 +93,15 @@
         "action": {
             "type": "Click",
             "param": {
-                "target": [11, 19, 28, 37]
+                "target": [
+                    11,
+                    19,
+                    28,
+                    37
+                ]
             }
         },
-        "post_delay": 500,
-        "next": [
-            "王城驻防_等待"
-        ]
-    },
-    "王城驻防_等待": {
-        "recognition": "DirectHit",
-        "pre_delay": 60000,
-        "action": "DoNothing"
+        "post_delay": 500
     },
     "王城驻防_选择队伍": {
         "pre_delay": 200,
@@ -101,8 +115,18 @@
         "action": {
             "type": "Click",
             "param": {
-                "target": [507, 1186, 92, 51]
+                "target": [
+                    507,
+                    1186,
+                    92,
+                    51
+                ]
             }
         }
+    },
+    "王城驻防_等待": {
+        "recognition": "DirectHit",
+        "pre_delay": 1000,
+        "action": "DoNothing"
     }
 }

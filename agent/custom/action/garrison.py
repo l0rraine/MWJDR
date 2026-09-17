@@ -65,14 +65,6 @@ class GarrisonDetect(CustomRecognition):
         context: Context,
         argv: CustomRecognition.AnalyzeArg,
     ) -> Union[CustomRecognition.AnalyzeResult, Optional[RectType]]:
-        global GARRISON_TEAM
-
-        # 1. 读取队伍编号
-        try:
-            param = json.loads(argv.custom_recognition_param)
-            GARRISON_TEAM = int(param.get("team", "1"))
-        except Exception:
-            GARRISON_TEAM = 1
 
         # 2. 队列判断：直接读 QueueStatus 缓存
         from utils.queue_status import QueueStatus
@@ -113,9 +105,9 @@ class GarrisonDeploy(CustomAction):
         global GARRISON_TEAM
         try:
             param = json.loads(argv.custom_action_param)
-            GARRISON_TEAM = int(param.get("team", "1"))
+            GARRISON_TEAM = int(param.get("team", "0"))
         except Exception:
-            GARRISON_TEAM = 1
+            GARRISON_TEAM = 0
 
         # 选队
         if GARRISON_TEAM > 0 and GARRISON_TEAM < len(TEAM_ROI):

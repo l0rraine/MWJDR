@@ -17,17 +17,12 @@
                 {
                     "name": "队伍",
                     "pipeline_type": "string",
-                    "default": "1",
+                    "default": "0",
                     "verify": "^[0-8]$",
                     "description": "王城驻防使用的队伍编号(0-8)，0为默认队伍不切换"
                 }
             ],
             "pipeline_override": {
-                "王城驻防_检测": {
-                    "custom_recognition_param": {
-                        "team": "{队伍}"
-                    }
-                },
                 "王城驻防_选队出征": {
                     "custom_action_param": {
                         "team": "{队伍}"
@@ -48,7 +43,7 @@
                 }
             ],
             "pipeline_override": {
-                "王城驻防_设置间隔": {
+                "王城驻防_入口": {
                     "custom_action_param": {
                         "interval": "{检查间隔}"
                     }
