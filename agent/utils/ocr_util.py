@@ -17,7 +17,7 @@ from .logger import logger
 def ocr_until_consistent(
     context: Context,
     roi: list,
-    expected_pattern: str = None,
+    expected_pattern: str,
     consistent_count: int = 3,
     max_attempts: int = 30,
 ) -> str | None:
@@ -46,7 +46,7 @@ def ocr_until_consistent(
             img = context.tasker.controller.post_screencap().wait().get()
             detail = context.run_recognition_direct(
                 JRecognitionType.OCR,
-                JOCR(roi=roi, only_rec=True),
+                JOCR(roi=roi, expected=expected_pattern),
                 img,
             )
 
@@ -56,15 +56,6 @@ def ocr_until_consistent(
                 continue
 
             text = detail.best_result.text.strip()
-
-            # 正则过滤
-            if expected_pattern and not re.match(expected_pattern, text):
-                logger.debug(
-                    f"OCR第{attempt}次：结果'{text}'不匹配正则'{expected_pattern}'，丢弃"
-                )
-                same_count = 0
-                continue
-
             # 一致性校验
             if text == last_result:
                 same_count += 1
@@ -72,10 +63,8 @@ def ocr_until_consistent(
                     f"OCR第{attempt}次：'{text}'一致（{same_count}/{consistent_count}）"
                 )
                 if same_count >= consistent_count:
-                    logger.debug(
-                        f"OCR一致性校验通过：'{text}'（{consistent_count}次一致）"
-                    )
-                    return text
+                    match = re.search(expected_pattern, text)
+                    return match.group()
             else:
                 last_result = text
                 same_count = 1
@@ -133,14 +122,6 @@ def ocr_until_consistent_by_task(
 
             text = detail.best_result.text.strip()
 
-            # 正则过滤
-            if expected_pattern and not re.match(expected_pattern, text):
-                # logger.debug(
-                #     f"OCR第{attempt}次[{task_name}]：结果'{text}'不匹配正则'{expected_pattern}'，丢弃"
-                # )
-                same_count = 0
-                continue
-
             # 一致性校验
             if text == last_result:
                 same_count += 1
@@ -151,6 +132,9 @@ def ocr_until_consistent_by_task(
                     logger.debug(
                         f"OCR成功[{task_name}]：'{text}'（{consistent_count}次一致）"
                     )
+                    if expected_pattern:
+                        match = re.search(expected_pattern, text)
+                        return match.group(), detail
                     return text, detail
             else:
                 last_result = text

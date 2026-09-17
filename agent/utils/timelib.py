@@ -58,7 +58,7 @@ def get_time_from_ocr(context, task_name, max_time=300):
     text, _ = ocr_until_consistent_by_task(
         context,
         task_name,
-        expected_pattern=r"\d+\D+\d+",
+        expected_pattern=r"\d+\D+\d+\D+\d+",
     )
     if text is None:
         logger.warning(f"OCR识别时间失败: {task_name}")
