@@ -138,7 +138,9 @@ class MineRecoTeam(CustomRecognition):
 
         # 如果距离上次识别失败不足1分钟，直接返回失败
         if LAST_WRONG_HERO_TIME > 0 and (time.time() - LAST_WRONG_HERO_TIME) < 60:
-            logger.debug(f"距离上次英雄识别失败仅 {time.time() - LAST_WRONG_HERO_TIME:.1f}s，跳过挖矿")
+            logger.debug(
+                f"距离上次英雄识别失败仅 {time.time() - LAST_WRONG_HERO_TIME:.1f}s，跳过挖矿"
+            )
             return CustomRecognition.AnalyzeResult(box=None, detail={})
 
         # 读取队伍上限 max_teams：由"新手-挖矿配置" select 选项通过
@@ -270,7 +272,7 @@ class MineSetLevel(CustomAction):
                     "roi": [584, 1029, 44, 48],
                 }
             },
-            expected_pattern=r"^\d$",
+            expected_pattern=r"\d",
         )
         MINE_LEVEL = int(MINE_LEVEL) if MINE_LEVEL else 1
 

@@ -50,10 +50,10 @@ class RecordID(CustomAction):
     _account_id: str = ""
 
     # 角色 ID 的 OCR 区域（9位数字）
-    _id_roi: list = [347, 946, 138, 34]
+    _id_roi: list = [343, 893, 167, 44]
 
     # 角色 ID 格式：9位纯数字
-    _id_pattern: str = r"^\d+$"
+    _id_pattern: str = r"\d+"
 
     @classmethod
     def current_account_id(cls) -> str:

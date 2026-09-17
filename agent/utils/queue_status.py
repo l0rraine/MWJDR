@@ -41,7 +41,7 @@ class QueueStatus:
         由 新手_不可能任务(custom_recognition) 在主循环每轮调用。
         """
         text, _ = ocr_until_consistent_by_task(
-            context, cls._MAIN_OCR_TASK, expected_pattern=r"^\d\D\d$"
+            context, cls._MAIN_OCR_TASK, expected_pattern=r"\d\D\d"
         )
         cls._if_fail = 0
         if text:

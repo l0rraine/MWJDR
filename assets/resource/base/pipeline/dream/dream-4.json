@@ -1,0 +1,321 @@
+{
+  "梦境寻忆_4_闯关": {
+    "focus": "第四阶段闯关",
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/铃铛.png"
+    ],
+    "threshold": 0.8,
+    "roi": [
+      499,
+      0,
+      106,
+      106
+    ],
+    "next": [
+      "梦境寻忆_4_码头关",
+      "梦境寻忆_4_滑冰场关",
+      "梦境寻忆_4_摩天轮关",
+      "梦境寻忆_4_餐厅关",
+      "梦境寻忆_4_教室关",
+      "梦境寻忆_4_宫殿关",
+      "梦境寻忆_4_天文台关",
+      "梦境寻忆_4_灯塔关",
+      "梦境寻忆_4_游乐场关",
+      "梦境寻忆_4_植物角关"
+    ]
+  },
+  "梦境寻忆_4_码头关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/码头.png"
+    ],
+    "roi": [
+      551,
+      283,
+      133,
+      119
+    ],
+    "focus": "关卡:码头",
+    "next": "梦境寻忆_4_开始_码头关"
+  },
+  "梦境寻忆_4_开始_码头关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "码头"
+    }
+  },
+  "梦境寻忆_4_植物角关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/植物角.png"
+    ],
+    "roi": [
+      57,
+      91,
+      103,
+      144
+    ],
+    "focus": "关卡:植物角",
+    "next": "梦境寻忆_4_开始_植物角关"
+  },
+  "梦境寻忆_4_开始_植物角关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "植物角"
+    }
+  },
+  "梦境寻忆_4_滑冰场关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/滑冰场.png"
+    ],
+    "roi": [
+      54,
+      56,
+      131,
+      88
+    ],
+    "focus": "关卡:滑冰场",
+    "next": "梦境寻忆_4_开始_滑冰场关"
+  },
+  "梦境寻忆_4_开始_滑冰场关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "滑冰场"
+    }
+  },
+  "梦境寻忆_4_摩天轮关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/摩天轮.png"
+    ],
+    "roi": [
+      292,
+      108,
+      125,
+      163
+    ],
+    "focus": "关卡:摩天轮",
+    "next": "梦境寻忆_4_开始_摩天轮关"
+  },
+  "梦境寻忆_4_开始_摩天轮关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "摩天轮"
+    }
+  },
+  "梦境寻忆_4_餐厅关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/餐厅.png"
+    ],
+    "roi": [
+      504,
+      681,
+      100,
+      137
+    ],
+    "focus": "关卡:餐厅",
+    "next": "梦境寻忆_4_开始_餐厅关"
+  },
+  "梦境寻忆_4_开始_餐厅关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "餐厅"
+    }
+  },
+  "梦境寻忆_4_教室关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/教室.png"
+    ],
+    "roi": [
+      193,
+      202,
+      129,
+      120
+    ],
+    "focus": "关卡:教室",
+    "next": "梦境寻忆_4_开始_教室关"
+  },
+  "梦境寻忆_4_开始_教室关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "教室"
+    }
+  },
+  "梦境寻忆_4_灯塔关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/灯塔.png"
+    ],
+    "roi": [
+      246,
+      62,
+      133,
+      127
+    ],
+    "focus": "关卡:灯塔",
+    "next": "梦境寻忆_4_开始_灯塔关"
+  },
+  "梦境寻忆_4_开始_灯塔关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "灯塔"
+    }
+  },
+  "梦境寻忆_4_游乐场关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/游乐场.png"
+    ],
+    "roi": [
+      109,
+      259,
+      110,
+      123
+    ],
+    "focus": "关卡:游乐场",
+    "next": "梦境寻忆_4_开始_游乐场关"
+  },
+  "梦境寻忆_4_开始_游乐场关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "游乐场"
+    }
+  },
+  "梦境寻忆_4_宫殿关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/宫殿.png"
+    ],
+    "roi": [
+      216,
+      51,
+      160,
+      124
+    ],
+    "focus": "关卡:宫殿",
+    "next": "梦境寻忆_4_开始_宫殿关"
+  },
+  "梦境寻忆_4_开始_宫殿关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "宫殿"
+    }
+  },
+  "梦境寻忆_4_天文台关": {
+    "recognition": "TemplateMatch",
+    "template": [
+      "梦境寻忆/4/天文台.png"
+    ],
+    "roi": [
+      40,
+      172,
+      102,
+      161
+    ],
+    "focus": "关卡:天文台",
+    "next": "梦境寻忆_4_开始_天文台关"
+  },
+  "梦境寻忆_4_开始_天文台关": {
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "闯关",
+      "level": "天文台"
+    }
+  },
+  "梦境寻忆_4_组队": {
+    "next": [
+      "梦境寻忆_4_组队_征服之剑",
+      "梦境寻忆_4_组队_迷城晶塔",
+      "梦境寻忆_4_组队_海洋球乐园"
+    ]
+  },
+  "梦境寻忆_4_组队_征服之剑": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "征服之剑",
+    "next": [
+      "梦境寻忆_4_组队_开始_征服之剑"
+    ]
+  },
+  "梦境寻忆_4_组队_开始_征服之剑": {
+    "focus": "关卡:征服之剑",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "征服之剑"
+    }
+  },
+  "梦境寻忆_4_组队_迷城晶塔": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "迷城晶塔",
+    "next": [
+      "梦境寻忆_4_组队_开始_迷城晶塔"
+    ]
+  },
+  "梦境寻忆_4_组队_开始_迷城晶塔": {
+    "focus": "关卡:迷城晶塔",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "迷城晶塔"
+    }
+  },
+  "梦境寻忆_4_组队_海洋球乐园": {
+    "recognition": "OCR",
+    "roi": [
+      56,
+      0,
+      252,
+      111
+    ],
+    "expected": "海洋球乐园",
+    "next": [
+      "梦境寻忆_4_组队_开始_海洋球乐园"
+    ]
+  },
+  "梦境寻忆_4_组队_开始_海洋球乐园": {
+    "focus": "关卡:海洋球乐园",
+    "action": "Custom",
+    "custom_action": "梦境寻忆",
+    "custom_action_param": {
+      "mode": "组队",
+      "level": "海洋球乐园"
+    }
+  }
+}

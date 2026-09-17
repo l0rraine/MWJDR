@@ -100,7 +100,7 @@ class Memories(CustomAction):
                 img = context.tasker.controller.post_screencap().wait().get()
                 d = context.run_recognition_direct(
                     JRecognitionType.OCR,
-                    JOCR(roi=area, only_rec=True),
+                    JOCR(roi=area, only_rec=True, threshold=0.5),
                     img,
                 )
                 if not d.filtered_results:
@@ -108,17 +108,33 @@ class Memories(CustomAction):
 
                 # 三段式匹配：先完全匹配，再包含匹配，最后缺失打印
                 texts = [r.text.strip().capitalize() for r in d.filtered_results]
-                # 1. 完全匹配（abc == key）
-                match = next(
-                    (key for key in item_dict if any(t == key for t in texts)),
-                    None,
-                )
-                # 2. 包含匹配（key in abc）
+                # 1. 完全匹配（abc == key），去掉被其他匹配key包含的短key
+                exact_matches = [
+                    key for key in item_dict if any(t == key for t in texts)
+                ]
+                if exact_matches:
+                    filtered = [
+                        k
+                        for k in exact_matches
+                        if not any(other != k and k in other for other in exact_matches)
+                    ]
+                    match = filtered[0] if filtered else exact_matches[0]
+                else:
+                    match = None
+                # 2. 包含匹配（key in abc），去掉被其他匹配key包含的短key
                 if not match:
-                    match = next(
-                        (key for key in item_dict if any(key in t for t in texts)),
-                        None,
-                    )
+                    fuzzy_matches = [
+                        key for key in item_dict if any(key in t for t in texts)
+                    ]
+                    if fuzzy_matches:
+                        filtered = [
+                            k
+                            for k in fuzzy_matches
+                            if not any(
+                                other != k and k in other for other in fuzzy_matches
+                            )
+                        ]
+                        match = filtered[0] if filtered else fuzzy_matches[0]
                 if match:
                     logger.debug(f"找到:{match}")
                     click_rect(context, item_dict[match])
@@ -177,24 +193,40 @@ class Memories(CustomAction):
                 img = context.tasker.controller.post_screencap().wait().get()
                 d = context.run_recognition_direct(
                     JRecognitionType.OCR,
-                    JOCR(roi=area, only_rec=True),
+                    JOCR(roi=area, only_rec=True, threshold=0.5),
                     img,
                 )
                 if not d.filtered_results:
                     continue
                 # 三段式匹配：先完全匹配，再包含匹配，最后缺失打印
                 texts = [r.text.strip().capitalize() for r in d.filtered_results]
-                # 1. 完全匹配（abc == key）
-                match = next(
-                    (key for key in item_dict if any(t == key for t in texts)),
-                    None,
-                )
-                # 2. 包含匹配（key in abc）
+                # 1. 完全匹配（abc == key），去掉被其他匹配key包含的短key
+                exact_matches = [
+                    key for key in item_dict if any(t == key for t in texts)
+                ]
+                if exact_matches:
+                    filtered = [
+                        k
+                        for k in exact_matches
+                        if not any(other != k and k in other for other in exact_matches)
+                    ]
+                    match = filtered[0] if filtered else exact_matches[0]
+                else:
+                    match = None
+                # 2. 包含匹配（key in abc），去掉被其他匹配key包含的短key
                 if not match:
-                    match = next(
-                        (key for key in item_dict if any(key in t for t in texts)),
-                        None,
-                    )
+                    fuzzy_matches = [
+                        key for key in item_dict if any(key in t for t in texts)
+                    ]
+                    if fuzzy_matches:
+                        filtered = [
+                            k
+                            for k in fuzzy_matches
+                            if not any(
+                                other != k and k in other for other in fuzzy_matches
+                            )
+                        ]
+                        match = filtered[0] if filtered else fuzzy_matches[0]
                 if match:
                     logger.debug(f"找到:{match}")
                     click_rect(context, item_dict[match])

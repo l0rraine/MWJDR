@@ -34,7 +34,8 @@ class NewbieImpossibleTask(CustomRecognition):
 
         mine = context.get_node_data("挖矿_入口").get("enabled", False)
         join = context.get_node_data("加入集结_入口").get("enabled", False)
-        if mine or join:
+        garrison = context.get_node_data("王城驻防_入口").get("enabled", False)
+        if mine or join or garrison:
             QueueStatus.update(context)
         return CustomRecognition.AnalyzeResult(box=None, detail={})
 

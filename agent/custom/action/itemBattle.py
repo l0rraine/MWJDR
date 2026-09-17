@@ -23,7 +23,7 @@ class RecoVigor(CustomAction):
         param = json.loads(argv.custom_action_param)
         cost = int(param.get("体力消耗"))
         text = ocr_until_consistent(
-            context, roi=[583, 21, 87, 36], expected_pattern=r"^\d+$"
+            context, roi=[583, 21, 87, 36], expected_pattern=r"\d+"
         )
         if text is None:
             logger.warning("识别体力失败")
@@ -77,8 +77,8 @@ class ItemCombat(CustomAction):
 
         detail = None
         while detail is None or not detail.hit:
-            if time.time() - march_start_time >= 301:
-                logger.info("已超过5分01秒未识别到行军，认为行军已经开始")
+            if time.time() - march_start_time >= 181:
+                logger.info("已超过3分01秒未识别到行军，认为行军已经开始")
                 break
             time.sleep(1)
             img = context.tasker.controller.post_screencap().wait().get()

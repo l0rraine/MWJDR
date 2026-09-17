@@ -24,7 +24,7 @@ class SetMonsterCount(CustomAction):
         argv: CustomAction.RunArg,
     ) -> bool:
         text, _ = ocr_until_consistent_by_task(
-            context, "自动集结_识别次数", expected_pattern=r"^\d+$"
+            context, "自动集结_识别次数", expected_pattern=r"\d+"
         )
         if text is None:
             logger.warning("识别怪兽次数失败")
@@ -126,12 +126,9 @@ class BeginCombat(CustomAction):
                     return CustomAction.RunResult(success=False)
 
                 text, _ = ocr_until_consistent_by_task(
-                    context, "识别罐头数量", expected_pattern=r"^\d+$"
+                    context, "识别罐头数量", expected_pattern=r"\d+[,]\d+"
                 )
-                if text is None:
-                    logger.warning("识别罐头数量失败")
-                    return CustomAction.RunResult(success=False)
-                max_can = int(text)
+                max_can = int(text.replace(",", ""))
                 if max_can < 2:
                     logger.info("罐头已用完")
                     self._end(context)
@@ -154,12 +151,9 @@ class BeginCombat(CustomAction):
                 and not CombatRepetitionCount.isReachLimit()
             ):
                 text, _ = ocr_until_consistent_by_task(
-                    context, "识别罐头数量", expected_pattern=r"^\d+$"
+                    context, "识别罐头数量", expected_pattern=r"\d+[,]\d+"
                 )
-                if text is None:
-                    logger.warning("识别罐头数量失败")
-                    return CustomAction.RunResult(success=False)
-                max_can = int(text)
+                max_can = int(text.replace(",", ""))
                 logger.debug(f"罐头数量：{max_can}")
                 if max_can < 2:
                     logger.info("罐头已用完")
