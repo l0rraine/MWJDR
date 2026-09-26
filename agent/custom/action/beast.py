@@ -8,6 +8,7 @@ from utils import logger
 from utils import timelib
 from utils.mfa_config import disable_battle_tasks
 
+
 @AgentServer.custom_action("野兽开始出征")
 class BeastBeginCombat(CustomAction):
     def run(
@@ -18,7 +19,7 @@ class BeastBeginCombat(CustomAction):
         json_data = json.loads(argv.custom_action_param)
         logger.debug(json_data)
 
-        _, minutes, seconds = timelib.get_time_from_ocr(context,"识别集结时间",200)
+        _, minutes, seconds = timelib.get_time_from_ocr(context, "识别集结时间", 200)
         return_time = minutes * 60 + seconds
 
         # 开始出征
@@ -44,6 +45,5 @@ class BeastBeginCombat(CustomAction):
         #     context.run_task("自动野兽_入口")
         #     return CustomAction.RunResult(success=True)
 
-
-        time.sleep(return_time*2 + 0.5)
+        time.sleep(return_time * 2 + 0.5)
         return CustomAction.RunResult(success=True)
