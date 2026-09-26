@@ -4,8 +4,26 @@
     "github": "https://github.com/l0rraine/MWJDR",
     "controller": [
         {
-            "name": "安卓端",
+            "name": "ADB",
+            "label": "模拟器",
             "type": "Adb"
+        },
+        {
+            "name": "Scrcpy",
+            "label": "Scrcpy",
+            "type": "Win32",
+            "win32": {
+                "class_regex": "^SDL_app$",
+                "window_regex": "无尽冬日.*",
+                "screencap": "FramePool",
+                "mouse": "PostMessageWithCursorPos",
+                "keyboard": "PostMessageWithCursorPos"
+            },
+            "permission_required": true
+        },
+        {
+            "name": "PlayCover",
+            "type": "PlayCover"
         }
     ],
     "resource": [
@@ -42,6 +60,6 @@
         "resource/tasks/梦境寻忆.json",
         "resource/tasks/打熊.json",
         "resource/tasks/新手.json",
-		"resource/tasks/王城驻防.json"
+        "resource/tasks/王城驻防.json"
     ]
 }
