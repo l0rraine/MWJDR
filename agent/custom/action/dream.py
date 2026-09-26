@@ -70,7 +70,8 @@ class Memories(CustomAction):
             self.stage_mode(context, level)
         else:
             self.team_mode(context, level)
-        return CustomAction.RunResult(success=False)
+        context.override_next(argv.node_name, [])
+        return CustomAction.RunResult(success=True)
 
     def stage_mode(self, context: Context, level):
         global EPISODE

@@ -27,7 +27,8 @@ class RecoVigor(CustomAction):
         )
         if text is None:
             logger.warning("识别体力失败")
-            return CustomAction.RunResult(success=False)
+            context.override_next(argv.node_name, [])
+            return CustomAction.RunResult(success=True)
         left = int(text)
         remaining = math.floor(left / cost)
         CombatRepetitionCount.reset()
@@ -66,7 +67,8 @@ class ItemCombat(CustomAction):
                 )
                 disable_battle_tasks(context, "集结物品_识别体力入口")
                 CombatRepetitionCount.reset()
-                return CustomAction.RunResult(success=False)
+                context.override_next(argv.node_name, [])
+                return CustomAction.RunResult(success=True)
 
         CombatRepetitionCount.addCount()
         logger.info(f"已出征 {CombatRepetitionCount.count} 次")
@@ -92,6 +94,7 @@ class ItemCombat(CustomAction):
             )
             disable_battle_tasks(context, "集结物品_识别体力入口")
             CombatRepetitionCount.reset()
-            return CustomAction.RunResult(success=False)
+            context.override_next(argv.node_name, [])
+            return CustomAction.RunResult(success=True)
 
         return CustomAction.RunResult(success=True)

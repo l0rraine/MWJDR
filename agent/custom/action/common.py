@@ -205,7 +205,8 @@ class MakeSureQueueAvailable(CustomAction):
         )
         if text is None:
             logger.warning("识别队列数量失败")
-            return CustomAction.RunResult(success=False)
+            context.override_next(argv.node_name, [])
+            return CustomAction.RunResult(success=True)
         logger.debug(f"队列情况：{text}")
         match = re.search(r"\d+", text)
         if match and int(match.group()) > 0:
