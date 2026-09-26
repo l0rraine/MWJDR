@@ -135,6 +135,14 @@ def ocr_until_consistent_by_task(
                     if expected_pattern:
                         match = re.search(expected_pattern, text)
                         return match.group(), detail
+                    else:
+                        logger.debug(
+                            f"OCR成功[{task_name}]：未指定匹配模式，结果：'{text}'"
+                        )
+                        return text, detail
+                    logger.debug(
+                        f"OCR成功[{task_name}]：未指定匹配模式，结果：'{text}'"
+                    )
                     return text, detail
             else:
                 last_result = text
