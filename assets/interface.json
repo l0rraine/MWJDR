@@ -35,11 +35,8 @@
         }
     ],
     "agent": {
-        "child_exec": "{PROJECT_DIR}/python/python.exe",
-        "child_args": [
-            "-u",
-            "{PROJECT_DIR}/../agent/main.py"
-        ]
+        "child_exec": "{PROJECT_DIR}/../agent-go/agent-go.exe",
+        "child_args": []
     },
     "task": [],
     "option": {},
