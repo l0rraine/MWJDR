@@ -6,22 +6,19 @@
 maafw(Python 绑定)wheel,保证整套 DLL 版本一致。
 
 用法:
-    python tools/update_bin_go.py                 # 默认匹配 requirements.txt 的 maafw 版本
-    python tools/update_bin_go.py --use-binding   # 改用 Go 绑定 README 标注的版本
-    python tools/update_bin_go.py 5.11.0          # 显式指定版本更新
-    python tools/update_bin_go.py --check         # 仅检查对齐情况,不更新
+    python tools/update_bin_go.py                 # 用 Go 绑定 README 标注的版本更新
+    python tools/update_bin_go.py 5.11.0          # 指定版本更新
+    python tools/update_bin_go.py --check         # 仅检查当前版本是否对齐,不更新
 
 注意事项:
     - DLL 必须整套替换(只换 MaaFramework.dll 会因依赖 DLL 版本不匹配而失败)
     - deps/bin-go 与 Python 版的 deps/bin 相互独立,互不影响
-    - requirements.txt 与 Go 绑定要求不一致时脚本会告警;Go 绑定跟踪的
-      MaaFramework release 可能晚于 requirements.txt,此时 DLL 与 Go 绑定
-      不匹配会导致 'procedure could not be found',请用 --use-binding 对齐
     - 更新后重新 go build,并用 agent-go.exe 冒烟测试(MAA init + AgentServer 启动)
     - 升级 Go 绑定: cd agent-go && go get github.com/MaaXYZ/maa-framework-go/v4@latest
 """
 import argparse
 import glob
+import json
 import os
 import re
 import shutil
@@ -37,20 +34,6 @@ BIN_GO = PROJECT / "deps" / "bin-go"
 GOMODCACHE = Path(os.environ.get("GOMODCACHE", str(Path.home() / "go" / "pkg" / "mod")))
 
 MAA_DLL = "MaaFramework.dll"
-
-
-def requirements_maafw_version() -> str:
-    """从项目根 requirements.txt 读取 maafw 版本(权威来源)。"""
-    req = PROJECT / "requirements.txt"
-    if not req.exists():
-        return ""
-    for line in req.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if line.startswith("maafw"):
-            m = re.match(r"maafw\s*==\s*([\d.]+)", line)
-            if m:
-                return m.group(1)
-    return ""
 
 
 def go_binding_version() -> str:
@@ -122,37 +105,21 @@ def install(bin_dir: Path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("version", nargs="?", help="显式指定 MaaFramework 版本(最高优先)")
-    ap.add_argument("--use-binding", action="store_true",
-                    help="使用 Go 绑定 README 标注的版本,而非 requirements.txt")
-    ap.add_argument("--check", action="store_true", help="仅检查对齐情况,不更新")
+    ap.add_argument("version", nargs="?", help="MaaFramework 版本,缺省用 Go 绑定要求的版本")
+    ap.add_argument("--check", action="store_true", help="仅检查对齐情况")
     args = ap.parse_args()
 
-    req_ver = requirements_maafw_version()
     go_ver = go_binding_version()
-    print(f"requirements.txt maafw: {req_ver or '(未找到)'}")
     print(f"Go 绑定要求 MaaFramework: {go_ver or '(未知)'}")
+    print(f"当前 deps/bin-go: {current_version()} (DLL 无版本资源,以安装记录为准)")
 
-    if req_ver and go_ver and req_ver != go_ver:
-        print(f"!! 注意: requirements.txt({req_ver}) 与 Go 绑定要求({go_ver}) 不一致")
-        print(f"   若 DLL 与 Go 绑定不匹配,启动会报 'procedure could not be found'")
-        print(f"   此时请改用 --use-binding 或显式指定与 Go 绑定对齐的版本")
-
-    # 版本来源优先级: 显式指定 > --use-binding > requirements.txt(默认) > 报错
     if not args.version:
-        if args.use_binding:
-            if not go_ver:
-                sys.exit("无法从 Go 绑定确定版本,请显式指定")
-            args.version = go_ver
-        elif req_ver:
-            args.version = req_ver
-        else:
-            sys.exit("无法确定版本: requirements.txt 无 maafw 且未指定 --use-binding,请显式指定")
-
-    print(f"将使用版本: {args.version}")
+        if not go_ver:
+            sys.exit("无法确定版本:请显式指定,如 python tools/update_bin_go.py 5.10.4")
+        args.version = go_ver
 
     if args.check:
-        print("检查完成(需人工核对 DLL 来源版本与 requirements.txt/Go 绑定要求一致)")
+        print("检查完成(需人工核对 DLL 来源版本与 Go 绑定要求一致)")
         return
 
     if not args.version:
