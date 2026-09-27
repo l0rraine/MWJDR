@@ -1,5 +1,0 @@
-maafw==5.13.1
-loguru
-pillow
-pytz
-rapidocr-onnxruntime
