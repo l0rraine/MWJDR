@@ -43,7 +43,7 @@
 - **多实例支持**：通过 MFAAvalonia 环境变量识别当前实例，多开时互不干扰
 - **每日去重**：商店购买自动记录日期，同日不重复购买
 - **联盟币不足自动禁用**：购买时联盟币不足则自动禁用该物品，避免后续重复尝试
-- **JSON 驱动选项**：商店物品列表从 pipeline JSON 读取，增减物品无需修改 Python 代码
+- **JSON 驱动选项**：商店物品列表从 pipeline JSON 读取，增减物品无需修改 Go 代码
 
 ## 项目结构
 
@@ -76,34 +76,39 @@ MWJDR/
 │       ├── model/                   # OCR 模型
 │       └── image/                   # 模板图片
 │
-├── agent/                           # Python 自定义动作
-│   ├── main.py                      # 入口：venv 管理 → AgentServer 启动
-│   ├── custom/action/               # 自定义动作实现
-│   │   ├── combat.py                #   CombatRepetitionCount 计数器、切换队伍、撤回队伍
-│   │   ├── monster.py               #   巨兽次数识别、出征循环
-│   │   ├── beast.py                 #   野兽出征循环
-│   │   ├── light.py                 #   灯塔出征循环
-│   │   ├── itemBattle.py            #   体力识别、物品集结循环
-│   │   ├── dream.py                 #   梦境寻忆（坐标字典找物）
-│   │   ├── unite.py                 #   联盟总动员扫描
-│   │   ├── travel.py                #   游历宝藏挖掘
-│   │   ├── mine.py                  #   挖矿队伍派遣/召回
-│   │   ├── union_shop.py            #   联盟商店购买（统帅直购+75%折扣反算）
-│   │   ├── mystery_merchant.py      #   神秘商店购买（当季专武+50%折扣+刷新）
-│   │   ├── wandering_merchant.py    #   游荡商人购买（免费/钻石刷新）
-│   │   └── common.py                #   角色切换、队列管理、节点控制
-│   └── utils/                       # 工具模块
-│       ├── logger.py                #   日志
-│       ├── timelib.py               #   OCR 时间解析
-│       ├── chainfo.py               #   联盟总动员状态管理
-│       ├── data_store.py            #   持久化数据存储（购买日期等）
-│       ├── click_util.py            #   点击工具（区域随机点击）
-│       ├── ocr_util.py              #   OCR 工具
-│       ├── merchant_utils.py        #   任务公共工具（add_offset、save_task_date、daily_check、disable_switch）
-│       └── mfa_config.py            #   MFAAvalonia 实例配置读取、战斗任务检测与禁用
+├── agent-go/                        # Go 自定义动作（基于 MaaFramework Go 绑定）
+│   ├── main.go                      # 入口：MAA 初始化 → AgentServer 启动
+│   ├── register.go                  # 集中注册所有 Custom Action / Recognition
+│   ├── parentwatch_windows.go       # 父进程监控（客户端退出即自杀）
+│   ├── custom/action/               # 自定义动作实现（.go）
+│   │   ├── combat.go                #   CombatRepetitionCount 计数器、切换队伍、撤回队伍
+│   │   ├── monster.go               #   巨兽次数识别、出征循环
+│   │   ├── beast.go                 #   野兽出征循环
+│   │   ├── light.go                 #   灯塔出征循环
+│   │   ├── item_battle.go           #   体力识别、物品集结循环
+│   │   ├── dream.go                 #   梦境寻忆（坐标字典找物）
+│   │   ├── unite.go                 #   联盟总动员扫描
+│   │   ├── travel.go                #   游历宝藏挖掘
+│   │   ├── mine.go                  #   挖矿队伍派遣/召回
+│   │   ├── union_shop.go            #   联盟商店购买（统帅直购+75%折扣反算）
+│   │   ├── mystery_merchant.go      #   神秘商店购买（当季专武+50%折扣+刷新）
+│   │   ├── wandering_merchant.go    #   游荡商人购买（免费/钻石刷新）
+│   │   ├── common.go                #   角色切换、队列管理、节点控制
+│   │   └── ...                      #   其余动作与梦境关卡数据（dream_stages_data.go）
+│   └── utils/                       # 工具模块（.go）
+│       ├── logger.go                #   日志（INFO/WARNING/CRITICAL 分级）
+│       ├── timelib.go               #   OCR 时间解析
+│       ├── data_store.go            #   持久化数据存储（购买日期等）
+│       ├── click_util.go            #   点击工具（区域随机点击）
+│       ├── ocr_util.go              #   OCR 工具
+│       ├── merchant_utils.go        #   任务公共工具（AddOffset/SaveTaskDate/DailyCheck/DisableSwitch）
+│       ├── mfa_config.go            #   MFAAvalonia 实例配置读取、战斗任务检测与禁用
+│       ├── account_id.go            #   账号 ID（实例切换）
+│       ├── img_util.go              #   截图与裁剪
+│       └── queue_status.go          #   队列状态
 │
-├── configure.py                     # 资源配置脚本
-├── requirements.txt                 # Python 依赖
+├── configure.py                     # 资源配置脚本（OCR 模型复制）
+├── deps/bin-go/                     # MaaFramework DLL（与 Go 绑定版本对齐，本地生成不入库）
 └── docs/                            # 文档
 ```
 
@@ -131,10 +136,10 @@ MFAAvalonia (GUI)
   │       ├─ 节点 enabled: false → 跳过
   │       ├─ 识别（TemplateMatch / OCR / ColorMatch）
   │       ├─ 动作（Click / Swipe / Custom / DoNothing）
-  │       ├─ Custom Action → 调用 Python 代码
-  │       │     ├─ context.run_task() / run_recognition() → 执行子任务
-  │       │     ├─ context.override_pipeline() → 运行时修改节点
-  │       │     └─ context.run_recognition_direct() / run_action_direct() → 直接调用
+  │       ├─ Custom Action → 调用 Go 代码（agent-go.exe）
+  │       │     ├─ ctx.RunTask() / ctx.RunRecognition() → 执行子任务
+  │       │     ├─ ctx.OverridePipeline() → 运行时修改节点
+  │       │     └─ ctx.OverrideNext() → 直接指定下一节点
   │       └─ 跟随 next 数组进入下一节点
   │
   └─ 任务完成
@@ -145,57 +150,59 @@ MFAAvalonia (GUI)
 节点有三种 enable/disable 方式：
 
 1. **静态 `pipeline_override`**：`interface.json` 中选项的 cases 定义，任务启动前由 MFAAvalonia 合并
-2. **运行时 `override_pipeline()`**：Custom Action 在执行过程中动态修改节点属性
+2. **运行时 `override_pipeline()`**：Custom Action 在执行过程中动态修改节点属性（Go 端为 `ctx.OverridePipeline()`）
 3. **默认 `enabled: false`**：Pipeline JSON 中某些节点默认禁用，由选项或代码激活
 
 ### JSON 驱动选项（商店模式）
 
-商店物品列表不硬编码在 Python 中，而是通过 pipeline JSON 节点的 `next` 列表驱动：
+商店物品列表不硬编码在 Go 代码中，而是通过 pipeline JSON 节点的 `next` 列表驱动：
 
 1. 在 pipeline JSON 中创建选项汇总节点（如 `联盟商店_选项`），其 `next` 列出所有参数节点（如 `联盟商店_参数_统帅经验`）
-2. Python 端通过 `context.get_node_data("联盟商店_选项")["next"]` 读取列表
+2. Go 端通过 `NodeNextNames(ctx, "联盟商店_选项")` 读取列表
 3. 检查每个参数节点的 `enabled` 状态，提取物品名（`removeprefix` 去掉前缀）
-4. 增减物品只需修改 JSON 和添加模板图片，无需改动 Python 代码
+4. 增减物品只需修改 JSON 和添加模板图片，无需改动 Go 代码
 
 命名约定：**物品名 = 选项名 = 图片名**，模板路径为 `{商店目录}/{物品名}.png`。
 
 ### 自定义动作注册
 
-所有 Custom Action 通过装饰器注册到 AgentServer：
+所有 Custom Action 在 `register.go` 中集中注册到 AgentServer（等价于 Python 版的装饰器）：
 
-```python
-@AgentServer.custom_action("动作名称")
-class MyAction(CustomAction):
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        # argv.custom_action_param: JSON 字符串参数
-        # context: 可调用 pipeline API
-        return CustomAction.RunResult(success=True)
+```go
+// register.go
+func RegisterAll() {
+    _ = maa.AgentServerRegisterCustomAction("动作名称",
+        maa.CustomActionFunc(myAction))
+}
+
+func myAction(ctx *maa.Context, arg *maa.CustomActionArg) bool {
+    // arg.CustomActionParam: JSON 字符串参数
+    // ctx: 可调用 pipeline API
+    return true
+}
 ```
 
 ### 战斗任务自动检测
 
 `MakeSureQueueAvailable` 在执行前会读取 MFAAvalonia 实例配置，判断用户是否勾选了战斗任务：
 
-```python
-from utils.mfa_config import has_battle_tasks
-
-battle_status = has_battle_tasks()
-if battle_status is False:
-    # 无战斗任务，跳过确保空闲队列
-    return CustomAction.RunResult(success=True)
+```go
+battleStatus, _ := utils.HasBattleTasks()
+if !battleStatus {
+    // 无战斗任务，跳过确保空闲队列
+    return true
+}
 ```
 
-实现原理：MFAAvalonia 启动 Agent 进程时注入 `MFA_INSTANCE_ID` 环境变量，Python 端据此读取 `config/instances/{id}.json` 中的 `TaskItems`，检查战斗任务的 `default_check` 状态。
+实现原理：MFAAvalonia 启动 Agent 进程时注入 `MFA_INSTANCE_ID` 环境变量，Go 端据此读取 `config/instances/{id}.json` 中的 `TaskItems`，检查战斗任务的 `default_check` 状态。
 
 ### 体力耗尽自动禁用战斗任务
 
 当任何战斗因体力/罐头耗尽而结束时（无免费体力、罐头用完等），自动禁用当前实例中所有已启用的战斗任务（`default_check: true → false`），避免后续任务反复空跑。
 
-```python
-from utils.mfa_config import disable_battle_tasks
-
-# 体力耗尽时调用
-disable_battle_tasks()  # 将所有战斗任务的 default_check 设为 false
+```go
+// 体力耗尽时调用，禁用当前实例中所有已启用的战斗任务
+utils.DisableBattleTasks(ctx, "自动野兽_入口")
 ```
 
 适用场景：
@@ -228,7 +235,14 @@ disable_battle_tasks()  # 将所有战斗任务的 default_check 设为 false
    python ./configure.py
    ```
 
-3. 将项目目录添加到 MFAAvalonia 作为资源路径
+3. 构建 agent（开发模式；发布版已内置 `agent-go.exe`）
+
+   ```bash
+   cd agent-go
+   go build -o agent-go.exe .
+   ```
+
+4. 将项目目录添加到 MFAAvalonia 作为资源路径
 
 ### 使用
 
@@ -243,7 +257,7 @@ disable_battle_tasks()  # 将所有战斗任务的 default_check 设为 false
 
 1. 在 `assets/resource/pipeline/` 对应的 JSON 文件中添加节点定义
 2. 在 `assets/interface.json` 中注册任务入口和可配置选项
-3. 如需复杂逻辑，在 `agent/custom/action/` 中实现 Custom Action
+3. 如需复杂逻辑，在 `agent-go/custom/action/` 中实现 Custom Action
 
 ### 添加新的商店物品
 
@@ -251,12 +265,12 @@ disable_battle_tasks()  # 将所有战斗任务的 default_check 设为 false
 2. 在 `assets/resource/pipeline/{商店}.json` 中添加 `参数_物品名` 节点
 3. 将新节点名加入选项汇总节点（如 `联盟商店_选项`）的 `next` 列表
 4. 在 `assets/interface.json` 中添加对应的选项开关
-5. 无需修改 Python 代码
+5. 无需修改 Go 代码
 
 ### 添加新的 Custom Action
 
-1. 在 `agent/custom/action/` 下创建或修改 Python 文件
-2. 使用 `@AgentServer.custom_action("名称")` 装饰器注册
+1. 在 `agent-go/custom/action/` 下创建或修改 Go 文件
+2. 在 `agent-go/register.go` 的 `RegisterAll()` 中用 `maa.AgentServerRegisterCustomAction("名称", ...)` 注册
 3. 在 Pipeline JSON 中通过 `"action": "Custom"` + `"custom_action": "名称"` 引用
 
 ### 调试
