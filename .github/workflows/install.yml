@@ -119,7 +119,7 @@ jobs:
           # 转换 PNG 到 ICO
           magick convert assets/logo.png -define icon:auto-resize=256,128,64,48,32,24,16 mwjdr.ico
 
-      - name: Modify MFAAvalonia exe icon
+      - name: Rename MFAAvalonia.exe to MWJDR.exe and set icon
         if: matrix.arch == 'x86_64'
         shell: bash
         run: |
@@ -129,7 +129,10 @@ jobs:
           # 修改 exe 图标
           ./rcedit.exe "MFA/MFAAvalonia.exe" --set-icon "mwjdr.ico"
 
-          echo "MFAAvalonia icon modified successfully"
+          # 重命名主程序,提升辨识度
+          mv "MFA/MFAAvalonia.exe" "MFA/MWJDR.exe"
+
+          echo "MWJDR.exe icon modified and renamed successfully"
 
       - name: Rename MaaFramework DLL dir to bin-go
         shell: bash
