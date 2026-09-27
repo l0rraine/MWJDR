@@ -21,6 +21,7 @@ func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	text, _ := utils.OcrUntilConsistentByTask(ctx, "自动集结_识别次数", nil, `\d+`, 0, 0)
 	if text == "" {
 		utils.Warning("识别怪兽次数失败")
+		combatCount.Reset() // 清理残留状态,避免影响后续任务
 		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
 		return true
 	}
@@ -35,8 +36,7 @@ func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
 		return true
 	}
-	combatCount.Reset()
-	combatCount.Init(remaining)
+	combatCount.InitFromOCR(remaining)
 	utils.Infof("已识别当前怪兽还剩余%d次", remaining)
 	_ = ctx.OverridePipeline(map[string]any{"自动集结_查看次数": map[string]any{"enabled": false}})
 	_, _ = ctx.RunTask("后退")
@@ -61,11 +61,21 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		use19Can = 1
 	}
 
-	if repeatLimit != 0 {
-		combatCount.Init(repeatLimit)
-	}
-	if canLimit != 0 {
-		combatCount.Init(canLimit)
+	// 计数接管:普通模式(只执行10次)的 Limit 由 setMonsterCount(OCR 识别)设置,保持不覆盖;
+	// 其余情况(未初始化/其他任务残留/模式切换)按本次参数重置,避免跨任务、跨模式计数错乱
+	if combatCount.fromOCR {
+		// 保持 OCR 识别值
+	} else if !combatCount.initialized || combatCount.owner != "monster" ||
+		(repeatLimit != 0 && combatCount.Limit != repeatLimit) ||
+		(canLimit != 0 && combatCount.Limit != canLimit) {
+		combatCount.Reset()
+		combatCount.owner = "monster"
+		if repeatLimit != 0 {
+			combatCount.Init(repeatLimit)
+		}
+		if canLimit != 0 {
+			combatCount.Init(canLimit)
+		}
 	}
 
 	_, minutes, seconds := utils.GetTimeFromOCR(ctx, "识别集结时间", 200)
@@ -81,27 +91,21 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	if detail != nil && detail.Hit {
 		utils.Debugf("体力不足,尝试领取免费体力:%s", utils.BestText(detail))
 		detail, _ = ctx.RunRecognition("是否有免费体力", img)
+		canUseFree := false
 		if detail != nil && detail.Hit {
 			currentHour := time.Now().Hour()
-			canUseFree := false
 			if currentHour < 19 {
 				canUseFree = true
 				utils.Debug("0点~19点,无条件领取免费体力")
+			} else if use19Can == 1 {
+				canUseFree = true
+				utils.Debug("19点罐头选项已启用,领取免费体力")
 			} else {
-				if use19Can == 1 {
-					canUseFree = true
-					utils.Debug("19点罐头选项已启用,领取免费体力")
-				} else {
-					utils.Debug("19点罐头选项未启用,不领取免费体力")
-				}
+				utils.Debug("19点罐头选项未启用,不领取免费体力,改用罐头")
 			}
+		}
 
-			if !canUseFree {
-				utils.Info("免费罐头未启用,不领取免费体力,停止出征")
-				monsterEnd(ctx)
-				_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
-				return true
-			}
+		if canUseFree {
 			utils.Debug("领取免费体力")
 			_, _ = ctx.RunTask("免费体力")
 			_, _ = ctx.RunTask("点击出征")

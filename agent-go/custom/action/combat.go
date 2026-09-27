@@ -9,6 +9,8 @@ type combatRepetitionCount struct {
 	Count       int
 	Limit       int
 	initialized bool
+	fromOCR     bool   // Limit 是否由 setMonsterCount(OCR 识别)设置,beginCombat 保持不覆盖
+	owner       string // 当前 Limit 归属的任务("monster");其他任务残留时 beginCombat 会接管重置
 }
 
 var combatCount = &combatRepetitionCount{}
@@ -18,6 +20,14 @@ func (c *combatRepetitionCount) Init(limit int) {
 		c.Limit = limit
 		c.initialized = true
 	}
+}
+
+// InitFromOCR 由 setMonsterCount(OCR 识别剩余次数)设置 Limit,标记为 OCR 来源
+func (c *combatRepetitionCount) InitFromOCR(limit int) {
+	c.Limit = limit
+	c.initialized = true
+	c.fromOCR = true
+	c.owner = "monster"
 }
 
 func (c *combatRepetitionCount) AddCount(step int) {
@@ -32,6 +42,8 @@ func (c *combatRepetitionCount) Reset() {
 	c.Count = 0
 	c.Limit = 0
 	c.initialized = false
+	c.fromOCR = false
+	c.owner = ""
 }
 
 func (c *combatRepetitionCount) IsReachLimit() bool {
