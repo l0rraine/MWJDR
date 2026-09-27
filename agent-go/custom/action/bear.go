@@ -192,7 +192,8 @@ func bearComputeTeam(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 
 	if currentStage > 5 {
 		utils.Info("打熊已结束")
-		return false
+		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		return true
 	}
 
 	bearReserveTeam = 0

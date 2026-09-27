@@ -36,7 +36,8 @@ func beastBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		} else {
 			utils.Debug("野兽无免费体力,停止出征")
 			utils.DisableBattleTasks(ctx, "自动野兽_入口")
-			return false
+			_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+			return true
 		}
 	}
 
