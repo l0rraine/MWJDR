@@ -20,8 +20,8 @@ version = len(sys.argv) > 1 and sys.argv[1] or "v0.0.1"
 
 def install_deps():
     shutil.copytree(
-        working_dir / "deps" / "bin",
-        install_path,
+        working_dir / "deps" / "bin-go",
+        install_path / "deps" / "bin-go",
         ignore=shutil.ignore_patterns(
             "*MaaDbgControlUnit*",
             "*MaaThriftControlUnit*",
@@ -63,7 +63,7 @@ def install_resource():
 
 
 def install_chores():
-    for file in ["README.md", "LICENSE", "requirements.txt"]:
+    for file in ["README.md", "LICENSE"]:
         shutil.copy2(
             working_dir / file,
             install_path,
@@ -77,23 +77,16 @@ def install_chores():
 
 
 def install_agent():
-    shutil.copytree(
-        working_dir / "agent",
-        install_path / "agent",
-        dirs_exist_ok=True,
-    )
+    agent_dir = install_path / "agent-go"
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    exe_name = "agent-go.exe" if sys.platform.startswith("win") else "agent-go"
+    shutil.copy2(working_dir / "agent-go" / exe_name, agent_dir)
 
     with open(install_path / "interface.json", "r", encoding="utf-8") as f:
         interface = json.load(f)
 
-    if sys.platform.startswith("win"):
-        interface["agent"]["child_exec"] = r"{PROJECT_DIR}/python/python.exe"
-    elif sys.platform.startswith("darwin"):
-        interface["agent"]["child_exec"] = r"{PROJECT_DIR}/python/bin/python3"
-    elif sys.platform.startswith("linux"):
-        interface["agent"]["child_exec"] = r"python3"
-
-    interface["agent"]["child_args"] = ["-u", r"{PROJECT_DIR}/agent/main.py"]
+    interface["agent"]["child_exec"] = "{PROJECT_DIR}/agent-go/" + exe_name
+    interface["agent"]["child_args"] = []
 
     with open(install_path / "interface.json", "w", encoding="utf-8") as f:
         json.dump(interface, f, ensure_ascii=False, indent=4)

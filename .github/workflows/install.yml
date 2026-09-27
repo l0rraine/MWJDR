@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  MAA_FRAMEWORK_VERSION: "v5.13.1"
+  MAA_FRAMEWORK_VERSION: "v5.10.4"  # 与 Go 绑定(maa-framework-go v4)要求对齐
   MFAA_VERSION: "v2.16.1"
 
 permissions:
@@ -131,28 +131,28 @@ jobs:
 
           echo "MFAAvalonia icon modified successfully"
 
-      - name: Setup Embed Python on Windows
+      - name: Rename MaaFramework DLL dir to bin-go
         shell: bash
         run: |
-          python tools/ci/setup_embed_python.py
+          if [ -d "deps/bin" ] && [ ! -d "deps/bin-go" ]; then
+            mv deps/bin deps/bin-go
+          fi
 
-      - name: Download Python dependencies
-        shell: bash
-        run: |
-          ./install/python/python.exe tools/ci/download_deps.py --deps-dir install/deps
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x"
 
-      - name: Download drop_core module
+      - name: Build agent-go
         shell: bash
-        env:
-          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          ./install/python/python.exe tools/ci/download_drop_core.py --os windows --arch ${{ matrix.arch }} || echo "drop_core download skipped"
+          cd agent-go && go build -o agent-go.exe .
 
       - name: Install
         shell: bash
         run: |
           PLATFORM_TAG="win-${{ steps.platform.outputs.tag }}"
-          ./install/python/python.exe ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
+          python ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
 
       - name: Copy MFA files to main version
         shell: bash
@@ -248,37 +248,28 @@ jobs:
           # 转换 PNG 到 ICO
           magick convert assets/logo.png -define icon:auto-resize=256,128,64,48,32,24,16 mwjdr.ico
 
-      - name: Setup Embed Python on macOS
+      - name: Rename MaaFramework DLL dir to bin-go
         shell: bash
         run: |
-          python3 tools/ci/setup_embed_python.py
-          EMBED_PYTHON_PATH="./install/python/bin/python3"
-          if [ -f "$EMBED_PYTHON_PATH" ]; then
-            echo "Setting execute permission for $EMBED_PYTHON_PATH"
-            chmod +x "$EMBED_PYTHON_PATH"
-          else
-            echo "Warning: Embedded Python executable not found at $EMBED_PYTHON_PATH. Skipping chmod."
+          if [ -d "deps/bin" ] && [ ! -d "deps/bin-go" ]; then
+            mv deps/bin deps/bin-go
           fi
 
-      - name: Download Python dependencies
-        shell: bash
-        run: |
-          ./install/python/bin/python3 tools/ci/download_deps.py --deps-dir install/deps
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.27.x"
 
-      - name: Download drop_core module
+      - name: Build agent-go
         shell: bash
-        env:
-          PRIVATE_REPO_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
-          ./install/python/bin/python3 tools/ci/download_drop_core.py --os darwin --arch ${{ matrix.arch }} || echo "drop_core download skipped"
+          cd agent-go && go build -o agent-go .
 
       - name: Install on macOS
         shell: bash
         run: |
-          PYTHON_EXECUTABLE="./install/python/bin/python3"
           PLATFORM_TAG="osx-${{ steps.platform.outputs.tag }}"
-          echo "Using Python executable: $PYTHON_EXECUTABLE for macOS"
-          $PYTHON_EXECUTABLE ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
+          python3 ./tools/ci/install.py ${{ needs.meta.outputs.tag }} $PLATFORM_TAG
 
 
       - name: Copy MFA files to main version
@@ -370,18 +361,10 @@ jobs:
               find "$f" -type f -name "MFAUpdater*" -exec chmod +x {} \; 2>/dev/null || true
               echo "Set execute permission for all MFAUpdater files"
 
-              PYTHON_PATHS=(
-                "$f/python/bin/python3"
-                "$f/python/python"
-                "$f/python/bin/python"
-                "$f/python/python.exe"
-              )
-              for PYTHON_PATH in "${PYTHON_PATHS[@]}"; do
-                if [[ -f "$PYTHON_PATH" ]]; then
-                  chmod +x "$PYTHON_PATH"
-                  echo "Set execute permission for $PYTHON_PATH"
-                fi
-              done
+              if [[ -f "$f/agent-go/agent-go" ]]; then
+                chmod +x "$f/agent-go/agent-go"
+                echo "Set execute permission for $f/agent-go/agent-go"
+              fi
 
               tar -cpzf "$f.tar.gz" -C "$f" .
               echo "Created archive with preserved permissions: $f.tar.gz"
