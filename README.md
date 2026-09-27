@@ -215,41 +215,42 @@ utils.DisableBattleTasks(ctx, "自动野兽_入口")
 
 ## 快速开始
 
-### 前置条件
+### 方式一：使用发布版（推荐）
 
-- Windows 系统
-- [MFAAvalonia](https://github.com/MaaXYZ/MFAAvalonia) 已安装
-- 安卓设备已通过 ADB 连接
+发布版已内置图形界面（MWJDR.exe）、Go agent、MaaFramework DLL 与全部资源，开箱即用：
 
-### 安装
+1. 从 [Releases](https://github.com/l0rraine/MWJDR/releases) 下载最新版本（如 `MWJDR-win-x86_64-vX.X.X-Full.zip`）
+2. 解压后双击 `MWJDR.exe`
+3. 连接安卓设备（需已开启 ADB 调试）
+4. 选择要执行的任务并配置选项，点击开始
 
-1. 下载最新 Release 或克隆本仓库
+### 方式二：从源码运行（开发）
+
+1. 克隆本仓库
 
    ```bash
    git clone https://github.com/l0rraine/MWJDR.git
    ```
 
-2. 配置资源文件
+2. 配置资源文件（复制 OCR 模型）
 
    ```bash
    python ./configure.py
    ```
 
-3. 构建 agent（开发模式；发布版已内置 `agent-go.exe`）
+3. 构建 Go agent
 
    ```bash
    cd agent-go
    go build -o agent-go.exe .
    ```
 
-4. 将项目目录添加到 MFAAvalonia 作为资源路径
+4. 在 MFAAvalonia 中将项目目录添加为资源路径，选择本项目运行
 
-### 使用
+### 前置条件（两种方式通用）
 
-1. 启动 MFAAvalonia，选择本项目
-2. 连接安卓设备
-3. 选择要执行的任务并配置选项
-4. 点击开始
+- Windows 系统
+- 安卓设备已通过 ADB 连接
 
 ## 开发指南
 
