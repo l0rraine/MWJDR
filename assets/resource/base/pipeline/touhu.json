@@ -1,0 +1,32 @@
+{
+  "投壶_入口": {
+    "next": [
+      "投壶_执行"
+    ]
+  },
+  "投壶_执行": {
+    "action": "Custom",
+    "custom_action": "投壶",
+    "custom_action_param": {
+      "重开配额": 5
+    },
+    "next": [
+      "投壶_判断继续"
+    ]
+  },
+  "投壶_判断继续": {
+    "action": "Custom",
+    "custom_action": "投壶_判断继续",
+    "custom_action_param": {
+      "局数": 0
+    },
+    "next": [
+      "投壶_执行",
+      "投壶_结束"
+    ]
+  },
+  "投壶_结束": {
+    "action": "DoNothing",
+    "next": []
+  }
+}

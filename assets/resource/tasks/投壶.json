@@ -1,0 +1,54 @@
+{
+    "task": [
+        {
+            "name": "投壶",
+            "entry": "投壶_入口",
+            "option": [
+                "投壶重开配额",
+                "投壶局数"
+            ]
+        }
+    ],
+    "option": {
+        "投壶重开配额": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "重开配额",
+                    "pattern_msg": "脱靶后暂停重开的次数上限",
+                    "pipeline_type": "number",
+                    "default": "5",
+                    "verify": "^\\d+$",
+                    "description": "一局内脱靶（未投中）允许暂停重开的次数，0 表示脱靶后不重开"
+                }
+            ],
+            "pipeline_override": {
+                "投壶_执行": {
+                    "custom_action_param": {
+                        "重开配额": "{重开配额}"
+                    }
+                }
+            }
+        },
+        "投壶局数": {
+            "type": "input",
+            "inputs": [
+                {
+                    "name": "局数",
+                    "pattern_msg": "执行多少局，0 表示无限",
+                    "pipeline_type": "number",
+                    "default": "0",
+                    "verify": "^\\d+$",
+                    "description": "自动执行的局数，0 表示一直运行直到手动停止"
+                }
+            ],
+            "pipeline_override": {
+                "投壶_判断继续": {
+                    "custom_action_param": {
+                        "局数": "{局数}"
+                    }
+                }
+            }
+        }
+    }
+}
