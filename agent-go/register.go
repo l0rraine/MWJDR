@@ -20,4 +20,5 @@ func registerAll() {
 	action.RegisterWanderingMerchantActions()
 	action.RegisterMysteryMerchantActions()
 	action.RegisterUnionShopActions()
+	action.RegisterTouhuActions()
 }
