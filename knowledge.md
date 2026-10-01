@@ -1616,3 +1616,5 @@ _ = ctx.OverridePipeline(map[string]any{"自动集结_巨兽入口": map[string]
 | 2026-09-30 | `monster.go` | 只执行10次，剩余=0 后不停"查看次数"死循环 | 停止分支改用 `stopMonsterTask`（禁用 `自动集结_巨兽入口`） |
 | 2026-10-01 | `unite.go` | 两槽都满意后仍重复"查看任务"几次才停（弹回路径"已在活动界面"OCR 命中→不重新压栈→栈耗尽后停止，非死循环） | 停止分支改用 `stopUniteTask`（禁用 `联盟总动员_入口`），一次终止不再弹栈 |
 | 2026-10-01 | `bear.go`/`beast.go`/`light.go`/`item_battle.go`/`dream.go`/`common.go` | 批量清除全部残留 `OverrideNext(空列表)` | 停止类分支改用禁用 next 循环锚点：bear→`熊_执行滚动`、beast→`自动野兽_入口`、light→`灯塔入口`、item_battle→`集结物品入口`；dream/common 节点本身无 next，仅移除冗余调用（禁用会破坏梦境多关卡/启动流程） |
+| 2026-10-01 | `monster.json`/`monster.go` | "只执行10次"剩余 0 时 OCR 30 次全失败（最后结果''）——PaddleOCR 把孤立圆体"0"识别成字母 O，节点 expected `\d+` 过滤后不命中 | expected 放行 `[\dOo]+` + `setMonsterCount` 用 `normalizeOCRZero` 把 O/o 归一化为 0 |
+| 2026-10-01 | `bear.go` | 队伍全部派出后连续向上滚动无停顿（识别队伍禁用→JumpBack 空转，pre/post_delay 全 0） | 全部派出分支保持原循环节奏（禁用识别队伍不扫描 + sleep 1s 保持间隔）；新增"活动开始后 25 分钟起提前结束"（活动共 30 分钟整，`30*60-5*60=1500s`） |

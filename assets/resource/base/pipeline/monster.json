@@ -180,7 +180,7 @@
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "\\d+",
+                "expected": "[\\dOo]+",
                 "roi": [
                     385,
                     529,

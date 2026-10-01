@@ -196,12 +196,21 @@ func bearComputeTeam(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		return true
 	}
 
+	// 打熊活动共30分钟:活动最后5分钟(开始后25分钟起)派出的队伍来不及返回,直接结束
+	if time.Since(bearStageStart(bearStartTime)).Seconds() >= 30*60-5*60 {
+		utils.Info("打熊剩余不足5分钟,停止出征")
+		stopBearTask(ctx)
+		return true
+	}
+
 	bearReserveTeam = 0
 	bearTotalTeams = len(bearTeamOrder) - bearReserveTeam
 
 	if bearSendTeams == bearTotalTeams {
 		_ = ctx.OverridePipeline(map[string]any{"熊_识别队伍_大车头": map[string]any{"enabled": false}})
 		_ = ctx.OverridePipeline(map[string]any{"熊_识别队伍_普通车头": map[string]any{"enabled": false}})
+		// 全部派出:不扫描(识别队伍已禁用),但保持与扫描时相近的循环间隔,避免连续快速滚动
+		time.Sleep(1 * time.Second)
 	} else {
 		_ = ctx.OverridePipeline(map[string]any{"熊_识别队伍_大车头": map[string]any{"enabled": true}})
 		_ = ctx.OverridePipeline(map[string]any{"熊_识别队伍_普通车头": map[string]any{"enabled": true}})

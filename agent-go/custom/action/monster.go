@@ -1,6 +1,7 @@
 package action
 
 import (
+	"strings"
 	"time"
 
 	"github.com/MaaXYZ/maa-framework-go/v4"
@@ -18,14 +19,14 @@ func RegisterMonsterActions() {
 
 // 设置怪兽次数
 func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
-	text, _ := utils.OcrUntilConsistentByTask(ctx, "自动集结_识别次数", nil, `\d+`, 0, 0)
+	text, _ := utils.OcrUntilConsistentByTask(ctx, "自动集结_识别次数", nil, `[0-9Oo]+`, 0, 0)
 	if text == "" {
 		utils.Warning("识别怪兽次数失败")
 		combatCount.Reset() // 清理残留状态,避免影响后续任务
 		stopMonsterTask(ctx)
 		return true
 	}
-	remaining := atoiLocal(text)
+	remaining := atoiLocal(normalizeOCRZero(text))
 	combatCount.Reset()
 
 	if remaining <= 0 {
@@ -226,4 +227,10 @@ func stripCommaDot(s string) string {
 		}
 	}
 	return string(out)
+}
+
+// normalizeOCRZero 将 OCR 把数字 0 误识别成的 O/o 归一化为 0
+// (孤立圆体"0"常被 PaddleOCR 识别为字母 O;与节点 expected 放行 [\dOo]+ 配套)
+func normalizeOCRZero(s string) string {
+	return strings.NewReplacer("O", "0", "o", "0").Replace(s)
 }
