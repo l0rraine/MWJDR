@@ -26,6 +26,7 @@
 18. [Pipeline JSON 选项列表与 Python 解耦模式](#18-pipeline-json-选项列表与-python-解耦模式)
 19. [通用每日检查与记录日期 action](#19-通用每日检查与记录日期-action)
 20. [AgentServer 多线程限制与全局变量持久化](#20-agentserver-多线程限制与全局变量持久化)
+21. [OverrideNext(空列表) 无法终止任务：JumpBack 弹栈死循环（集结怪兽）](#21-overridenext空列表-无法终止任务jumpback-弹栈死循环集结怪兽)
 
 ---
 
@@ -1543,3 +1544,75 @@ with _lock:
 经过 6 次迭代后，**放弃了后台线程方案**，将所有逻辑合并到 Pipeline 主线程的 Custom Action 中（如 `熊_识别队伍` 同时负责阶段计算、OCR 识别和点击操作）。这彻底避免了多线程问题，代码也更简洁。
 
 > 💡 **核心原则：在 AgentServer 中，所有 MaaFramework 相关操作都应在 Pipeline 主线程中完成。不要引入后台线程。**
+
+---
+
+## 21. OverrideNext(空列表) 无法终止任务：JumpBack 弹栈死循环（集结怪兽）
+
+### 问题
+
+集结巨兽「只执行10次」（未开作战设置）模式下，最后一次检测到剩余次数为 0 时，脚本不停重复「查看次数 → 识别0 → …」陷入死循环，永不停止。
+
+### 根因（基于 MaaFramework v5.10.4 PipelineTask.cpp 源码）
+
+`context.override_next(当前节点, [])` 把 next 置为空，**并不能保证任务终止**：
+
+```cpp
+// 命中带 [JumpBack] 前缀的引用项时，压入"当前父节点的名字"
+if (node_detail.jump_back) {
+    jumpback_stack.emplace(pre_node_name);
+}
+
+// next 跑空时：只要 jumpback 栈非空就会弹栈回父节点 next 开头，继续执行
+if (next.empty() && !error_handling && !jumpback_stack.empty()) {
+    auto top = std::move(jumpback_stack.top());
+    jumpback_stack.pop();
+    node = get_pipeline_data(top);
+    next = node.next;   // 重新查该父节点的 next，从头遍历
+}
+```
+
+在集结巨兽链路中，`自动集结_巨兽入口.next` 含 `[JumpBack]自动集结_点击放大镜` 等前缀节点：任务从城堡界面启动时「确定巨兽位置」识别失败，会命中 `[JumpBack]点击放大镜`，把 `自动集结_巨兽入口` 压入 jumpback 栈；每轮打完回入口也会重新压栈。因此**栈内必然残留 `自动集结_巨兽入口`**。
+
+此时 `设置怪兽次数` 的 next 被 override 为空 → 核心弹栈回到 `自动集结_巨兽入口` 重新执行；而停止分支又**没有禁用 `自动集结_查看次数`**（只有 remaining>0 分支会禁用），于是形成：
+
+```
+巨兽入口 → 点击搜索 → 查看次数 → 下滑 → 设置怪兽次数(OCR=0)
+  → OverrideNext(空) → 弹栈 → 巨兽入口 → 点击搜索 → 查看次数 → …（死循环）
+```
+
+### 正确停止方式：禁用入口节点
+
+让当前节点的 next 列表**非空但全部 disabled**，核心 `run_reco_and_action` 的 `any_of(valid)` 检查失败返回无效 NodeDetail → 进入 error handling（`error_handling=true`）→ `next=on_error(空)` → **弹栈条件 `!error_handling` 不满足 → 弹栈被阻断 → 任务终止**：
+
+```go
+// ✅ 修复后：禁用入口节点（monster.go stopMonsterTask）
+_ = ctx.OverridePipeline(map[string]any{"自动集结_巨兽入口": map[string]any{"enabled": false}})
+// 移除 OverrideNext(当前节点, []) —— 它会触发弹栈死循环
+```
+
+> ⚠️ 弹栈恢复执行时不检查被弹出节点自身的 enabled（直接取 `node.next`），所以**禁用入口 + 保留 OverrideNext(空) 的组合依然会循环**，必须彻底移除 OverrideNext(空) 调用。
+
+### 修改范围（2026-09-30，monster.go）
+
+| 位置 | 修改 |
+|---|---|
+| `setMonsterCount` OCR 识别失败分支 | OverrideNext(空) → `stopMonsterTask` |
+| `setMonsterCount` remaining≤0 分支 | OverrideNext(空) → `stopMonsterTask` |
+| `beginCombat` 高级模式达到次数上限 | OverrideNext(空) → `stopMonsterTask` |
+| `monsterEnd`（罐头用完/无体力） | 增加 `stopMonsterTask`（兼停止当前任务） |
+| 新增 `stopMonsterTask` | 禁用 `自动集结_巨兽入口` 节点 |
+
+注意：remaining≤0 属于正常完成，**不调用** `monsterEnd`（会禁用后续战斗任务）；罐头用完/无体力属资源耗尽，仍调用 `monsterEnd` 禁用后续战斗任务。
+
+### 遗留风险
+
+已全部处理（2026-10-01 批量修复）：`bear.go`、`beast.go`、`common.go`、`dream.go`、`item_battle.go`、`light.go` 的 `OverrideNext(空列表)` 已清除——停止类分支改为"禁用 next 循环锚点节点"，`dream.go`(86) 与 `common.go`(208) 属节点无 next 的冗余调用，仅移除。当前全仓库已无 `OverrideNext(空列表)` 调用，剩余 `OverrideNext` 均为跳转真实节点（`touhu.go`→`投壶_结束`、`wandering_merchant.go`→`商店购买_入口`、`merchant_utils.go`→skipNext）。
+
+### 同类修复记录
+
+| 日期 | 文件 | 现象 | 修复 |
+|---|---|---|---|
+| 2026-09-30 | `monster.go` | 只执行10次，剩余=0 后不停"查看次数"死循环 | 停止分支改用 `stopMonsterTask`（禁用 `自动集结_巨兽入口`） |
+| 2026-10-01 | `unite.go` | 两槽都满意后仍重复"查看任务"几次才停（弹回路径"已在活动界面"OCR 命中→不重新压栈→栈耗尽后停止，非死循环） | 停止分支改用 `stopUniteTask`（禁用 `联盟总动员_入口`），一次终止不再弹栈 |
+| 2026-10-01 | `bear.go`/`beast.go`/`light.go`/`item_battle.go`/`dream.go`/`common.go` | 批量清除全部残留 `OverrideNext(空列表)` | 停止类分支改用禁用 next 循环锚点：bear→`熊_执行滚动`、beast→`自动野兽_入口`、light→`灯塔入口`、item_battle→`集结物品入口`；dream/common 节点本身无 next，仅移除冗余调用（禁用会破坏梦境多关卡/启动流程） |

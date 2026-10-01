@@ -83,7 +83,8 @@ func memories(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	} else {
 		dreamTeamMode(ctx, level)
 	}
-	_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+	// 本关卡完成:节点"梦境寻忆_*_开始_*关"无 next 字段,OverrideNext(空) 为冗余调用,
+	// 直接 return 即弹栈回"梦境寻忆_*_闯关"继续下一关;此处不能禁用节点,否则会中断多关卡流程。
 	return true
 }
 

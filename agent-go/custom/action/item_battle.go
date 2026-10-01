@@ -23,7 +23,7 @@ func recoVigor(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	text := utils.OcrUntilConsistent(ctx, maa.Rect{583, 21, 87, 36}, `\d+`, 3, 30)
 	if text == "" {
 		utils.Warning("识别体力失败")
-		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		stopItemBattleTask(ctx)
 		return true
 	}
 	left := atoiLocal(text)
@@ -58,7 +58,7 @@ func itemCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		utils.Infof("体力耗尽,共使用物品集结 %d次,停止出征", combatCount.Count)
 		utils.DisableBattleTasks(ctx, "集结物品_识别体力入口")
 		combatCount.Reset()
-		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		stopItemBattleTask(ctx)
 		return true
 	}
 
@@ -87,9 +87,16 @@ func itemCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		utils.Infof("体力耗尽,共使用物品集结 %d次,停止出征", combatCount.Count)
 		utils.DisableBattleTasks(ctx, "集结物品_识别体力入口")
 		combatCount.Reset()
-		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		stopItemBattleTask(ctx)
 		return true
 	}
 
 	return true
+}
+
+// stopItemBattleTask 终止物品集结任务:禁用"集结物品入口"(当前节点 next 的循环锚点),
+// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
+// 不能依赖 OverrideNext(空):入口链路经 [JumpBack] 节点压栈,next 为空会弹栈回入口重跑。
+func stopItemBattleTask(ctx *maa.Context) {
+	_ = ctx.OverridePipeline(map[string]any{"集结物品入口": map[string]any{"enabled": false}})
 }

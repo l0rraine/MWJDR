@@ -22,7 +22,7 @@ func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	if text == "" {
 		utils.Warning("识别怪兽次数失败")
 		combatCount.Reset() // 清理残留状态,避免影响后续任务
-		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		stopMonsterTask(ctx)
 		return true
 	}
 	remaining := atoiLocal(text)
@@ -33,7 +33,7 @@ func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		_, _ = ctx.RunTask("后退")
 		time.Sleep(500 * time.Millisecond)
 		utils.ClickRect(ctx, maa.Rect{628, 727, 15, 18})
-		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		stopMonsterTask(ctx)
 		return true
 	}
 	combatCount.InitFromOCR(remaining)
@@ -48,6 +48,16 @@ func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	}
 
 	return true
+}
+
+// stopMonsterTask 终止当前集结巨兽流程:禁用入口节点,使"设置怪兽次数/准备出征"的
+// next 列表全部失效,核心 run_reco_and_action 返回无效 NodeDetail 进入 error handling,
+// 任务终止(不会再弹栈)。
+// 注意:不能依赖 OverrideNext(空列表) 停止——入口链路经 [JumpBack]自动集结_点击放大镜
+// 等节点压栈,jumpback 栈非空时 next 为空会弹栈回到自动集结_巨兽入口重新执行,
+// 而停止分支又未禁用自动集结_查看次数,导致"查看次数→识别0→弹栈→查看次数"死循环。
+func stopMonsterTask(ctx *maa.Context) {
+	_ = ctx.OverridePipeline(map[string]any{"自动集结_巨兽入口": map[string]any{"enabled": false}})
 }
 
 // 开始出征
@@ -114,7 +124,6 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			if canLimit > 0 && combatCount.IsReachLimit() {
 				utils.Infof("已达到罐头使用次数上限:%d次,停止出征", canLimit)
 				monsterEnd(ctx)
-				_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
 				return true
 			}
 
@@ -126,7 +135,6 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			if maxCan < 2 {
 				utils.Info("罐头已用完")
 				monsterEnd(ctx)
-				_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
 				return true
 			}
 
@@ -145,7 +153,6 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			if maxCan < 2 {
 				utils.Info("罐头已用完")
 				monsterEnd(ctx)
-				_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
 				return true
 			}
 			c := min(20, (combatCount.Limit-combatCount.Count)*2, maxCan)
@@ -155,7 +162,6 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		} else {
 			utils.Debug("无体力,结束")
 			monsterEnd(ctx)
-			_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
 			return false
 		}
 	}
@@ -195,7 +201,7 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		if advancedMode == 1 {
 			utils.Infof("已达到出征次数上限:%d次,停止出征", combatCount.Limit)
 			combatCount.Reset()
-			_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+			stopMonsterTask(ctx)
 			return true
 		}
 		utils.Info("已到达次数上限,重新查看次数")
@@ -208,6 +214,7 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 
 func monsterEnd(ctx *maa.Context) {
 	utils.DisableBattleTasks(ctx, "自动集结_巨兽入口")
+	stopMonsterTask(ctx)
 	combatCount.Reset()
 }
 

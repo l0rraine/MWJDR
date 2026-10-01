@@ -205,7 +205,7 @@ func makeSureQueueAvailable(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	text, _ := utils.OcrUntilConsistentByTask(ctx, "识别当前队列数量", nil, `\d+/\d+`, 0, 0)
 	if text == "" {
 		utils.Warning("识别队列数量失败")
-		_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+		// 节点"确保有空闲队列"无 next 字段,OverrideNext(空) 为冗余调用,直接 return 即可。
 		return true
 	}
 	utils.Debugf("队列情况:%s", text)

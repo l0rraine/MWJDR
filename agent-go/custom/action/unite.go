@@ -128,8 +128,17 @@ func uniteScan(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		return true
 	}
 	utils.Info("已全部得到满意的结果,停止刷新")
-	_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+	stopUniteTask(ctx)
 	return true
+}
+
+// stopUniteTask 终止当前联盟总动员流程:禁用入口节点,使"联盟总动员_执行扫描"的 next 列表
+// 全部失效,核心 run_reco_and_action 返回无效 NodeDetail 进入 error handling,任务立即终止。
+// 不能依赖 OverrideNext(空列表):入口链路经 [JumpBack]联盟总动员_点击活动 等节点压栈,
+// next 为空会弹栈回到入口白跑一轮(每轮弹1个),直到栈耗尽才停——这正是"已全部满意后
+// 仍重复查看任务几次"的原因;栈内残留条目耗尽前任务不会终止。
+func stopUniteTask(ctx *maa.Context) {
+	_ = ctx.OverridePipeline(map[string]any{"联盟总动员_入口": map[string]any{"enabled": false}})
 }
 
 // uniteEnabledExpected 收集所有启用任务的 OCR expected 文本(flattened)

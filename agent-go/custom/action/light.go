@@ -33,11 +33,18 @@ func lightBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			_, _ = ctx.RunTask("点击出征")
 		} else {
 			utils.DisableBattleTasks(ctx, "灯塔入口")
-			_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+			stopLightTask(ctx)
 			return true
 		}
 	}
 
 	time.Sleep(time.Duration(returnTime*2)*time.Second + 500*time.Millisecond)
 	return true
+}
+
+// stopLightTask 终止自动灯塔任务:禁用"灯塔入口"("灯塔准备出征"的 next 唯一引用),
+// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
+// 不能依赖 OverrideNext(空):入口链路经 [JumpBack] 节点压栈,next 为空会弹栈回入口重跑。
+func stopLightTask(ctx *maa.Context) {
+	_ = ctx.OverridePipeline(map[string]any{"灯塔入口": map[string]any{"enabled": false}})
 }

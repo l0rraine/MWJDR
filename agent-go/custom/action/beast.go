@@ -36,11 +36,18 @@ func beastBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		} else {
 			utils.Debug("野兽无免费体力,停止出征")
 			utils.DisableBattleTasks(ctx, "自动野兽_入口")
-			_ = ctx.OverrideNext(arg.CurrentTaskName, []maa.NextItem{})
+			stopBeastTask(ctx)
 			return true
 		}
 	}
 
 	time.Sleep(time.Duration(returnTime*2)*time.Second + 500*time.Millisecond)
 	return true
+}
+
+// stopBeastTask 终止自动野兽任务:禁用"自动野兽_入口"("自动野兽_准备出征"的 next 唯一引用),
+// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
+// 不能依赖 OverrideNext(空):入口链路经 [JumpBack] 节点压栈,next 为空会弹栈回入口重跑。
+func stopBeastTask(ctx *maa.Context) {
+	_ = ctx.OverridePipeline(map[string]any{"自动野兽_入口": map[string]any{"enabled": false}})
 }
