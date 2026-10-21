@@ -23,6 +23,7 @@ var (
 	mines          = append([]string{}, allMines...)
 	lastWrongHeroT int64 // unix 秒
 	mineLevel      = 0
+	mineMaxSwipes  = 4 // 搜索列表最多向右滑动次数
 	mineNodeMap    = map[string]string{
 		"挖矿_矿_肉": "肉",
 		"挖矿_矿_木": "木",
@@ -186,24 +187,35 @@ func mineRecoTeam(ctx *maa.Context, arg *maa.CustomRecognitionArg) (*maa.CustomR
 	return nil, true
 }
 
-// 挖矿_识别矿图标
+// 挖矿_识别矿图标:在搜索结果列表里找目标矿图标。
+// 第一屏找不到时向右滑动重试,最多滑动 mineMaxSwipes 次(有上限,避免无限滑动);
+// 仍未找到则返回未命中,由 挖矿_确定矿图标 的 next 走 后退 干净退出。
 func mineRecoMine(ctx *maa.Context, arg *maa.CustomRecognitionArg) (*maa.CustomRecognitionResult, bool) {
-	img, err := utils.ScreenCap(ctx)
-	if err != nil {
-		return nil, true
+	for attempt := 0; attempt <= mineMaxSwipes; attempt++ {
+		if attempt > 0 {
+			_, _ = ctx.RunAction("挖矿_滑动到右边", maa.Rect{}, "", nil)
+			time.Sleep(700 * time.Millisecond)
+		}
+		img, err := utils.ScreenCap(ctx)
+		if err != nil {
+			return nil, true
+		}
+		detail, _ := ctx.RunRecognition("识别要挖的矿", img,
+			map[string]any{
+				"识别要挖的矿": map[string]any{
+					"recognition": "TemplateMatch",
+					"roi":         []int{86, 820, 634, 176},
+					"template":    nextMine + "矿.png",
+				},
+			})
+		// 必须同时判断 Hit 与有效框:未命中时 detail 非 nil 且 Box 为无效值,
+		// 只判 nil 会变成"永远命中",进而点到无效坐标、面板根本不会打开。
+		if detail != nil && detail.Hit && detail.Box[2] > 0 && detail.Box[3] > 0 {
+			return &maa.CustomRecognitionResult{Box: detail.Box, Detail: ""}, true
+		}
 	}
-	detail, _ := ctx.RunRecognition("识别要挖的矿", img,
-		map[string]any{
-			"识别要挖的矿": map[string]any{
-				"recognition": "TemplateMatch",
-				"roi":         []int{86, 820, 634, 176},
-				"template":    nextMine + "矿.png",
-			},
-		})
-	if detail == nil {
-		return nil, true
-	}
-	return &maa.CustomRecognitionResult{Box: detail.Box, Detail: ""}, true
+	utils.Warningf("挖矿: 滑动%d次仍未找到%s矿图标,放弃本轮", mineMaxSwipes, nextMine)
+	return nil, true
 }
 
 // 挖矿_设置等级:调整矿等级至默认值并搜索
@@ -221,6 +233,12 @@ func mineSetLevel(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 				"roi":         []int{584, 1029, 44, 48},
 			},
 		}, `\d`, 0, 0)
+	if text == "" {
+		// 读不到等级通常意味着矿详情面板没打开(上一个节点没选中矿)。
+		// 此时按 0/1 处理会盲点"增加等级"7 次、再点搜索,把界面点乱,所以直接放弃本轮调整。
+		utils.Warning("挖矿: 未识别到矿等级(矿详情面板可能未打开),跳过本轮等级调整与搜索")
+		return true
+	}
 	mineLevel = atoiLocal(text)
 	if mineLevel == 0 {
 		mineLevel = 1
