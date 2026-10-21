@@ -83,6 +83,23 @@ func memories(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	} else {
 		dreamTeamMode(ctx, level)
 	}
+
+	// 循环模式(仅闯关):找到所有物品并点击继续后,等候5s再回到 梦境寻忆_闯关 继续下一关。
+	// 关卡节点(梦境寻忆_*_开始_*关)本身无 next,正常流程到此弹栈结束;
+	// 循环模式下用 OverrideNext 把当前节点的 next 指向 梦境寻忆_闯关,
+	// 框架在 action 返回后读取该 next,不再弹栈,而是重新走关卡选择。
+	if mode == "闯关" && NodeEnabled(ctx, "梦境寻忆_循环模式") {
+		if arg.CurrentTaskName == "" {
+			utils.Warning("循环模式:未取得当前节点名,本轮不再循环")
+		} else {
+			utils.Info("循环模式:等候5s后继续闯关")
+			time.Sleep(5 * time.Second)
+			if err := ctx.OverrideNext(arg.CurrentTaskName,
+				[]maa.NextItem{{Name: "梦境寻忆_闯关"}}); err != nil {
+				utils.Warningf("循环模式:OverrideNext 失败:%v", err)
+			}
+		}
+	}
 	// 本关卡完成:节点"梦境寻忆_*_开始_*关"无 next 字段,OverrideNext(空) 为冗余调用,
 	// 直接 return 即弹栈回"梦境寻忆_*_闯关"继续下一关;此处不能禁用节点,否则会中断多关卡流程。
 	return true

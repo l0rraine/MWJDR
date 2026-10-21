@@ -35,6 +35,9 @@
             "cases": [
                 {
                     "name": "闯关模式",
+                    "option": [
+                        "梦境寻忆循环模式"
+                    ],
                     "pipeline_override": {
                         "梦境寻忆_组队": {
                             "enabled": false
@@ -51,6 +54,30 @@
                             "enabled": true
                         },
                         "梦境寻忆_闯关": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
+        },
+        "梦境寻忆循环模式": {
+            "type": "switch",
+            "default_case": "No",
+            "label": "循环模式",
+            "description": "闯关模式专属:每关找到所有物品并点击继续后,等候5秒自动回到关卡选择继续下一关,直到没有可识别的关卡",
+            "cases": [
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "梦境寻忆_循环模式": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "梦境寻忆_循环模式": {
                             "enabled": false
                         }
                     }
