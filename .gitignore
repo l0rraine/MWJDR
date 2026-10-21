@@ -454,3 +454,8 @@ debug
 
 # 本地参考资料与临时产物
 temp/
+
+# agent-go 本地构建/运行输出
+agent-go/build_err.txt
+agent-go/start_err.txt
+agent-go/start_out.txt
