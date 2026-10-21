@@ -2,19 +2,33 @@ package utils
 
 import (
 	"fmt"
+	"html"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
 
 // Logger 提供与 Python loguru 兼容的日志输出:
-// - stderr 输出 "level:message" 格式(MFAAvalonia 按前缀识别级别)
-// - 同时写文件 debug/custom/YYYY-MM-DD.log
+// - stderr 输出 "level:<font color=...>msg</font>" 格式:
+//   MFAAvalonia 按 "level:" 前缀识别级别(CheckShouldLog),
+//   内容以 Markdown 渲染,其 HtmlPlugin 的 FontParser 解析 <font color>
+//   并直接设置前景色(本地值优先于主题正文色),实现按级别着色。
+// - 同时写文件 debug/custom/YYYY-MM-DD.log(纯文本,不含 HTML)
 type Logger struct {
 	mu     sync.Mutex
 	file   *os.File
 	logDir string
+}
+
+// levelColors stderr 着色映射,与旧版 MFA AddLog 的前缀配色一致
+var levelColors = map[string]string{
+	"info":     "Black",
+	"debug":    "DeepSkyBlue",
+	"warn":     "Orange",
+	"err":      "OrangeRed",
+	"critical": "Red",
 }
 
 var stdLogger = NewLogger("debug/custom")
@@ -38,9 +52,23 @@ func (l *Logger) openFile() error {
 	return nil
 }
 
+// stderrLine 构造 MFAAvalonia 日志面板用的 stderr 行。
+// 消息做 HTML 转义,换行折叠为空格(面板按行分割,跨行会切断标签)。
+func stderrLine(short, msg string) string {
+	color, ok := levelColors[short]
+	if !ok {
+		color = "Black"
+	}
+	safe := html.EscapeString(msg)
+	safe = strings.ReplaceAll(safe, "\r\n", " ")
+	safe = strings.ReplaceAll(safe, "\r", " ")
+	safe = strings.ReplaceAll(safe, "\n", " ")
+	return fmt.Sprintf("%s:<font color=%q>%s</font>", short, color, safe)
+}
+
 func (l *Logger) log(short, long, msg string) {
-	// stderr: MFAAvalonia 依赖 "level:message" 前缀
-	fmt.Fprintf(os.Stderr, "%s:%s\n", short, msg)
+	// stderr: MFAAvalonia 日志面板
+	fmt.Fprintln(os.Stderr, stderrLine(short, msg))
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
