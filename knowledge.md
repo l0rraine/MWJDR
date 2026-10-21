@@ -27,6 +27,7 @@
 19. [通用每日检查与记录日期 action](#19-通用每日检查与记录日期-action)
 20. [AgentServer 多线程限制与全局变量持久化](#20-agentserver-多线程限制与全局变量持久化)
 21. [OverrideNext(空列表) 无法终止任务：JumpBack 弹栈死循环（集结怪兽）](#21-overridenext空列表-无法终止任务jumpback-弹栈死循环集结怪兽)
+22. [Agent 日志按级别着色：stderr font 协议（v2.16.1-beta.3 起）](#22-agent-日志按级别着色stderr-font-协议v2161-beta3-起)
 
 ---
 
@@ -1617,4 +1618,33 @@ _ = ctx.OverridePipeline(map[string]any{"自动集结_巨兽入口": map[string]
 | 2026-10-01 | `unite.go` | 两槽都满意后仍重复"查看任务"几次才停（弹回路径"已在活动界面"OCR 命中→不重新压栈→栈耗尽后停止，非死循环） | 停止分支改用 `stopUniteTask`（禁用 `联盟总动员_入口`），一次终止不再弹栈 |
 | 2026-10-01 | `bear.go`/`beast.go`/`light.go`/`item_battle.go`/`dream.go`/`common.go` | 批量清除全部残留 `OverrideNext(空列表)` | 停止类分支改用禁用 next 循环锚点：bear→`熊_执行滚动`、beast→`自动野兽_入口`、light→`灯塔入口`、item_battle→`集结物品入口`；dream/common 节点本身无 next，仅移除冗余调用（禁用会破坏梦境多关卡/启动流程） |
 | 2026-10-01 | `monster.json`/`monster.go` | "只执行10次"剩余 0 时 OCR 30 次全失败（最后结果''）——PaddleOCR 把孤立圆体"0"识别成字母 O，节点 expected `\d+` 过滤后不命中 | expected 放行 `[\dOo]+` + `setMonsterCount` 用 `normalizeOCRZero` 把 O/o 归一化为 0 |
+
+---
+
+## 22. Agent 日志按级别着色：stderr font 协议（v2.16.1-beta.3 起）
+
+### 问题
+
+MFAAvalonia v2.16.1-beta.3（2026-08-27，提交 692e22b "render agent logs as markdown"）起，agent 的每行 stderr 输出改为 Markdown 渲染。日志模板中 `UseMarkdown=true` 分支（MarkdownScrollViewer）不引用 `LogItemViewModel.Color`，且 `MdXamlDocStyle.axaml` 给所有元素显式设 `Foreground={DynamicResource SukiText}`，导致 `AddLog` 按前缀算好的颜色（debug=DeepSkyBlue、info=Black 等）被丢弃——debug 与 info 显示成同一颜色。
+
+### 结论与协议
+
+不修改 MFA 源码，由 agent 在 stderr 内容里自带颜色。`AgentHelper.HandleOutputLine` 按行首 `level:` 前缀（`CheckShouldLog`）放行并剥前缀后，内容以 Markdown 渲染；MFA 的 `MdXamlPlugin` 注册了 HtmlPlugin，其 `FontParser` 解析 `<font color="...">` 并直接设置 CSpan.Foreground（本地值优先于样式），因此：
+
+```
+debug:<font color="DeepSkyBlue">消息</font>
+```
+
+实现见 `agent-go/utils/logger.go` 的 `stderrLine`（含 HTML 转义与换行折叠，保证一行一条），颜色映射 `levelColors` 与旧版前缀配色一致；格式契约由 `logger_test.go` 固化。
+
+### 约束与注意
+
+| 项 | 说明 |
+|---|---|
+| 适用版本 | 要求 MFAAvalonia ≥ v2.16.1-beta.3（此前 `useMarkdown=false`，font 标签会原样显示为文字） |
+| 互斥 | 与"MFA 源码里 `HandleOutputLine` 改回 `useMarkdown: false`"的补丁互斥：改了 A 就必须去掉 B，否则 HTML 标签原样显示 |
+| 前缀不变 | 行首必须是裸 `level:`，`CheckShouldLog` 用 `StartsWith` 匹配；`*level:` 前缀也被容忍 |
+| 换行 | 面板按 `\n` 分行，多行消息折叠为空格；文件日志 `debug/custom/*.log` 仍为纯文本不受影响 |
+| markdown 字符 | 消息内的 `*`/`#`/`[` 等仍会被 Markdown 处理，HTML 特殊字符由 `html.EscapeString` 转义 |
 | 2026-10-01 | `bear.go` | 队伍全部派出后连续向上滚动无停顿（识别队伍禁用→JumpBack 空转，pre/post_delay 全 0） | 全部派出分支保持原循环节奏（禁用识别队伍不扫描 + sleep 1s 保持间隔）；新增"活动开始后 25 分钟起提前结束"（活动共 30 分钟整，`30*60-5*60=1500s`） |
+| 2026-10-21 | `common.go`/`monster.go`/`unite.go`/`bear.go`/`beast.go`/`light.go`/`item_battle.go` | MFAAvalonia v2.16 新增任务状态灯后，"禁用锚点"终止的任务显示红叉（error handling → 任务状态 FAILED），正常完成的场景（巨兽次数打完、打熊提前结束等）也亮红叉 | 六个 `stopXxxTask` 统一改用 `stopPipelineCleanly`（`Tasker.PostStop`，外部停止信号 → 任务 SUCCEEDED → 绿勾，MFA 队列继续）；调用点仍 `return true`（返回 false 会先置 error_handling 覆盖停止路径）。**需实测确认 C# 绑定对 stop 后任务的 job 状态**；若显示仍为红叉再回滚并提 issue |
