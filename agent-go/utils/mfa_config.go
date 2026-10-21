@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-
-	"github.com/MaaXYZ/maa-framework-go/v4"
 )
 
 // MFAAvalonia 实例配置读取
@@ -105,78 +103,4 @@ func HasBattleTasks() (bool, bool) {
 		}
 	}
 	return false, true
-}
-
-// DisableBattleTasks 体力耗尽时,自动禁用当前任务之后已启用的战斗任务
-// 返回 true 表示成功禁用
-func DisableBattleTasks(ctx *maa.Context, currentEntry string) bool {
-	instanceID := GetInstanceID()
-	if instanceID == "" {
-		Debug("非 MFAAvalonia 环境,跳过禁用战斗任务")
-		return false
-	}
-	configPath := findInstanceConfig(instanceID)
-	if configPath == "" {
-		Warningf("未找到实例配置文件,无法禁用战斗任务: instance_id=%s", instanceID)
-		return false
-	}
-	raw, err := os.ReadFile(configPath)
-	if err != nil {
-		Warningf("读取实例配置失败,无法禁用战斗任务: %v", err)
-		return false
-	}
-	var config map[string]any
-	if err := json.Unmarshal(raw, &config); err != nil {
-		Warningf("解析实例配置失败,无法禁用战斗任务: %v", err)
-		return false
-	}
-
-	taskItems, _ := config["TaskItems"].([]any)
-	if len(taskItems) == 0 {
-		return false
-	}
-
-	// 查找当前任务位置
-	currentIndex := -1
-	for i, t := range taskItems {
-		if task, ok := t.(map[string]any); ok {
-			if entry, _ := task["entry"].(string); entry == currentEntry {
-				currentIndex = i
-				break
-			}
-		}
-	}
-	if currentIndex == -1 {
-		Warningf("未在配置文件中找到当前任务 '%s',将禁用所有已启用的战斗任务", currentEntry)
-	}
-
-	// 禁用当前任务之后的战斗任务
-	disabled := make([]string, 0)
-	for i, t := range taskItems {
-		task, ok := t.(map[string]any)
-		if !ok {
-			continue
-		}
-		entry, _ := task["entry"].(string)
-		if currentIndex != -1 && i <= currentIndex {
-			continue
-		}
-		if !battleTaskEntries[entry] {
-			continue
-		}
-		if defaultCheck, _ := task["default_check"].(bool); defaultCheck {
-			_ = ctx.GetTasker().GetResource().OverridePipeline(
-				map[string]any{entry: map[string]any{"enabled": false}})
-			Infof("已自动禁用战斗任务: %s", entry)
-			name, _ := task["name"].(string)
-			disabled = append(disabled, name)
-		}
-	}
-
-	if len(disabled) == 0 {
-		Debug("没有需要禁用的战斗任务")
-		return false
-	}
-	Infof("体力耗尽,已自动禁用后续战斗任务: %v", disabled)
-	return true
 }
