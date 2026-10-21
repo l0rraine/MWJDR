@@ -51,14 +51,16 @@ func setMonsterCount(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	return true
 }
 
-// stopMonsterTask 终止当前集结巨兽流程:禁用入口节点,使"设置怪兽次数/准备出征"的
-// next 列表全部失效,核心 run_reco_and_action 返回无效 NodeDetail 进入 error handling,
-// 任务终止(不会再弹栈)。
-// 注意:不能依赖 OverrideNext(空列表) 停止——入口链路经 [JumpBack]自动集结_点击放大镜
+// stopMonsterTask 终止当前集结巨兽流程:请求框架停止(外部停止信号),
+// 任务以成功状态结束,MFAAvalonia 状态灯显示绿勾。
+// 历史:曾用"禁用自动集结_巨兽入口使 next 全失效"终止(error handling,任务状态为失败,
+// 新版 MFAAvalonia 显示红叉),2026-10 起改用 PostStop。
+// 更早的历史:不能依赖 OverrideNext(空列表) 停止——入口链路经 [JumpBack]自动集结_点击放大镜
 // 等节点压栈,jumpback 栈非空时 next 为空会弹栈回到自动集结_巨兽入口重新执行,
-// 而停止分支又未禁用自动集结_查看次数,导致"查看次数→识别0→弹栈→查看次数"死循环。
+// 而停止分支又未禁用自动集结_查看次数,导致"查看次数→识别0→弹栈→查看次数"死循环;
+// PostStop 直接终止整个任务,不经过弹栈,天然规避该问题。详见 knowledge.md §21/§22。
 func stopMonsterTask(ctx *maa.Context) {
-	_ = ctx.OverridePipeline(map[string]any{"自动集结_巨兽入口": map[string]any{"enabled": false}})
+	stopPipelineCleanly(ctx)
 }
 
 // 开始出征
@@ -163,7 +165,9 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 		} else {
 			utils.Debug("无体力,结束")
 			monsterEnd(ctx)
-			return false
+			// PostStop 终止任务后必须返回 true:返回 false 会先置 error_handling,
+			// 任务状态变为失败,MFAAvalonia 状态灯显示红叉
+			return true
 		}
 	}
 
@@ -214,7 +218,6 @@ func beginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 }
 
 func monsterEnd(ctx *maa.Context) {
-	utils.DisableBattleTasks(ctx, "自动集结_巨兽入口")
 	stopMonsterTask(ctx)
 	combatCount.Reset()
 }

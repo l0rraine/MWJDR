@@ -35,7 +35,6 @@ func beastBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			_, _ = ctx.RunTask("点击出征")
 		} else {
 			utils.Debug("野兽无免费体力,停止出征")
-			utils.DisableBattleTasks(ctx, "自动野兽_入口")
 			stopBeastTask(ctx)
 			return true
 		}
@@ -45,9 +44,10 @@ func beastBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	return true
 }
 
-// stopBeastTask 终止自动野兽任务:禁用"自动野兽_入口"("自动野兽_准备出征"的 next 唯一引用),
-// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
-// 不能依赖 OverrideNext(空):入口链路经 [JumpBack] 节点压栈,next 为空会弹栈回入口重跑。
+// stopBeastTask 终止自动野兽任务:请求框架停止(外部停止信号),任务以成功状态结束,
+// MFAAvalonia 状态灯显示绿勾。
+// 历史:曾用"禁用自动野兽_入口使 next 全失效"终止(error handling,任务状态为失败,
+// 新版 MFAAvalonia 显示红叉),2026-10 起改用 PostStop。详见 knowledge.md §21/§22。
 func stopBeastTask(ctx *maa.Context) {
-	_ = ctx.OverridePipeline(map[string]any{"自动野兽_入口": map[string]any{"enabled": false}})
+	stopPipelineCleanly(ctx)
 }

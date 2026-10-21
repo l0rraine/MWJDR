@@ -219,12 +219,15 @@ func bearComputeTeam(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	return true
 }
 
-// stopBearTask 终止打熊任务:禁用"熊_执行滚动"("熊_计算队伍"的 next 唯一引用),
-// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
-// 不能依赖 OverrideNext(空):主循环经 [JumpBack]熊_计算队伍 压栈,
-// next 为空会弹栈回"熊_开始战斗"继续识别队伍,形成"第N轮→计算→滚动→弹回"循环。
+// stopBearTask 终止打熊任务:请求框架停止(外部停止信号),任务以成功状态结束,
+// MFAAvalonia 状态灯显示绿勾。
+// 历史:曾用"禁用熊_执行滚动使 next 全失效"终止(error handling,任务状态为失败,
+// 新版 MFAAvalonia 显示红叉),2026-10 起改用 PostStop。
+// 更早的历史:不能依赖 OverrideNext(空):主循环经 [JumpBack]熊_计算队伍 压栈,
+// next 为空会弹栈回"熊_开始战斗"继续识别队伍,形成"第N轮→计算→滚动→弹回"循环;
+// PostStop 直接终止整个任务,不经过弹栈。详见 knowledge.md §21/§22。
 func stopBearTask(ctx *maa.Context) {
-	_ = ctx.OverridePipeline(map[string]any{"熊_执行滚动": map[string]any{"enabled": false}})
+	stopPipelineCleanly(ctx)
 }
 
 // 熊_记录队伍(对应 Python 第一个 BearCombat)

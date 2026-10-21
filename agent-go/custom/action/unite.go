@@ -132,13 +132,15 @@ func uniteScan(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	return true
 }
 
-// stopUniteTask 终止当前联盟总动员流程:禁用入口节点,使"联盟总动员_执行扫描"的 next 列表
-// 全部失效,核心 run_reco_and_action 返回无效 NodeDetail 进入 error handling,任务立即终止。
-// 不能依赖 OverrideNext(空列表):入口链路经 [JumpBack]联盟总动员_点击活动 等节点压栈,
+// stopUniteTask 终止当前联盟总动员流程:请求框架停止(外部停止信号),
+// 任务以成功状态结束,MFAAvalonia 状态灯显示绿勾。
+// 历史:曾用"禁用联盟总动员_入口使 next 全失效"终止(error handling,任务状态为失败,
+// 新版 MFAAvalonia 显示红叉),2026-10 起改用 PostStop。
+// 更早的历史:不能依赖 OverrideNext(空列表):入口链路经 [JumpBack]联盟总动员_点击活动 等节点压栈,
 // next 为空会弹栈回到入口白跑一轮(每轮弹1个),直到栈耗尽才停——这正是"已全部满意后
-// 仍重复查看任务几次"的原因;栈内残留条目耗尽前任务不会终止。
+// 仍重复查看任务几次"的原因;PostStop 直接终止整个任务,不经过弹栈。详见 knowledge.md §21/§22。
 func stopUniteTask(ctx *maa.Context) {
-	_ = ctx.OverridePipeline(map[string]any{"联盟总动员_入口": map[string]any{"enabled": false}})
+	stopPipelineCleanly(ctx)
 }
 
 // uniteEnabledExpected 收集所有启用任务的 OCR expected 文本(flattened)

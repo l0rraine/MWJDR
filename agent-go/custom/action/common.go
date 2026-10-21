@@ -47,6 +47,19 @@ func NodeEnabled(ctx *maa.Context, name string) bool {
 	return *node.Enabled
 }
 
+// stopPipelineCleanly 请求终止当前 pipeline(框架外部停止信号,MaaTaskerPostStop)。
+// 与"禁用循环锚点"不同:任务经 need_to_stop 路径以 SUCCEEDED 状态结束,
+// MFAAvalonia 任务状态灯显示绿勾而非红叉,且 MFA 任务队列继续执行后续任务。
+// 注意:
+//   - 调用后当前 CustomAction 必须 return true;返回 false 会先置 error_handling,
+//     覆盖停止路径,UI 仍显示失败;
+//   - 不要等待 PostStop 返回的 job(在 pipeline 线程上等待可能死锁),发完即走。
+func stopPipelineCleanly(ctx *maa.Context) {
+	if t := ctx.GetTasker(); t != nil {
+		_ = t.PostStop()
+	}
+}
+
 // NodeNextNames 读取节点的 next 列表(兼容 name/string 项),返回节点名列表
 func NodeNextNames(ctx *maa.Context, name string) []string {
 	raw, err := ctx.GetNodeJSON(name)

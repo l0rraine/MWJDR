@@ -56,7 +56,6 @@ func itemCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			return true
 		}
 		utils.Infof("体力耗尽,共使用物品集结 %d次,停止出征", combatCount.Count)
-		utils.DisableBattleTasks(ctx, "集结物品_识别体力入口")
 		combatCount.Reset()
 		stopItemBattleTask(ctx)
 		return true
@@ -85,7 +84,6 @@ func itemCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 
 	if combatCount.Count >= combatCount.Limit {
 		utils.Infof("体力耗尽,共使用物品集结 %d次,停止出征", combatCount.Count)
-		utils.DisableBattleTasks(ctx, "集结物品_识别体力入口")
 		combatCount.Reset()
 		stopItemBattleTask(ctx)
 		return true
@@ -94,9 +92,10 @@ func itemCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	return true
 }
 
-// stopItemBattleTask 终止物品集结任务:禁用"集结物品入口"(当前节点 next 的循环锚点),
-// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
-// 不能依赖 OverrideNext(空):入口链路经 [JumpBack] 节点压栈,next 为空会弹栈回入口重跑。
+// stopItemBattleTask 终止物品集结任务:请求框架停止(外部停止信号),任务以成功状态结束,
+// MFAAvalonia 状态灯显示绿勾。
+// 历史:曾用"禁用集结物品入口使 next 全失效"终止(error handling,任务状态为失败,
+// 新版 MFAAvalonia 显示红叉),2026-10 起改用 PostStop。详见 knowledge.md §21/§22。
 func stopItemBattleTask(ctx *maa.Context) {
-	_ = ctx.OverridePipeline(map[string]any{"集结物品入口": map[string]any{"enabled": false}})
+	stopPipelineCleanly(ctx)
 }

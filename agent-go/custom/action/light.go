@@ -32,7 +32,6 @@ func lightBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 			_, _ = ctx.RunTask("免费体力")
 			_, _ = ctx.RunTask("点击出征")
 		} else {
-			utils.DisableBattleTasks(ctx, "灯塔入口")
 			stopLightTask(ctx)
 			return true
 		}
@@ -42,9 +41,10 @@ func lightBeginCombat(ctx *maa.Context, arg *maa.CustomActionArg) bool {
 	return true
 }
 
-// stopLightTask 终止自动灯塔任务:禁用"灯塔入口"("灯塔准备出征"的 next 唯一引用),
-// 使 next 列表全部失效,核心 error handling 立即终止,不再弹栈重跑。
-// 不能依赖 OverrideNext(空):入口链路经 [JumpBack] 节点压栈,next 为空会弹栈回入口重跑。
+// stopLightTask 终止自动灯塔任务:请求框架停止(外部停止信号),任务以成功状态结束,
+// MFAAvalonia 状态灯显示绿勾。
+// 历史:曾用"禁用灯塔入口使 next 全失效"终止(error handling,任务状态为失败,
+// 新版 MFAAvalonia 显示红叉),2026-10 起改用 PostStop。详见 knowledge.md §21/§22。
 func stopLightTask(ctx *maa.Context) {
-	_ = ctx.OverridePipeline(map[string]any{"灯塔入口": map[string]any{"enabled": false}})
+	stopPipelineCleanly(ctx)
 }
