@@ -451,3 +451,6 @@ config
 debug
 
 .reasonix
+
+# 本地参考资料与临时产物
+temp/
