@@ -193,7 +193,13 @@ func dreamFindLoop(ctx *maa.Context, itemList []dreamItem, areas []maa.Rect, don
 					missCount[t]++
 				}
 			}
-			time.Sleep(500 * time.Millisecond)
+			if len(areas) == 3 {
+				// 闯关模式:3个区域,每个区域间隔0.8s,避免 OCR 识别重复
+				time.Sleep(800 * time.Millisecond)
+			} else {
+				// 组队模式:6个区域,每个区域间隔0.4s
+				time.Sleep(400 * time.Millisecond)
+			}
 		}
 
 		img, _ := utils.ScreenCap(ctx)
